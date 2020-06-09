@@ -54,6 +54,10 @@ app.get('/', (req, res) => {
   res.redirect('/user/dashboard');
 });
 
+app.get('/wakeup'), (req, res) => {
+  res.send('Awake!');
+}
+
 // Start Server
 app.listen(port, () => {
   debug(`Express server listening on port ${port}...`);

@@ -32,12 +32,13 @@ function routes() {
 
   // Function to get all relevant dates from a week number
   function getWeekData(week) {
-    const data = {};
-    data.delivery = moment()
+    const data = {
+      delivery: moment()
       .tz('Europe/Stockholm')
       .week(week)
       .startOf('isoWeek')
-      .add(2, 'days');
+      .add(2, 'days')
+    }
     data.deadline = data.delivery.clone()
       .subtract(1, 'day')
       .hours(11)
@@ -50,7 +51,7 @@ function routes() {
       .minutes(0)
       .seconds(0)
       .milliseconds(0);
-    data.orderable = data.deadline.isAfter();
+    data.orderable= data.deadline.isAfter();
     data.vegetablesOrderable = data.vegetableDeadline.isAfter();
     data.week = data.delivery.week();
     data.year = data.delivery.year();
@@ -60,8 +61,9 @@ function routes() {
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
     .get((req, res) => {
-      const week1 = getWeekData(moment().week());
-      const week2 = getWeekData(moment().week() + 1);
+      const week = moment().week();
+      const week1 = getWeekData(week);
+      const week2 = getWeekData(week + 1);
       const timeframe = {
         [`${week1.year}-${week1.week}`]: week1,
         [`${week2.year}-${week2.week}`]: week2
@@ -179,7 +181,8 @@ function routes() {
   // Invoice payment route
   treatBoxRoutes.route('/invoicepayment')
     .post((req, res) => {
-      debug(req.body);
+      const callbackUrl = req.body['callback-url'];
+
       const order = {
         itemsOrdered: {
           comboBoxes: parseInt(req.body['num-comboboxes'] || 0, 10),
@@ -250,8 +253,12 @@ function routes() {
       }
 
       insertTreatBoxOrder(order);
+      sendConfirmationEmail(order);
 
-      res.json(order);
+      const query = querystring.stringify({
+        name: order.purchaser.name
+      })
+      return res.redirect(`${callbackUrl}?${query}`);
     });
 
   treatBoxRoutes.route('/requestpayment')

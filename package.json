@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node app",
     "dev": "nodemon app",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx mocha"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,7 @@
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.31",
     "mongodb": "^3.5.8",
+    "nodemailer": "^6.4.8",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0"
   },

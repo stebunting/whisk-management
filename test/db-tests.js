@@ -14,7 +14,7 @@ const {
   insertTreatBoxOrder,
   getTreatBoxOrders,
   removeTreatBoxOrder
-} = require('../db-control')(tag, 'whisk-management-test');
+} = require('../lib/db-control/db-control')(tag, 'whisk-management-test');
 
 describe('Database Control Connection Tests', () => {
   describe('Add and retrieve user from new db', () => {
