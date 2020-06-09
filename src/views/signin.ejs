@@ -1,11 +1,5 @@
-<!DOCTYPE html>
+<%- include('partials/header', { title: 'Sign-In' }) %>
 
-<html>
-<head>
-  <title>Signin</title>
-</head>
-
-<body>
   <form name="signinForm" action="/auth/signin" method="post">
     <div class="form-group">
       <label for="username">Username</label>
@@ -17,5 +11,5 @@
     </div>
     <button type="submit" class="btn btn-primary">Sign-In</button>
   </form>
-</body>
-</html>
+  
+<%- include('partials/footer') %>

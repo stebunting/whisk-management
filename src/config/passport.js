@@ -6,7 +6,7 @@ const passport = require('passport');
 const { Strategy } = require('passport-local');
 const bcrypt = require('bcrypt');
 const debug = require('debug')(tag);
-const { getUser, logError } = require('../controllers/dbController')(tag);
+const { getUser, logError } = require('../../lib/db-control/db-control')(tag);
 
 function passportConfig(app) {
   app.use(passport.initialize());

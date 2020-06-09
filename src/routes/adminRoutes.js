@@ -5,7 +5,7 @@ const tag = 'whisk-management:adminRoutes';
 const express = require('express');
 const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
-const { setupDb } = require('../controllers/dbController')(tag);
+const { setupDb } = require('../../lib/db-control/db-control')(tag);
 
 function routes() {
   const adminRoutes = express.Router();

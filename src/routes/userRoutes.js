@@ -11,7 +11,10 @@ function routes() {
 
   userRoutes.use(loginCheck);
   userRoutes.route('/dashboard')
-    .get((req, res) => res.json(req.user));
+    .get((req, res) => {
+
+      return res.render('dashboard.ejs');
+    });
 
   return userRoutes;
 }

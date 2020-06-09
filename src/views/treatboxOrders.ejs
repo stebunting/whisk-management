@@ -1,0 +1,50 @@
+<%- include('partials/header', { title: 'Treatbox Orders' }) %>
+
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th class="column">WEEK</th>
+					<th class="column">NAME</th>
+					<th class="column">E-MAIL</th>
+					<th class="column">TELEPHONE NUMBER</th>
+					<th class="column">ADDRESS</th>
+					<th class="column">PAYMENT METHOD</th>
+					<th class="column">EDIT</th>
+				</tr>
+			</thead><%for (let i = 0; i < orders.length; i += 1) {
+				if (orders[i].delivery.type === 'delivery') { %>
+			<tr>
+				<td><%=orders[i].delivery.date %></td>
+				<td><%=orders[i].purchaser.name %></td>
+				<td><a href="mailto:<%=orders[i].purchaser.email %>"><%=orders[i].purchaser.email %></a></td>
+				<td><%=orders[i].purchaser.telephone %></td>
+				<td>
+					<%=orders[i].delivery.address %>&nbsp;
+					<a href="<%=orders[i].delivery.url %>" target="_blank" rel="external">
+						<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
+					</a>
+				</td>
+				<td><%=orders[i].payment.method %>&nbsp;<%
+					if (orders[i].payment.paid) {
+						%><img class="icon" src="/icons/tick.svg" alt="Paid!" /><%
+					} else {
+						%><img class="icon" src="/icons/cross.svg" alt="Not yet paid" /><%
+					} %></td>
+				<td>
+					<a href="/treatbox/orders/remove/<%=orders[i]._id %>">
+						<img class="icon" src="/icons/bin.svg" alt="Delete Order" />
+					</a>
+					<a data-toggle="collapse" data-target="#ID-<%=orders[i]._id %>">
+						<img class="icon" src="/icons/info.svg" alt="View Details" />
+					</a>
+				</td>
+			</tr>
+			<tr class="collapsingRow">
+				<td class="hiddenRow" colspan="7">
+					<div class="card collapse" id="ID-<%=orders[i]._id %>">
+						<div class="card-body">More Information...</div>
+					</div>
+				</td>
+			</tr><% }} %>
+		</table>
+<%- include('partials/footer') %>
