@@ -11,6 +11,15 @@
 	padding-left: 0px;
 }
 
+.user-info-subtitle {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
 .user-info-detail {
 	font-weight: bold;
+}
+
+.info-paid, .info-edit {
+	text-align: center;
 }

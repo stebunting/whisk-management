@@ -1,101 +1,132 @@
 <%-include('partials/header', { title: 'Treatbox Orders' }); %>
-<% let lastWeek='0-0'; %>
+<% let lastWeek='0'; %>
 
+		<%for (let i = 0; i < orders.length; i += 1) {
+			const timestamp = orders[i]._id.getTimestamp();
+			if (lastWeek != orders[i].delivery.date) {
+				lastWeek = orders[i].delivery.date;
+				const data = getWeekData(lastWeek.substring(5));
+				const total = totals.find((x) => x._id === lastWeek);
+				%>
 		<table class="table table-bordered">
 			<thead>
+				<tr>
+					<td colspan="6">
+						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
+							<div class="card">
+								<div class="card-body row">
+								<ul class="user-info-list col-md-4">
+									<li>
+										<span class="user-info-subtitle">Orders</span>
+									</li>
+									<li>
+										<span class="user-info-detail">COMBO BOXES:</span>
+										<%=total.comboBoxes %>
+									</li>
+									<li>
+										<span class="user-info-detail">TREAT BOXES:</span>
+										<%=total.treatBoxes %>
+									</li>
+									<li>
+										<span class="user-info-detail">VEGETABLE BOXES:</span>
+										<%=total.vegetableBoxes %>
+									</li>
+								</ul>
+								<ul class="user-info-list col-md-4">
+									<li>
+										<span class="user-info-subtitle">To Make</span>
+									</li>
+									<li>
+										<span class="user-info-detail">TREAT BOXES TO MAKE:</span>
+										<%=total.treatBoxesToMake %>
+									</li>
+									<li>
+										<span class="user-info-detail">VEGETABLE BOXES TO ORDER:</span>
+										<%=total.vegetableBoxesToOrder %>
+									</li>
+								</ul>
+								<ul class="user-info-list col-md-4">
+									<li>
+										<span class="user-info-subtitle">Deliveries</span>
+									</li>
+									<li>
+										<span class="user-info-detail">NUMBER OF DELIVERIES:</span>
+										<%=total.deliveries %>
+									</li>
+									<li>
+										<span class="user-info-detail">INCOME:</span>
+										<%=total.income %> SEK
+									</li>
+								</ul>
+							</div>
+						</div>
+					</td>
+				</tr>
 				<tr>
 					<th class="column">ORDER DATE</th>
 					<th class="column">ORDER TIME</th>
 					<th class="column">NAME</th>
 					<th class="column">ADDRESS</th>
-					<th class="column">PAID</th>
-					<th class="column">EDIT</th>
+					<th class="column info-paid">PAID</th>
+					<th class="column info-edit">INFO</th>
 				</tr>
-			</thead><%for (let i = 0; i < orders.length; i += 1) {
-				if (orders[i].delivery.type === 'delivery') {
-					const timestamp = orders[i]._id.getTimestamp();
-					if (lastWeek != orders[i].delivery.date) {
-						lastWeek = orders[i].delivery.date;
-						const data = getWeekData(lastWeek.substring(5));
-						%>
-				<tr>
-					<td colspan="7">
-						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
-					</td>
-				</tr><% } %>
+			</thead>
+				<% }
+				for (let j = 0; j < orders[i].recipients.length; j += 1) {
+				%>
 				<tr>
 					<td><%=timestamp.toLocaleDateString() %></td>
 					<td><%=timestamp.toLocaleTimeString() %></td>
-					<td><%=orders[i].purchaser.name %></td>
+					<td><%=orders[i].recipients[j].name %></td>
 					<td>
-						<%=orders[i].delivery.address %>&nbsp;
-						<a href="<%=orders[i].delivery.url %>" target="_blank" rel="external">
+						<%=orders[i].recipients[j].address %>&nbsp;
+						<a href="<%=orders[i].recipients[j].url %>" target="_blank" rel="external">
 							<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
 						</a>
 					</td>
-					<td><%
+					<td class="info-paid"><%
 						if (orders[i].payment.paid) {
 							%><img class="icon" src="/icons/tick.svg" alt="Paid!" /><%
 						} else {
 							%><img class="icon" src="/icons/cross.svg" alt="Not yet paid" /><%
 						} %></td>
-					<td>
-						<a href="/treatbox/orders/remove/<%=orders[i]._id %>">
-							<img class="icon" src="/icons/bin.svg" alt="Delete Order" />
-						</a>
-						<a data-toggle="collapse" data-target="#ID-<%=orders[i]._id %>">
+					<td class="info-edit">
+						<a data-toggle="collapse" data-target="<%=`#ID-${j}-${orders[i]._id}` %>">
 							<img class="icon" src="/icons/info.svg" alt="View Details" />
 						</a>
 					</td>
 				</tr>
 				<tr class="collapsingRow">
-					<td class="hiddenRow" colspan="7">
-						<div class="card collapse" id="ID-<%=orders[i]._id %>">
+					<td class="hiddenRow" colspan="6">
+						<div class="card collapse" id="<%=`ID-${j}-${orders[i]._id}` %>">
 							<div class="card-body row">
-								<ul class="user-info-list col-md-6">
-									<li>
-										<span class="user-info-detail">NAME:</span>
-										<%=orders[i].purchaser.name %>
-									</li>
-									<li>
-										<span class="user-info-detail">PHONE NUMBER:</span>
-										<%=orders[i].purchaser.telephone %>
-									</li>
-									<li>
-										<span class="user-info-detail">E-MAIL ADDRESS:</span>
-										<%=orders[i].purchaser.email %>
-									</li>
-									<li>
-										<span class="user-info-detail">DELIVERY ADDRESS:</span>
-										<%=`${orders[i].delivery.address} (Zone ${orders[i].delivery.zone})` %>
-									</li>
-									<li>
-										<span class="user-info-detail">NOTES:</span>
-										<%=orders[i].delivery.addressNotes %>
-									</li>
-								</ul>
-
 								<div class="col-md-6">
 									<ul class="user-info-list">
 										<li>
-											<span class="user-info-detail">COMBO-BOXES:</span>
-											<%=orders[i].itemsOrdered.comboBoxes %>
+											<span class="user-info-subtitle">Purchaser</span>
 										</li>
 										<li>
-											<span class="user-info-detail">TREAT-BOXES:</span>
-											<%=orders[i].itemsOrdered.treatBoxes %>
+											<span class="user-info-detail">NAME:</span>
+											<%=orders[i].purchaser.name %>
 										</li>
 										<li>
-											<span class="user-info-detail">VEGETABLE-BOXES:</span>
-											<%=orders[i].itemsOrdered.vegetableBoxes %>
+											<span class="user-info-detail">PHONE NUMBER:</span>
+											<%=orders[i].purchaser.telephone %>
+										</li>
+										<li>
+											<span class="user-info-detail">E-MAIL ADDRESS:</span>
+											<a href="mailto:<%=orders[i].purchaser.email %>"><%=orders[i].purchaser.email %></a>
+										</li>
+									</ul>
+
+									<ul class="user-info-list">
+										<li>
+											<span class="user-info-subtitle">Payment</span>
 										</li>
 										<li>
 											<span class="user-info-detail">COST:</span>
 											<%=orders[i].cost.total%> SEK
 										</li>
-									</ul>
-
-									<ul class="user-info-list">
 										<li>
 											<span class="user-info-detail">PAYMENT METHOD:</span>
 											<%=orders[i].payment.method%>
@@ -104,6 +135,45 @@
 											<span class="user-info-detail">PAID:</span>
 											<%if (orders[i].payment.paid) { %>Yes<% } else { %>
 											No <a href="/treatbox/orders/markaspaid/<%=orders[i]._id %>">(Mark as Paid)</a><%} %></li>
+									</ul>
+								</div>
+
+								<div class="col-md-6">
+									<ul class="user-info-list">
+										<li>
+											<span class="user-info-subtitle">Recipient</span>
+										</li>
+										<li>
+											<span class="user-info-detail">NAME:</span>
+										<%=orders[i].recipients[j].name %>
+										</li>
+										<li>
+											<span class="user-info-detail">PHONE NUMBER:</span>
+										<%=orders[i].recipients[j].telephone %>
+										</li>
+										<li>
+											<span class="user-info-detail">NOTES:</span>
+											<%=orders[i].recipients[j].addressNotes %>
+										</li>
+										<li>
+											<span class="user-info-detail">MESSAGE:</span>
+											<%=orders[i].recipients[j].message %>
+										</li>
+									</ul>
+
+									<ul class="user-info-list">
+										<li>
+											<span class="user-info-detail">COMBO BOXES:</span>
+											<%=orders[i].recipients[j].numComboBoxes %>
+										</li>
+										<li>
+											<span class="user-info-detail">TREAT BOXES:</span>
+											<%=orders[i].recipients[j].numTreatBoxes %>
+										</li>
+										<li>
+											<span class="user-info-detail">VEGETABLE BOXES:</span>
+											<%=orders[i].recipients[j].numVegetableBoxes %>
+										</li>
 									</ul>
 								</div>
 							</div>

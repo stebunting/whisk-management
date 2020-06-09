@@ -14,6 +14,7 @@ const {
   insertTreatBoxOrder,
   getTreatBoxOrders,
   updateTreatBoxOrders,
+  getTreatBoxTotals,
   removeTreatBoxOrder
 } = require('../lib/db-control/db-control')(tag, 'whisk-management-test');
 
@@ -90,9 +91,9 @@ describe('Database Control Connection Tests', () => {
   describe('Add new treatbox order to database', () => {
     const order = {
       itemsOrdered: {
-        comboBoxes: 1,
-        treatBoxes: 0,
-        vegetableBoxes: 1
+        comboBoxes: 3,
+        treatBoxes: 2,
+        vegetableBoxes: 4
       },
       purchaser: {
         name: 'Dina Mystris',
@@ -100,7 +101,7 @@ describe('Database Control Connection Tests', () => {
         telephone: '07787448962'
       },
       delivery: {
-        date: 'Wednesday 17th June',
+        date: '2020-25',
         type: 'split-delivery'
       },
       cost: {
@@ -113,9 +114,9 @@ describe('Database Control Connection Tests', () => {
       recipients: [
         {
           itemsToDeliver: '1 x Combo Box, 1 x Vegetable Box',
-          numComboBoxes: 1,
-          numTreatBoxes: 0,
-          numVegetableBoxes: 1,
+          numComboBoxes: 3,
+          numTreatBoxes: 2,
+          numVegetableBoxes: 4,
           name: 'Stephen Bunting',
           telephone: '07754326547',
           address: 'Sandhamnsgatan 57, 115 28 Stockholm, Sweden',
@@ -154,6 +155,17 @@ describe('Database Control Connection Tests', () => {
       const insertedOrder = await insertTreatBoxOrder(order);
       assert.equal(insertedOrder.insertedCount, 1);
       assert.deepEqual(insertedOrder.ops[0], order);
+    });
+
+    it('gets total items by week', async () => {
+      const response = await getTreatBoxTotals();
+      assert.equal(response[0].comboBoxes, 6);
+      assert.equal(response[0].treatBoxes, 4);
+      assert.equal(response[0].vegetableBoxes, 8);
+      assert.equal(response[0].treatBoxesToMake, 10);
+      assert.equal(response[0].vegetableBoxesToOrder, 14);
+      assert.equal(response[0].deliveries, 2);
+      assert.equal(response[0].income, 1480);
     });
 
     it('updates order to paid', async () => {

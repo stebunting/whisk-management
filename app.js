@@ -29,15 +29,14 @@ app.use('/js', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 
 app.use('/js', express.static(path.join(__dirname, 'node_modules', 'jquery', 'dist')));
 app.set('views', './src/views');
 
-// Connect to MongoDB
+// Connect to MongoDB and SMTP Server
 const dbController = require('./lib/db-control/db-control')(tag);
-
-dbController.connect();
-
-// Connect to SMTP Server
 const email = require('./lib/email/email')();
 
-email.connect();
+(async function(){
+  dbController.connect();
+  email.connect();
+}());
 
 // Configure Passport
 require('./src/config/passport.js')(app);

@@ -10,6 +10,7 @@ const {
   insertTreatBoxOrder,
   getTreatBoxOrders,
   updateTreatBoxOrders,
+  getTreatBoxTotals,
   removeTreatBoxOrder
 } = require('../../lib/db-control/db-control')(tag);
 const { sendConfirmationEmail } = require('../../lib/email/email')()
@@ -224,10 +225,19 @@ function routes() {
 
           break;
         case 'delivery':
-          order.delivery.address = req.body.address;
-          order.delivery.addressNotes = req.body['notes-address'];
-          order.delivery.googleFormattedAddress = req.body['google-formatted-address'];
-          order.delivery.zone = parseInt(req.body.zone, 10);
+          order.recipients = [];
+          const recipient = {
+            numComboBoxes: order.itemsOrdered.comboBoxes,
+            numTreatBoxes: order.itemsOrdered.treatBoxes,
+            numVegetableBoxes: order.itemsOrdered.vegetableBoxes,
+            name: order.purchaser.name,
+            telephone: order.purchaser.telephone,
+            address: req.body.address,
+            addressNotes: req.body['notes-address'],
+            zone: parseInt(req.body.zone, 10),
+            message: ''
+          }
+            order.recipients.push(recipient);
           if (order.zone === 2) {
             order.cost.delivery += zone2DeliveryCost;
           }
@@ -259,11 +269,11 @@ function routes() {
       }
 
       insertTreatBoxOrder(order);
-      sendConfirmationEmail(order);
+      //sendConfirmationEmail(order);
 
       const query = querystring.stringify({
         name: order.purchaser.name
-      })
+      });
       return res.redirect(`${callbackUrl}?${query}`);
     });
 
@@ -273,21 +283,22 @@ function routes() {
   treatBoxRoutes.route('/orders')
     .get(async (req, res) => {
       const orders = await getTreatBoxOrders();
-      for (let i = 0; i < orders.length; i += 1) {
-        const q = querystring.stringify({
-          api: 1,
-          query: orders[i].delivery.address
-        });
-        orders[i].delivery.url = `https://www.google.com/maps/search/?${q}`;
-      }
-      res.render('treatboxOrders', { orders, getWeekData });
-    });
+      const totals = await getTreatBoxTotals();
 
-  treatBoxRoutes.route('/orders/remove/:id')
-    .get(async (req, res) => {
-      const { id } = req.params;
-      await removeTreatBoxOrder(id);
-      return res.redirect('/treatbox/orders');
+      for (let i = 0; i < orders.length; i += 1) {
+        for (let j = 0; j < orders[i].recipients.length; j += 1) {
+          const q = querystring.stringify({
+            api: 1,
+            query: orders[i].recipients[j].address
+          });
+          orders[i].recipients[j].url = `https://www.google.com/maps/search/?${q}`;
+        }
+      }
+      res.render('treatboxOrders', {
+        orders,
+        totals,
+        getWeekData
+      });
     });
 
   treatBoxRoutes.route('/orders/markaspaid/:id')
