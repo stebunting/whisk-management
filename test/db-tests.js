@@ -13,6 +13,7 @@ const {
   getUser,
   insertTreatBoxOrder,
   getTreatBoxOrders,
+  updateTreatBoxOrders,
   removeTreatBoxOrder
 } = require('../lib/db-control/db-control')(tag, 'whisk-management-test');
 
@@ -122,7 +123,11 @@ describe('Database Control Connection Tests', () => {
           zone: 1,
           message: 'Message for Ste'
         }
-      ]
+      ],
+      payment: {
+        method: 'Invoice',
+        paid: false
+      }
     };
 
     it('connects to client', async () => {
@@ -149,6 +154,15 @@ describe('Database Control Connection Tests', () => {
       const insertedOrder = await insertTreatBoxOrder(order);
       assert.equal(insertedOrder.insertedCount, 1);
       assert.deepEqual(insertedOrder.ops[0], order);
+    });
+
+    it('updates order to paid', async () => {
+      const orders = await getTreatBoxOrders();
+      assert.equal(orders[1].payment.paid, false);
+
+      const response = await updateTreatBoxOrders(orders[1]._id, { 'payment.paid': true });
+      const updatedOrders = await getTreatBoxOrders();
+      assert.equal(updatedOrders[1].payment.paid, true);
     });
 
     it('removes one item from database', async () => {

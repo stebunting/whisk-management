@@ -5,3 +5,12 @@
 .collapsingRow .hiddenRow {
 	padding: 0px;
 }
+
+.user-info-list {
+	list-style-type: none;
+	padding-left: 0px;
+}
+
+.user-info-detail {
+	font-weight: bold;
+}

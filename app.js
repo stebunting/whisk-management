@@ -34,6 +34,11 @@ const dbController = require('./lib/db-control/db-control')(tag);
 
 dbController.connect();
 
+// Connect to SMTP Server
+const email = require('./lib/email/email')();
+
+email.connect();
+
 // Configure Passport
 require('./src/config/passport.js')(app);
 
@@ -54,9 +59,9 @@ app.get('/', (req, res) => {
   res.redirect('/user/dashboard');
 });
 
-app.get('/wakeup'), (req, res) => {
+app.get('/wakeup', (req, res) => {
   res.send('Awake!');
-}
+});
 
 // Start Server
 app.listen(port, () => {

@@ -1,50 +1,114 @@
-<%- include('partials/header', { title: 'Treatbox Orders' }) %>
+<%-include('partials/header', { title: 'Treatbox Orders' }); %>
+<% let lastWeek='0-0'; %>
 
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<th class="column">WEEK</th>
+					<th class="column">ORDER DATE</th>
+					<th class="column">ORDER TIME</th>
 					<th class="column">NAME</th>
-					<th class="column">E-MAIL</th>
-					<th class="column">TELEPHONE NUMBER</th>
 					<th class="column">ADDRESS</th>
-					<th class="column">PAYMENT METHOD</th>
+					<th class="column">PAID</th>
 					<th class="column">EDIT</th>
 				</tr>
 			</thead><%for (let i = 0; i < orders.length; i += 1) {
-				if (orders[i].delivery.type === 'delivery') { %>
-			<tr>
-				<td><%=orders[i].delivery.date %></td>
-				<td><%=orders[i].purchaser.name %></td>
-				<td><a href="mailto:<%=orders[i].purchaser.email %>"><%=orders[i].purchaser.email %></a></td>
-				<td><%=orders[i].purchaser.telephone %></td>
-				<td>
-					<%=orders[i].delivery.address %>&nbsp;
-					<a href="<%=orders[i].delivery.url %>" target="_blank" rel="external">
-						<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
-					</a>
-				</td>
-				<td><%=orders[i].payment.method %>&nbsp;<%
-					if (orders[i].payment.paid) {
-						%><img class="icon" src="/icons/tick.svg" alt="Paid!" /><%
-					} else {
-						%><img class="icon" src="/icons/cross.svg" alt="Not yet paid" /><%
-					} %></td>
-				<td>
-					<a href="/treatbox/orders/remove/<%=orders[i]._id %>">
-						<img class="icon" src="/icons/bin.svg" alt="Delete Order" />
-					</a>
-					<a data-toggle="collapse" data-target="#ID-<%=orders[i]._id %>">
-						<img class="icon" src="/icons/info.svg" alt="View Details" />
-					</a>
-				</td>
-			</tr>
-			<tr class="collapsingRow">
-				<td class="hiddenRow" colspan="7">
-					<div class="card collapse" id="ID-<%=orders[i]._id %>">
-						<div class="card-body">More Information...</div>
-					</div>
-				</td>
-			</tr><% }} %>
-		</table>
+				if (orders[i].delivery.type === 'delivery') {
+					const timestamp = orders[i]._id.getTimestamp();
+					if (lastWeek != orders[i].delivery.date) {
+						lastWeek = orders[i].delivery.date;
+						const data = getWeekData(lastWeek.substring(5));
+						%>
+				<tr>
+					<td colspan="7">
+						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
+					</td>
+				</tr><% } %>
+				<tr>
+					<td><%=timestamp.toLocaleDateString() %></td>
+					<td><%=timestamp.toLocaleTimeString() %></td>
+					<td><%=orders[i].purchaser.name %></td>
+					<td>
+						<%=orders[i].delivery.address %>&nbsp;
+						<a href="<%=orders[i].delivery.url %>" target="_blank" rel="external">
+							<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
+						</a>
+					</td>
+					<td><%
+						if (orders[i].payment.paid) {
+							%><img class="icon" src="/icons/tick.svg" alt="Paid!" /><%
+						} else {
+							%><img class="icon" src="/icons/cross.svg" alt="Not yet paid" /><%
+						} %></td>
+					<td>
+						<a href="/treatbox/orders/remove/<%=orders[i]._id %>">
+							<img class="icon" src="/icons/bin.svg" alt="Delete Order" />
+						</a>
+						<a data-toggle="collapse" data-target="#ID-<%=orders[i]._id %>">
+							<img class="icon" src="/icons/info.svg" alt="View Details" />
+						</a>
+					</td>
+				</tr>
+				<tr class="collapsingRow">
+					<td class="hiddenRow" colspan="7">
+						<div class="card collapse" id="ID-<%=orders[i]._id %>">
+							<div class="card-body row">
+								<ul class="user-info-list col-md-6">
+									<li>
+										<span class="user-info-detail">NAME:</span>
+										<%=orders[i].purchaser.name %>
+									</li>
+									<li>
+										<span class="user-info-detail">PHONE NUMBER:</span>
+										<%=orders[i].purchaser.telephone %>
+									</li>
+									<li>
+										<span class="user-info-detail">E-MAIL ADDRESS:</span>
+										<%=orders[i].purchaser.email %>
+									</li>
+									<li>
+										<span class="user-info-detail">DELIVERY ADDRESS:</span>
+										<%=`${orders[i].delivery.address} (Zone ${orders[i].delivery.zone})` %>
+									</li>
+									<li>
+										<span class="user-info-detail">NOTES:</span>
+										<%=orders[i].delivery.addressNotes %>
+									</li>
+								</ul>
+
+								<div class="col-md-6">
+									<ul class="user-info-list">
+										<li>
+											<span class="user-info-detail">COMBO-BOXES:</span>
+											<%=orders[i].itemsOrdered.comboBoxes %>
+										</li>
+										<li>
+											<span class="user-info-detail">TREAT-BOXES:</span>
+											<%=orders[i].itemsOrdered.treatBoxes %>
+										</li>
+										<li>
+											<span class="user-info-detail">VEGETABLE-BOXES:</span>
+											<%=orders[i].itemsOrdered.vegetableBoxes %>
+										</li>
+										<li>
+											<span class="user-info-detail">COST:</span>
+											<%=orders[i].cost.total%> SEK
+										</li>
+									</ul>
+
+									<ul class="user-info-list">
+										<li>
+											<span class="user-info-detail">PAYMENT METHOD:</span>
+											<%=orders[i].payment.method%>
+										</li>
+										<li>
+											<span class="user-info-detail">PAID:</span>
+											<%if (orders[i].payment.paid) { %>Yes<% } else { %>
+											No <a href="/treatbox/orders/markaspaid/<%=orders[i]._id %>">(Mark as Paid)</a><%} %></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</td>
+				</tr><% }} %>
+			</table>
 <%- include('partials/footer') %>

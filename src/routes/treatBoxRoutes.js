@@ -9,8 +9,10 @@ const debug = require('debug')(tag);
 const {
   insertTreatBoxOrder,
   getTreatBoxOrders,
+  updateTreatBoxOrders,
   removeTreatBoxOrder
 } = require('../../lib/db-control/db-control')(tag);
+const { sendConfirmationEmail } = require('../../lib/email/email')()
 
 // Pricing
 const comboBoxPrice = 49000;
@@ -61,7 +63,11 @@ function routes() {
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
     .get((req, res) => {
-      const week = moment().week();
+      if (moment().isoWeekday() < 3) {
+        week = moment().week();
+      } else {
+        week = moment().week() + 1;
+      }
       const week1 = getWeekData(week);
       const week2 = getWeekData(week + 1);
       const timeframe = {
@@ -274,13 +280,20 @@ function routes() {
         });
         orders[i].delivery.url = `https://www.google.com/maps/search/?${q}`;
       }
-      res.render('treatboxOrders', { orders });
+      res.render('treatboxOrders', { orders, getWeekData });
     });
 
   treatBoxRoutes.route('/orders/remove/:id')
     .get(async (req, res) => {
       const { id } = req.params;
       await removeTreatBoxOrder(id);
+      return res.redirect('/treatbox/orders');
+    });
+
+  treatBoxRoutes.route('/orders/markaspaid/:id')
+    .get(async (req, res) => {
+      const { id } = req.params;
+      await updateTreatBoxOrders(id, { 'payment.paid': true });
       return res.redirect('/treatbox/orders');
     });
 
