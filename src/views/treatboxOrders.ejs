@@ -11,7 +11,7 @@
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<td colspan="6">
+					<td colspan="5">
 						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
 							<div class="card">
 								<div class="card-body row">
@@ -68,21 +68,30 @@
 					<th class="column">NAME</th>
 					<th class="column">ADDRESS</th>
 					<th class="column info-paid">PAID</th>
-					<th class="column info-edit">INFO</th>
 				</tr>
-			</thead>
-				<% }
-				for (let j = 0; j < orders[i].recipients.length; j += 1) {
+			</thead><% }
+				let length;
+				let collection;
+				if (orders[i].delivery.type === 'collection') {
+					collection = true;
+					length = 1;
+				} else {
+					collection = false;
+					length = orders[i].recipients.length;
+				}
+				for (let j = 0; j < length; j += 1) {
+					let recipient;
+					recipient = collection ? orders[i] : orders[i].recipients[j];
 				%>
-				<tr>
+				<tr data-toggle="collapse" data-target="<%=`#ID-${j}-${orders[i]._id}` %>">
 					<td><%=timestamp.toLocaleDateString() %></td>
 					<td><%=timestamp.toLocaleTimeString() %></td>
-					<td><%=orders[i].recipients[j].name %></td>
+					<td><%=recipient.details.name %></td>
 					<td>
-						<%=orders[i].recipients[j].address %>&nbsp;
-						<a href="<%=orders[i].recipients[j].url %>" target="_blank" rel="external">
+						<% if (collection) { %>Collection<% } else { %><%=recipient.delivery.address %>&nbsp;
+						<a href="<%=recipient.delivery.url %>" target="_blank" rel="external">
 							<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
-						</a>
+						</a><% } %>
 					</td>
 					<td class="info-paid"><%
 						if (orders[i].payment.paid) {
@@ -90,14 +99,9 @@
 						} else {
 							%><img class="icon" src="/icons/cross.svg" alt="Not yet paid" /><%
 						} %></td>
-					<td class="info-edit">
-						<a data-toggle="collapse" data-target="<%=`#ID-${j}-${orders[i]._id}` %>">
-							<img class="icon" src="/icons/info.svg" alt="View Details" />
-						</a>
-					</td>
 				</tr>
 				<tr class="collapsingRow">
-					<td class="hiddenRow" colspan="6">
+					<td class="hiddenRow" colspan="5">
 						<div class="card collapse" id="<%=`ID-${j}-${orders[i]._id}` %>">
 							<div class="card-body row">
 								<div class="col-md-6">
@@ -107,18 +111,23 @@
 										</li>
 										<li>
 											<span class="user-info-detail">NAME:</span>
-											<%=orders[i].purchaser.name %>
+											<%=orders[i].details.name %>
 										</li>
 										<li>
 											<span class="user-info-detail">PHONE NUMBER:</span>
-											<%=orders[i].purchaser.telephone %>
+											<%=orders[i].details.telephone %>
 										</li>
 										<li>
 											<span class="user-info-detail">E-MAIL ADDRESS:</span>
-											<a href="mailto:<%=orders[i].purchaser.email %>"><%=orders[i].purchaser.email %></a>
+											<a href="mailto:<%=orders[i].details.email %>"><%=orders[i].details.email %></a>
 										</li>
 									</ul>
 
+									<% if (collection) { %>
+								</div>
+
+								<div class="col-md-6">
+									<% } %>
 									<ul class="user-info-list">
 										<li>
 											<span class="user-info-subtitle">Payment</span>
@@ -139,40 +148,34 @@
 								</div>
 
 								<div class="col-md-6">
+									<% if (!collection) { %>
 									<ul class="user-info-list">
 										<li>
 											<span class="user-info-subtitle">Recipient</span>
 										</li>
 										<li>
 											<span class="user-info-detail">NAME:</span>
-										<%=orders[i].recipients[j].name %>
+										<%=recipient.details.name %>
 										</li>
 										<li>
 											<span class="user-info-detail">PHONE NUMBER:</span>
-										<%=orders[i].recipients[j].telephone %>
+										<%=recipient.details.telephone %>
 										</li>
 										<li>
 											<span class="user-info-detail">NOTES:</span>
-											<%=orders[i].recipients[j].addressNotes %>
+											<%=recipient.delivery.addressNotes %>
 										</li>
 										<li>
 											<span class="user-info-detail">MESSAGE:</span>
-											<%=orders[i].recipients[j].message %>
+											<%=recipient.delivery.message %>
 										</li>
 									</ul>
+									<% } %>
 
 									<ul class="user-info-list">
 										<li>
-											<span class="user-info-detail">COMBO BOXES:</span>
-											<%=orders[i].recipients[j].numComboBoxes %>
-										</li>
-										<li>
-											<span class="user-info-detail">TREAT BOXES:</span>
-											<%=orders[i].recipients[j].numTreatBoxes %>
-										</li>
-										<li>
-											<span class="user-info-detail">VEGETABLE BOXES:</span>
-											<%=orders[i].recipients[j].numVegetableBoxes %>
+											<span class="user-info-detail">ORDER:</span>
+											<%=getReadableOrder(recipient.items) %>
 										</li>
 									</ul>
 								</div>

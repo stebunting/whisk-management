@@ -10,10 +10,10 @@ const {
   insertTreatBoxOrder,
   getTreatBoxOrders,
   updateTreatBoxOrders,
-  getTreatBoxTotals,
-  removeTreatBoxOrder
+  getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
-const { sendConfirmationEmail } = require('../../lib/email/email')()
+const { sendConfirmationEmail } = require('../../lib/email/email')();
+const { loginCheck } = require('../controllers/authController')();
 
 // Pricing
 const comboBoxPrice = 49000;
@@ -37,11 +37,11 @@ function routes() {
   function getWeekData(week) {
     const data = {
       delivery: moment()
-      .tz('Europe/Stockholm')
-      .week(week)
-      .startOf('isoWeek')
-      .add(2, 'days')
-    }
+        .tz('Europe/Stockholm')
+        .week(week)
+        .startOf('isoWeek')
+        .add(2, 'days')
+    };
     data.deadline = data.delivery.clone()
       .subtract(1, 'day')
       .hours(11)
@@ -54,16 +54,31 @@ function routes() {
       .minutes(0)
       .seconds(0)
       .milliseconds(0);
-    data.orderable= data.deadline.isAfter();
+    data.orderable = data.deadline.isAfter();
     data.vegetablesOrderable = data.vegetableDeadline.isAfter();
     data.week = data.delivery.week();
     data.year = data.delivery.year();
     return data;
   }
 
+  function getReadableOrder(order) {
+    let str = '';
+    if (order.comboBoxes > 0) {
+      str = `${str}${order.comboBoxes} x Combo Box${order.comboBoxes !== 1 ? 'es' : ''}`;
+    }
+    if (order.treatBoxes > 0) {
+      str = `${str}${str.length > 0 ? ', ' : ''}${order.treatBoxes} x Treat Box${order.treatBoxes !== 1 ? 'es' : ''}`;
+    }
+    if (order.vegetableBoxes > 0) {
+      str = `${str}${str.length > 0 ? ', ' : ''}${order.vegetableBoxes} x Vegetable Box${order.vegetableBoxes !== 1 ? 'es' : ''}`;
+    }
+    return str;
+  }
+
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
     .get((req, res) => {
+      let week;
       if (moment().isoWeekday() < 3) {
         week = moment().week();
       } else {
@@ -105,12 +120,12 @@ function routes() {
       debug(req.body);
 
       const info = {
-        itemsOrdered: {
+        items: {
           comboBoxes: parseInt(req.body['num-comboboxes'] || 0, 10),
           treatBoxes: parseInt(req.body['num-treatboxes'] || 0, 10),
           vegetableBoxes: parseInt(req.body['num-vegetableboxes'] || 0, 10)
         },
-        purchaser: {
+        details: {
           name: req.body.name || '',
           email: req.body.email || '',
           telephone: req.body.telephone || ''
@@ -149,17 +164,23 @@ function routes() {
           while (`name-${i}` in req.body) {
             const recipient = {
               itemsToDeliver: req.body[`items-to-deliver-${i}`],
-              numComboBoxes: parseInt(req.body[`recipient-num-comboboxes-${i}`], 10),
-              numTreatBoxes: parseInt(req.body[`recipient-num-treatboxes-${i}`], 10),
-              numVegetableBoxes: parseInt(req.body[`recipient-num-vegetableboxes-${i}`], 10),
-              name: req.body[`name-${i}`],
-              telephone: req.body[`telephone-${i}`],
-              address: req.body[`address-${i}`],
-              addressNotes: req.body[`notes-address-${i}`],
-              zone: parseInt(req.body[`zone-${i}`], 10),
-              message: req.body[`message-${i}`],
+              itesm: {
+                comboBoxes: parseInt(req.body[`recipient-num-comboboxes-${i}`], 10),
+                treatBoxes: parseInt(req.body[`recipient-num-treatboxes-${i}`], 10),
+                vegetableBoxes: parseInt(req.body[`recipient-num-vegetableboxes-${i}`], 10)
+              },
+              details: {
+                name: req.body[`name-${i}`],
+                telephone: req.body[`telephone-${i}`]
+              },
+              delivery: {
+                address: req.body[`address-${i}`],
+                addressNotes: req.body[`notes-address-${i}`],
+                zone: parseInt(req.body[`zone-${i}`], 10),
+                message: req.body[`message-${i}`]
+              }
             };
-            if (recipient.zone === 2) {
+            if (recipient.delivery.zone === 2) {
               info.cost.delivery += zone2DeliveryCost;
             }
             info.recipients.push(recipient);
@@ -170,9 +191,9 @@ function routes() {
           break;
       }
 
-      info.cost.food = info.itemsOrdered.comboBoxes * comboBoxPrice
-        + info.itemsOrdered.treatBoxes * treatBoxPrice
-        + info.itemsOrdered.vegetableBoxes * vegetableBoxPrice;
+      info.cost.food = info.items.comboBoxes * comboBoxPrice
+        + info.items.treatBoxes * treatBoxPrice
+        + info.items.vegetableBoxes * vegetableBoxPrice;
       info.cost.foodMoms = priceFormat(info.cost.food - (info.cost.food / 1.12));
       info.cost.deliveryMoms = priceFormat(info.cost.delivery - (info.cost.delivery / 1.25));
 
@@ -191,12 +212,12 @@ function routes() {
       const callbackUrl = req.body['callback-url'];
 
       const order = {
-        itemsOrdered: {
+        items: {
           comboBoxes: parseInt(req.body['num-comboboxes'] || 0, 10),
           treatBoxes: parseInt(req.body['num-treatboxes'] || 0, 10),
           vegetableBoxes: parseInt(req.body['num-vegetableboxes'] || 0, 10)
         },
-        purchaser: {
+        details: {
           name: req.body.name,
           email: req.body.email,
           telephone: req.body.telephone
@@ -219,44 +240,67 @@ function routes() {
       };
 
       let i = 0;
-
+      let recipient;
+      let q;
       switch (order.delivery.type) {
         case 'collection':
 
           break;
         case 'delivery':
           order.recipients = [];
-          const recipient = {
-            numComboBoxes: order.itemsOrdered.comboBoxes,
-            numTreatBoxes: order.itemsOrdered.treatBoxes,
-            numVegetableBoxes: order.itemsOrdered.vegetableBoxes,
-            name: order.purchaser.name,
-            telephone: order.purchaser.telephone,
-            address: req.body.address,
-            addressNotes: req.body['notes-address'],
-            zone: parseInt(req.body.zone, 10),
-            message: ''
-          }
-            order.recipients.push(recipient);
-          if (order.zone === 2) {
+          recipient = {
+            items: {
+              comboBoxes: order.items.comboBoxes,
+              treatBoxes: order.items.treatBoxes,
+              vegetableBoxes: order.items.vegetableBoxes
+            },
+            details: {
+              name: order.details.name,
+              telephone: order.details.telephone
+            },
+            delivery: {
+              address: req.body.address,
+              addressNotes: req.body['notes-address'],
+              zone: parseInt(req.body.zone, 10),
+              message: ''
+            }
+          };
+          q = querystring.stringify({
+            api: 1,
+            query: recipient.delivery.address
+          });
+          recipient.delivery.url = `https://www.google.com/maps/search/?${q}`;
+
+          order.recipients.push(recipient);
+          if (order.delivery.zone === 2) {
             order.cost.delivery += zone2DeliveryCost;
           }
           break;
         case 'split-delivery':
           order.recipients = [];
           while (`name-${i}` in req.body) {
-            const recipient = {
-              itemsToDeliver: req.body[`items-to-deliver-${i}`],
-              numComboBoxes: parseInt(req.body[`recipient-num-comboboxes-${i}`], 10),
-              numTreatBoxes: parseInt(req.body[`recipient-num-treatboxes-${i}`], 10),
-              numVegetableBoxes: parseInt(req.body[`recipient-num-vegetableboxes-${i}`], 10),
-              name: req.body[`name-${i}`],
-              telephone: req.body[`telephone-${i}`],
-              address: req.body[`address-${i}`],
-              addressNotes: req.body[`notes-address-${i}`],
-              zone: parseInt(req.body[`zone-${i}`], 10),
-              message: req.body[`message-${i}`],
+            recipient = {
+              items: {
+                comboBoxes: parseInt(req.body[`recipient-num-comboboxes-${i}`], 10),
+                treatBoxes: parseInt(req.body[`recipient-num-treatboxes-${i}`], 10),
+                vegetableBoxes: parseInt(req.body[`recipient-num-vegetableboxes-${i}`], 10)
+              },
+              details: {
+                name: req.body[`name-${i}`],
+                telephone: req.body[`telephone-${i}`]
+              },
+              delivery: {
+                address: req.body[`address-${i}`],
+                addressNotes: req.body[`notes-address-${i}`],
+                zone: parseInt(req.body[`zone-${i}`], 10),
+                message: req.body[`message-${i}`],
+              }
             };
+            q = querystring.stringify({
+              api: 1,
+              query: recipient.delivery.address
+            });
+            recipient.delivery.url = `https://www.google.com/maps/search/?${q}`;
             if (recipient.zone === 2) {
               order.cost.delivery += zone2DeliveryCost;
             }
@@ -269,10 +313,10 @@ function routes() {
       }
 
       insertTreatBoxOrder(order);
-      //sendConfirmationEmail(order);
+      // sendConfirmationEmail(order);
 
       const query = querystring.stringify({
-        name: order.purchaser.name
+        name: order.details.name
       });
       return res.redirect(`${callbackUrl}?${query}`);
     });
@@ -281,27 +325,21 @@ function routes() {
     .get((req, res) => res.send('ok'));
 
   treatBoxRoutes.route('/orders')
+    .all(loginCheck)
     .get(async (req, res) => {
       const orders = await getTreatBoxOrders();
       const totals = await getTreatBoxTotals();
 
-      for (let i = 0; i < orders.length; i += 1) {
-        for (let j = 0; j < orders[i].recipients.length; j += 1) {
-          const q = querystring.stringify({
-            api: 1,
-            query: orders[i].recipients[j].address
-          });
-          orders[i].recipients[j].url = `https://www.google.com/maps/search/?${q}`;
-        }
-      }
       res.render('treatboxOrders', {
         orders,
         totals,
-        getWeekData
+        getWeekData,
+        getReadableOrder
       });
     });
 
   treatBoxRoutes.route('/orders/markaspaid/:id')
+    .all(loginCheck)
     .get(async (req, res) => {
       const { id } = req.params;
       await updateTreatBoxOrders(id, { 'payment.paid': true });

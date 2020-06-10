@@ -90,45 +90,51 @@ describe('Database Control Connection Tests', () => {
 
   describe('Add new treatbox order to database', () => {
     const order = {
-      itemsOrdered: {
+      items: {
         comboBoxes: 3,
         treatBoxes: 2,
         vegetableBoxes: 4
       },
-      purchaser: {
-        name: 'Dina Mystris',
-        email: 'hello@whisk.se',
-        telephone: '07787448962'
+      details: {
+        name: 'John Davis',
+        email: 'john.davis@davismail.se',
+        telephone: '0733285654'
       },
       delivery: {
         date: '2020-25',
-        type: 'split-delivery'
+        type: 'delivery'
       },
       cost: {
-        food: 740,
+        food: 490,
         delivery: 0,
-        foodMoms: 79,
+        foodMoms: 53,
         deliveryMoms: 0,
-        total: 740
+        total: 490
       },
-      recipients: [
-        {
-          itemsToDeliver: '1 x Combo Box, 1 x Vegetable Box',
-          numComboBoxes: 3,
-          numTreatBoxes: 2,
-          numVegetableBoxes: 4,
-          name: 'Stephen Bunting',
-          telephone: '07754326547',
-          address: 'Sandhamnsgatan 57, 115 28 Stockholm, Sweden',
-          addressNotes: 'Doorcode 2288',
-          zone: 1,
-          message: 'Message for Ste'
-        }
-      ],
       payment: {
         method: 'Invoice',
         paid: false
-      }
+      },
+      recipients: [
+        {
+          items: {
+            comboBoxes: 3,
+            treatBoxes: 2,
+            vegetableBoxes: 4
+          },
+          details: {
+            name: 'John Davis',
+            telephone: '0733285654'
+          },
+          delivery: {
+            address: 'Roslagsgatan 34, 113 55 Stockholm, Sweden',
+            addressNotes: 'Doorcode 1234',
+            zone: 1,
+            message: '',
+            url: 'https://www.google.com/maps/search/?api=1&query=Roslagsgatan%2034%2C%20113%2055%20Stockholm%2C%20Sweden'
+          }
+        }
+      ]
     };
 
     it('connects to client', async () => {
@@ -165,7 +171,7 @@ describe('Database Control Connection Tests', () => {
       assert.equal(response[0].treatBoxesToMake, 10);
       assert.equal(response[0].vegetableBoxesToOrder, 14);
       assert.equal(response[0].deliveries, 2);
-      assert.equal(response[0].income, 1480);
+      assert.equal(response[0].income, 980);
     });
 
     it('updates order to paid', async () => {
