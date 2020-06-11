@@ -54,7 +54,8 @@
     "env": {
       "NODE_ENV": "development",
       "PORT": 3000,
-      "DEBUG": "whisk-management,whisk-management:*"
+      "DEBUG": "whisk-management,whisk-management:*",
+      "DEBUG_DEPTH": 3
     }
   }
 }
