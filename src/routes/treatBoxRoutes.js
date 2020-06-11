@@ -13,6 +13,7 @@ const {
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
 const { sendConfirmationEmail } = require('../../lib/email/email')();
+const { verify } = require('../../lib/verify/verify')();
 const { loginCheck } = require('../controllers/authController')();
 
 // Pricing
@@ -147,6 +148,7 @@ function routes() {
               address: postData[`address-${recipientId}`],
               addressNotes: postData[`notes-address-${recipientId}`],
               url: getGoogleMapsUrl(postData[`address-${recipientId}`]),
+              googleFormattedAddress: postData[`google-formatted-address-${recipientId}`],
               zone: parseInt(postData[`zone-${recipientId}`], 10),
               message: postData[`message-${recipientId}`]
             }
@@ -173,6 +175,82 @@ function routes() {
     order.cost = cost;
 
     return order;
+  }
+
+  function validateItems(items) {
+    return Object.prototype.hasOwnProperty.call(items, 'comboBoxes')
+        && verify(items.comboBoxes, 'number')
+        && Object.prototype.hasOwnProperty.call(items, 'treatBoxes')
+        && verify(items.treatBoxes, 'number')
+        && Object.prototype.hasOwnProperty.call(items, 'vegetableBoxes')
+        && verify(items.vegetableBoxes, 'number');
+  }
+
+  function validateDetails(details) {
+    return Object.prototype.hasOwnProperty.call(details, 'name')
+        && verify(details.name, 'name')
+        && Object.prototype.hasOwnProperty.call(details, 'telephone')
+        && verify(details.telephone, 'telephone');
+  }
+
+  function validateRecipient(recipient) {
+    return Object.prototype.hasOwnProperty.call(recipient, 'items')
+        && validateItems(recipient.items)
+        && Object.prototype.hasOwnProperty.call(recipient, 'details')
+        && validateDetails(recipient.details)
+        && Object.prototype.hasOwnProperty.call(recipient, 'delivery')
+        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'address')
+        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'googleFormattedAddress')
+        && verify(recipient.delivery.address, 'string')
+        && recipient.delivery.address === recipient.delivery.googleFormattedAddress
+        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'addressNotes')
+        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'url')
+        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'zone')
+        && verify(recipient.delivery.zone, 'number')
+        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'message');
+  }
+
+  function validateOrder(order) {
+    let valid = Object.prototype.hasOwnProperty.call(order, 'items')
+             && validateItems(order.items)
+             && Object.prototype.hasOwnProperty.call(order, 'details')
+             && validateDetails(order.details)
+             && Object.prototype.hasOwnProperty.call(order.details, 'email')
+             && verify(order.details.email, 'email')
+             && Object.prototype.hasOwnProperty.call(order, 'delivery')
+             && Object.prototype.hasOwnProperty.call(order.delivery, 'date')
+             && Object.prototype.hasOwnProperty.call(order.delivery, 'type')
+             && Object.prototype.hasOwnProperty.call(order, 'cost')
+             && Object.prototype.hasOwnProperty.call(order.cost, 'food')
+             && Object.prototype.hasOwnProperty.call(order.cost, 'delivery')
+             && Object.prototype.hasOwnProperty.call(order.cost, 'foodMoms')
+             && Object.prototype.hasOwnProperty.call(order.cost, 'deliveryMoms')
+             && Object.prototype.hasOwnProperty.call(order.cost, 'total');
+
+    switch (order.delivery.type) {
+      case 'collection':
+        return valid;
+
+      case 'delivery':
+        return valid
+            && Object.prototype.hasOwnProperty.call(order, 'recipients')
+            && order.recipients.length === 1
+            && validateRecipient(order.recipients[0]);
+
+      case 'split-delivery':
+        valid = valid
+             && Object.prototype.hasOwnProperty.call(order, 'recipients')
+             && order.recipients.length >= 1;
+
+        order.recipients.forEach((recipient) => {
+          valid = valid && validateRecipient(recipient);
+        });
+
+        return valid;
+
+      default:
+        return false;
+    }
   }
 
   // API to return important information
@@ -220,11 +298,9 @@ function routes() {
       const { referer } = req.headers;
       const { 'callback-url': callbackUrl } = req.body;
 
-      const valid = true;
       const order = parsePostData(req.body);
 
-      debug(order);
-      if (valid) {
+      if (validateOrder(order)) {
         return res.redirect(307, callbackUrl);
       }
       return res.redirect(307, referer);
@@ -238,6 +314,7 @@ function routes() {
       const order = parsePostData(req.body);
       order.payment = {
         method: req.body['payment-method'],
+        invoiced: false,
         paid: false
       };
 
@@ -274,6 +351,14 @@ function routes() {
     .get(async (req, res) => {
       const { id } = req.params;
       await updateTreatBoxOrders(id, { 'payment.paid': true });
+      return res.redirect('/treatbox/orders');
+    });
+
+  treatBoxRoutes.route('/orders/markasinvoiced/:id')
+    .all(loginCheck)
+    .get(async (req, res) => {
+      const { id } = req.params;
+      await updateTreatBoxOrders(id, { 'payment.invoiced': true });
       return res.redirect('/treatbox/orders');
     });
 

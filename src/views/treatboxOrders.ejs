@@ -10,7 +10,7 @@
 				%>
 		<table class="table table-bordered">
 			<thead>
-				<tr>
+				<tr class="table-info">
 					<td colspan="5">
 						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
 							<div class="card">
@@ -67,14 +67,16 @@
 					<th class="column">ORDER TIME</th>
 					<th class="column">NAME</th>
 					<th class="column">ADDRESS</th>
-					<th class="column info-paid">PAID</th>
+					<th class="column info-status">STATUS</th>
 				</tr>
 			</thead><% }
 				let length;
 				let collection;
+				let trClass = '';
 				if (orders[i].delivery.type === 'collection') {
 					collection = true;
 					length = 1;
+					trClass = 'table-warning';
 				} else {
 					collection = false;
 					length = orders[i].recipients.length;
@@ -83,7 +85,7 @@
 					let recipient;
 					recipient = collection ? orders[i] : orders[i].recipients[j];
 				%>
-				<tr data-toggle="collapse" data-target="<%=`#ID-${j}-${orders[i]._id}` %>">
+				<tr class="<%=trClass %>" data-toggle="collapse" data-target="<%=`#ID-${j}-${orders[i]._id}` %>">
 					<td><%=timestamp.toLocaleDateString() %></td>
 					<td><%=timestamp.toLocaleTimeString() %></td>
 					<td><%=recipient.details.name %></td>
@@ -93,14 +95,16 @@
 							<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
 						</a><% } %>
 					</td>
-					<td class="info-paid"><%
+					<td class="info-status"><%
 						if (orders[i].payment.paid) {
-							%><img class="icon" src="/icons/tick.svg" alt="Paid!" /><%
+							%><img class="icon" src="/icons/paid.svg" alt="Paid!" /><%
+						} else if (orders[i].payment.invoiced) {
+							%><img class="icon" src="/icons/invoice.svg" alt="Invoiced" /><%
 						} else {
-							%><img class="icon" src="/icons/cross.svg" alt="Not yet paid" /><%
+							%><img class="icon" src="/icons/cross.svg" alt="Ordered" /><%
 						} %></td>
 				</tr>
-				<tr class="collapsingRow">
+				<tr class="collapsingRow <%=trClass %>">
 					<td class="hiddenRow" colspan="5">
 						<div class="card collapse" id="<%=`ID-${j}-${orders[i]._id}` %>">
 							<div class="card-body row">
@@ -141,9 +145,14 @@
 											<%=orders[i].payment.method%>
 										</li>
 										<li>
-											<span class="user-info-detail">PAID:</span>
-											<%if (orders[i].payment.paid) { %>Yes<% } else { %>
-											No <a href="/treatbox/orders/markaspaid/<%=orders[i]._id %>">(Mark as Paid)</a><%} %></li>
+											<span class="user-info-detail">STATUS:</span>
+											<%if (orders[i].payment.paid) {
+												%>Paid<%
+											} else if (orders[i].payment.invoiced) {
+												%>Invoiced <a href="/treatbox/orders/markaspaid/<%=orders[i]._id %>">(Mark as Paid)</a>
+											<%
+											} else {
+												%>Ordered <a href="/treatbox/orders/markasinvoiced/<%=orders[i]._id %>">(Mark as Invoiced)</a><%} %></li>
 									</ul>
 								</div>
 

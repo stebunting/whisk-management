@@ -70,5 +70,19 @@ describe('Verification Tests', () => {
       assert.ok(verify('jkl!@£$%^&*hujd@gma1l.com', 'email'));
       assert.ok(verify('this@that.se', 'email'));
     });
+
+    it('returns false for badly formatted telephone number', async () => {
+      assert.ok(verify('00[4]6789263746', 'telephone') === false);
+      assert.ok(verify('07818965', 'telephone') === false);
+      assert.ok(verify('7813653351432', 'telephone') === false);
+      assert.ok(verify('098-432-(98)-6', 'telephone') === false);
+    });
+
+    it('returns true for well formatted telephone number', async () => {
+      assert.ok(verify('+46 73-328 90 45', 'telephone'));
+      assert.ok(verify('(0) 7754 637 432', 'telephone'));
+      assert.ok(verify('067867567843', 'telephone'));
+      assert.ok(verify('07787(8)8794', 'telephone'));
+    });
   });
 });
