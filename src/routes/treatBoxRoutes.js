@@ -15,12 +15,9 @@ const {
 const { sendConfirmationEmail } = require('../../lib/email/email')();
 const { verify } = require('../../lib/verify/verify')();
 const { loginCheck } = require('../controllers/authController')();
+const { getSettings } = require('../../lib/db-control/db-control')();
 
 // Pricing
-const comboBoxPrice = 49000;
-const treatBoxPrice = 25000;
-const vegetableBoxPrice = 25000;
-const zone2DeliveryCost = 5000;
 const foodMoms = 1.12;
 const deliveryMoms = 1.25;
 
@@ -86,7 +83,9 @@ function routes() {
     return `https://www.google.com/maps/search/?${q}`;
   }
 
-  function parsePostData(postData) {
+  async function parsePostData(postData) {
+    const settings = await getSettings('treatbox');
+
     const order = {
       items: {
         comboBoxes: parseInt(postData['num-comboboxes'], 10),
@@ -125,7 +124,7 @@ function routes() {
       };
       order.recipients = [recipient];
       if (recipient.delivery.zone === 2) {
-        cost.delivery += zone2DeliveryCost;
+        cost.delivery += settings.delivery.zone2.price;
       }
     } else if (order.delivery.type === 'split-delivery') {
       const numRecipients = parseInt(postData.recipients, 10);
@@ -154,7 +153,7 @@ function routes() {
             }
           };
           if (recipient.delivery.zone === 2) {
-            cost.delivery += zone2DeliveryCost;
+            cost.delivery += settings.delivery.zone2.price;
           }
           recipients.push(recipient);
           i += 1;
@@ -164,9 +163,9 @@ function routes() {
       order.recipients = recipients;
     }
 
-    cost.food = order.items.comboBoxes * comboBoxPrice
-      + order.items.treatBoxes * treatBoxPrice
-      + order.items.vegetableBoxes * vegetableBoxPrice;
+    cost.food = order.items.comboBoxes * settings.food.comboBox.price
+      + order.items.treatBoxes * settings.food.treatBox.price
+      + order.items.vegetableBoxes * settings.food.vegetableBox.price;
     cost.foodMoms = priceFormat(cost.food - (cost.food / foodMoms));
     cost.deliveryMoms = priceFormat(cost.delivery - (cost.delivery / deliveryMoms));
     cost.total = priceFormat(cost.food + cost.delivery);
@@ -255,7 +254,10 @@ function routes() {
 
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
-    .get((req, res) => {
+    .get(async (req, res) => {
+      const settings = await getSettings('treatbox');
+      debug(settings);
+
       let week;
       if (moment().isoWeekday() < 3) {
         week = moment().week();
@@ -272,14 +274,14 @@ function routes() {
       const info = {
         cost: {
           food: {
-            comboBox: comboBoxPrice,
-            treatBox: treatBoxPrice,
-            vegetableBox: vegetableBoxPrice
+            comboBox: settings.food.comboBox.price,
+            treatBox: settings.food.treatBox.price,
+            vegetableBox: settings.food.vegetableBox.price
           },
           delivery: {
             local: 0,
             zone1: 0,
-            zone2: zone2DeliveryCost
+            zone2: settings.delivery.zone2.price
           }
         },
         momsRate: {
@@ -298,7 +300,7 @@ function routes() {
       const { referer } = req.headers;
       const { 'callback-url': callbackUrl } = req.body;
 
-      const order = parsePostData(req.body);
+      const order = await parsePostData(req.body);
 
       if (validateOrder(order)) {
         return res.redirect(307, callbackUrl);
@@ -308,10 +310,10 @@ function routes() {
 
   // Invoice payment route
   treatBoxRoutes.route('/invoicepayment')
-    .post((req, res) => {
+    .post(async (req, res) => {
       const { 'callback-url': callbackUrl } = req.body;
 
-      const order = parsePostData(req.body);
+      const order = await parsePostData(req.body);
       order.payment = {
         method: req.body['payment-method'],
         invoiced: false,
@@ -339,6 +341,7 @@ function routes() {
       const totals = await getTreatBoxTotals();
 
       res.render('treatboxOrders', {
+        user: req.user,
         orders,
         totals,
         getWeekData,

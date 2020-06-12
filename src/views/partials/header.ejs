@@ -19,9 +19,21 @@
         <li class="nav-item">
           <a class="nav-link" href="/treatbox/orders">Treatbox Orders</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/auth/logout">Logout</a>
-        </li>
+
+        <%if (typeof user != 'undefined') {
+        %><li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=user.username%></a>
+            <div class="dropdown-menu" aria-labelledby="userDropdown">
+              <a class="dropdown-item" href="/user/dashboard">Dashboard</a>
+              <a class="dropdown-item" href="/user/settings">Settings</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="/auth/logout">Logout</a>
+            </div>
+          </li><%
+        } else {
+        %><li class="nav-item">
+            <a class="nav-link" href="/auth/signin">Sign-In</a>
+        </li><% } %>
       </ul>
     </div>
   </nav>

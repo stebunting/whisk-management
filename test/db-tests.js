@@ -11,6 +11,8 @@ const {
   setupDb,
   insertUser,
   getUser,
+  getSettings,
+  updateSettings,
   insertTreatBoxOrder,
   getTreatBoxOrders,
   updateTreatBoxOrders,
@@ -199,6 +201,41 @@ describe('Database Control Connection Tests', () => {
       assert.ok(!isConnected());
     });
   });
+
+  describe('Add and update settings', () => {
+    const settings = {
+      type: 'treatbox',
+      price: {
+        comboBox: 49000
+      }
+    }
+
+    it('connects to client', async () => {
+      await connect();
+      assert.ok(isConnected());
+    });
+
+    it('adds settings to database', async () => {
+      const response = await updateSettings(settings);
+      assert.equal(response.upsertedCount, 1);
+      assert.ok(isConnected());
+    });
+
+    it('update settings', async () => {
+      settings.price.comboBox = 50000
+      const response = await updateSettings(settings);
+    })
+
+    it('retrieves settings', async () => {
+      const response = await getSettings('treatbox');
+      assert.deepEqual(response.price, settings.price);
+    })
+
+    it('disconnects', () => {
+      disconnect();
+      assert.ok(!isConnected());
+    });
+  })
 
   describe('Attempt to perform functions when not connected', () => {
     const newUser = {
