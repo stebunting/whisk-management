@@ -3,6 +3,10 @@ const tag = 'whisk-management:treatBoxRoutes';
 
 // Requirements
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 const querystring = require('querystring');
 const moment = require('moment-timezone');
 const debug = require('debug')(tag);
@@ -322,7 +326,7 @@ function routes() {
 
       debug(order);
 
-      insertTreatBoxOrder(order);
+      // insertTreatBoxOrder(order);
       // sendConfirmationEmail(order);
 
       const query = querystring.stringify({
@@ -332,7 +336,42 @@ function routes() {
     });
 
   treatBoxRoutes.route('/requestpayment')
-    .get((req, res) => res.send('ok'));
+    .get(async (req, res) => {
+      const httpsAgent = new https.Agent({
+        cert: fs.readFileSync('cert/test.pem'),
+        key: fs.readFileSync('cert/test.key'),
+        ca: fs.readFileSync('cert/test-ca.pem')
+      });
+      const config = {
+        method: 'put',
+        url: `https://mss.cpc.getswish.net/swish-cpcapi/api/v2/paymentrequests/${uuidv4()}`,
+        httpsAgent,
+        header: {
+          'Content-Type': 'application/json'
+        },
+        data: {
+          callbackUrl: 'https://c136f9b3519b.ngrok.io/treatbox/swishcallback',
+          payeeAlias: '1234679304',
+          payerAlias: '0733283460',
+          amount: 100,
+          currency: 'SEK'
+        }
+      };
+
+      let response;
+      try {
+        response = await axios(config);
+      } catch (error) {
+        return res.send(error.stack);
+      }
+
+    });
+
+  treatBoxRoutes.route('/swishcallback')
+    .post((req, res) => {
+      debug(req.body);
+      return res.send('ok');
+    })
 
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
