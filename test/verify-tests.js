@@ -3,7 +3,7 @@ const tag = 'whisk-management:verify-tests';
 
 // Requirements
 const assert = require('assert');
-const { verify } = require('../lib/verify/verify')(tag);
+const { verify } = require('../lib/verify/verify')();
 
 describe('Verification Tests', () => {
   describe('Verify strings', () => {
