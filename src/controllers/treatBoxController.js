@@ -3,20 +3,22 @@ const tag = 'whisk-management:treatBoxController';
 
 // Requirements
 const moment = require('moment-timezone');
+const url = require('url');
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const { verify } = require('../../lib/verify/verify')();
-const { getSettings } = require('../../lib/db-control/db-control')(tag);
+const { insertTreatBoxOrder, getSettings } = require('../../lib/db-control/db-control')(tag);
+
+const callbackRoot = 'https://95b2ae6ba9bc.ngrok.io';
 
 // Test Constants
-const swish = {
+const swishTest = {
   alias: '1234679304',
   baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
-  callbackRoot: 'https://95b2ae6ba9bc.ngrok.io',
+  callbackRoot,
   httpsAgent: new https.Agent({
     cert: fs.readFileSync('cert/test.pem'),
     key: fs.readFileSync('cert/test.key'),
@@ -25,11 +27,17 @@ const swish = {
 };
 
 // Production Constants
-// const swish = {
-//   alias: '',
-//   baseUrl: 'https://swicpc.bankgirot.se/swish-cpcapi',
-//   callbackRoot: ''
-// }
+const swishProduction = {
+  alias: '1230655860',
+  baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
+  callbackRoot,
+  httpsAgent: new https.Agent({
+    cert: fs.readFileSync('cert/prod.pem'),
+    key: fs.readFileSync('cert/prod.key')
+  })
+};
+
+const swish = swishTest;
 
 // Pricing
 const foodMoms = 1.12;
@@ -79,6 +87,20 @@ function treatBoxController() {
       query: address
     });
     return `https://www.google.com/maps/search/?${q}`;
+  }
+
+  function parseSwishAlias(telephone) {
+    let alias = telephone.replace(/\D/g,'');
+    if (alias.charAt(0) === '0') {
+      alias = `46${alias.substring(1)}`;
+    } else if (alias.substring(0, 2) === '46') {
+      if (alias.charAt(2) === '0') {
+        alias = `46${alias.substring(3)}`;
+      } else {
+        alias = `46${alias.substring(2)}`;
+      }
+    }
+    return alias;
   }
 
   function validateItems(items) {
@@ -252,7 +274,6 @@ function treatBoxController() {
 
   async function getDetails(req, res) {
     const settings = await getSettings('treatbox');
-    debug(settings);
 
     let week;
     if (moment().isoWeekday() < 3) {
@@ -320,6 +341,7 @@ function treatBoxController() {
   }
 
   async function orderConfirmed(req, res) {
+    const referer = req.headers.referer.split('?')[0];
     const { 'callback-url': callbackUrl } = req.body;
 
     const order = await parsePostData(req.body);
@@ -332,7 +354,7 @@ function treatBoxController() {
     debug(order);
 
     if (order.payment.method === 'Invoice') {
-      // insertTreatBoxOrder(order);
+      insertTreatBoxOrder(order);
       // sendConfirmationEmail(order);
 
       const query = querystring.stringify({
@@ -342,10 +364,10 @@ function treatBoxController() {
     }
 
     if (order.payment.method === 'Swish') {
-      const paymentId = uuidv4();
+      order.payment.payerAlias = parseSwishAlias(order.details.telephone);
       const apiConfig = {
-        method: 'put',
-        url: `${swish.baseUrl}/api/v2/paymentrequests/${paymentId}`,
+        method: 'post',
+        url: `${swish.baseUrl}/api/v1/paymentrequests`,
         httpsAgent: swish.httpsAgent,
         header: {
           'Content-Type': 'application/json'
@@ -353,7 +375,7 @@ function treatBoxController() {
         data: {
           callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
           payeeAlias: swish.alias,
-          payerAlias: order.details.telephone,
+          payerAlias: order.payment.payerAlias,
           amount: order.cost.total,
           currency: 'SEK'
         }
@@ -361,32 +383,49 @@ function treatBoxController() {
 
       try {
         const response = await axios(apiConfig);
-        debug(response.data);
+        order.payment.id = response.headers.location.split('/');
+        order.payment.id = order.payment.id[order.payment.id.length - 1];
       } catch (error) {
-        return res.send(error.stack);
+        let errors = '';
+        if (error.response.data.length > 0) {
+          errors = error.response.data.map(x => x.errorCode).join(',');
+        }
+        const query = querystring.stringify({
+          status: errors
+        });
+        return res.redirect(307, `${referer}?${query}`);
       }
 
       (async function checkStatus() {
         setTimeout(() => {
-          getPaymentResult(paymentId).then((response) => {
-            debug(response.status);
-            if (response.status === 'CREATED') {
-              checkStatus();
-            } else {
-              debug(response);
-
+          getPaymentResult(order.payment.id).then((response) => {
+            if (response.status === 'PAID') {
               const query = querystring.stringify({
                 name: order.details.name
               });
+
+              order.payment.paid = true;
+              insertTreatBoxOrder(order);
+
               return res.redirect(`${callbackUrl}?${query}`);
             }
+
+            if (response.status === 'DECLINED' || response.status === 'ERROR') {
+              const query = querystring.stringify({
+                status: response.status
+              });
+              return res.redirect(307, `${referer}?${query}`);
+            }
+
+            checkStatus();
           });
         }, 1500);
       }());
     }
+    //return res.redirect(307, referer);
   }
 
-  return { getDetails, orderStarted, orderConfirmed };
+  return { parseSwishAlias, getWeekData, getDetails, orderStarted, orderConfirmed };
 }
 
 module.exports = treatBoxController;

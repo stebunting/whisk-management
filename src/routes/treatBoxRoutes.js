@@ -12,7 +12,12 @@ const {
 } = require('../../lib/db-control/db-control')(tag);
 const { sendConfirmationEmail } = require('../../lib/email/email')();
 const { loginCheck } = require('../controllers/authController')();
-const { getDetails, orderStarted, orderConfirmed } = require('../controllers/treatBoxController')();
+const {
+  getWeekData,
+  getDetails,
+  orderStarted,
+  orderConfirmed
+} = require('../controllers/treatBoxController')();
 
 function routes() {
   const treatBoxRoutes = express.Router();
@@ -42,20 +47,6 @@ function routes() {
   // Invoice payment route
   treatBoxRoutes.route('/invoicepayment')
     .post(orderConfirmed);
-
-  treatBoxRoutes.route('/checkPayment/:id')
-    .get(async (req, res) => {
-      const { id } = req.body;
-
-      const config = {
-        method: 'get',
-        url: `https://mss.cpc.getswish.net/swish-cpcapi/api/v2/paymentrequests/${uuidv4()}`,
-        httpsAgent: swishHttpsAgent,
-        header: {
-          'Content-Type': 'application/json'
-        }
-      };
-    })
 
   treatBoxRoutes.route('/swishcallback')
     .post((req, res) => {
