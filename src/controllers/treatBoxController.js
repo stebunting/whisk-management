@@ -12,7 +12,7 @@ const debug = require('debug')(tag);
 const { verify } = require('../../lib/verify/verify')();
 const { insertTreatBoxOrder, getSettings } = require('../../lib/db-control/db-control')(tag);
 
-const callbackRoot = 'https://95b2ae6ba9bc.ngrok.io';
+const callbackRoot = 'https://whisk-management.herokuapp.com';
 
 // Test Constants
 const swishTest = {
