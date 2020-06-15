@@ -32,12 +32,12 @@ const swishProduction = {
   baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
   callbackRoot,
   httpsAgent: new https.Agent({
-    cert: fs.readFileSync('cert/prod.pem'),
-    key: fs.readFileSync('cert/prod.key')
+    cert: Buffer.from(JSON.parse(`"${process.env.SWISH_CERT}"`)),
+    key: Buffer.from(JSON.parse(`"${process.env.SWISH_KEY}"`))
   })
 };
 
-const swish = swishTest;
+const swish = swishProduction;
 
 // Pricing
 const foodMoms = 1.12;
@@ -386,9 +386,12 @@ function treatBoxController() {
         order.payment.id = response.headers.location.split('/');
         order.payment.id = order.payment.id[order.payment.id.length - 1];
       } catch (error) {
+        throw error;
         let errors = '';
-        if (error.response.data.length > 0) {
+        if (error.response && error.response.data.length > 0) {
           errors = error.response.data.map(x => x.errorCode).join(',');
+        } else {
+          errors = 'ERROR';
         }
         const query = querystring.stringify({
           status: errors
