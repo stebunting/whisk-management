@@ -65,7 +65,6 @@ function routes() {
               codes.push(code);
             }
           }
-          debug(codes);
           settings = {
             type: 'rebatecodes',
             codes

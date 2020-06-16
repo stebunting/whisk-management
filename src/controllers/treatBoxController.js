@@ -317,17 +317,11 @@ function treatBoxController() {
     const response = await getSettings('rebatecodes');
     const result = response.codes.filter((x) => x.value === code);
     if (result.length === 0) {
-      return res.json({
-        data: {
-          codeExists: false
-        }
-      });
+      return res.json({ valid: false });
     }
     return res.json({
-      data: {
-        codeExists: true,
-        code: result[0]
-      }
+      valid: true,
+      code: result[0]
     });
   }
 
