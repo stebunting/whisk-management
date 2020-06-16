@@ -15,6 +15,7 @@ const { loginCheck } = require('../controllers/authController')();
 const {
   getWeekData,
   getDetails,
+  lookupRebateCode,
   orderStarted,
   orderConfirmed
 } = require('../controllers/treatBoxController')();
@@ -39,6 +40,9 @@ function routes() {
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
     .get(getDetails);
+
+  treatBoxRoutes.route('/lookuprebate')
+    .get(lookupRebateCode)
 
   // Data Validation
   treatBoxRoutes.route('/confirmation')

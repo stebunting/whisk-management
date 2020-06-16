@@ -53,6 +53,26 @@ function routes() {
           updateSettings(settings);
           break;
 
+        case 'rebatecodesUpdate':
+          const codesToGet = (Object.keys(req.body).length - 1) / 2;
+          let codes = [];
+          for (let i = 0; i < codesToGet; i += 1) {
+            let code = {
+              value: req.body[`rebate-code-${i}`],
+              type: req.body[`rebate-type-${i}`]
+            };
+            if (code.value !== '') {
+              codes.push(code);
+            }
+          }
+          debug(codes);
+          settings = {
+            type: 'rebatecodes',
+            codes
+          }
+          updateSettings(settings);
+          break;
+
         default:
           break;
       }
@@ -61,11 +81,13 @@ function routes() {
     })
     .get(async (req, res) => {
       const treatboxSettings = await getSettings('treatbox');
+      const rebatecodeSettings = await getSettings('rebatecodes');
 
       return res.render('settings.ejs', {
         user: req.user,
         priceFormat,
-        treatboxSettings
+        treatboxSettings,
+        rebatecodeSettings
       });
     });
 

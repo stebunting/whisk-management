@@ -311,6 +311,26 @@ function treatBoxController() {
     return res.json(info);
   }
 
+  async function lookupRebateCode(req, res) {
+    const { code } = req.query;
+
+    const response = await getSettings('rebatecodes');
+    const result = response.codes.filter((x) => x.value === code);
+    if (result.length === 0) {
+      return res.json({
+        data: {
+          codeExists: false
+        }
+      });
+    }
+    return res.json({
+      data: {
+        codeExists: true,
+        code: result[0]
+      }
+    });
+  }
+
   async function orderStarted(req, res) {
     const { referer } = req.headers;
     const { 'callback-url': callbackUrl } = req.body;
@@ -428,7 +448,14 @@ function treatBoxController() {
     //return res.redirect(307, referer);
   }
 
-  return { parseSwishAlias, getWeekData, getDetails, orderStarted, orderConfirmed };
+  return {
+    parseSwishAlias,
+    getWeekData,
+    getDetails,
+    lookupRebateCode,
+    orderStarted,
+    orderConfirmed
+  };
 }
 
 module.exports = treatBoxController;

@@ -60,6 +60,32 @@
 					</div>
 				</div>
 			</form>
+
+			<form action="/user/settings" method="post">
+				<% for (let i = 0; i <= rebatecodeSettings.codes.length; i += 1) {
+					let code = { value: '', type: '' };
+					if (i < rebatecodeSettings.codes.length) {
+						code = rebatecodeSettings.codes[i];
+					} %>
+				<div class="form-group row">
+					<label for="rebate-code-<%=i %>" class="col-md-3 col-form-label">Rebate Code</label>
+					<div class="col-md-3">
+						<input type="text" class="form-control" id="rebate-code-<%=i %>" name="rebate-code-<%=i %>" placeholder="Rebate Code" value="<%=code.value %>" />
+					</div>
+					<div class="col-md-3">
+						<select class="form-control" id="rebate-type-<%=i %>" name="rebate-type-<%=i %>">
+							<option value="discount"<% if (code.type === 'discount') { %> selected<% } %>>Discount</option>
+							<option value="zone3delivery" <% if (code.type === 'zone3delivery') { %>selected<% } %>>Zone 3 Delivery</option>
+						</select>
+					</div>
+				</div>
+				<% } %>
+				<div class="form-group row">
+					<div class="col-md-6 offset-md-3">
+						<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesUpdate">Update</button>
+					</div>
+				</div>
+			</form>
 		</div>
 	</div>
 <%- include('partials/footer') %>
