@@ -362,7 +362,9 @@ function treatBoxController() {
     }
 
     if (order.payment.method === 'Swish') {
-      order.payment.payerAlias = parseSwishAlias(order.details.telephone);
+      order.payment.swish = {
+        payerAlias: parseSwishAlias(order.details.telephone)
+      };
       const apiConfig = {
         method: 'post',
         url: `${swish.baseUrl}/api/v1/paymentrequests`,
@@ -373,16 +375,17 @@ function treatBoxController() {
         data: {
           callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
           payeeAlias: swish.alias,
-          payerAlias: order.payment.payerAlias,
+          payerAlias: order.payment.swish.payerAlias,
           amount: order.cost.total,
-          currency: 'SEK'
+          currency: 'SEK',
+          message: 'WHISK.se Order'
         }
       };
 
       try {
         const response = await axios(apiConfig);
-        order.payment.id = response.headers.location.split('/');
-        order.payment.id = order.payment.id[order.payment.id.length - 1];
+        order.payment.swish.id = response.headers.location.split('/');
+        order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
       } catch (error) {
         let errors = '';
         if (error.response && error.response.data.length > 0) {
@@ -398,7 +401,8 @@ function treatBoxController() {
 
       (async function checkStatus() {
         setTimeout(() => {
-          getPaymentResult(order.payment.id).then((response) => {
+          getPaymentResult(order.payment.swish.id).then((response) => {
+            order.payment.swish.reference = response.paymentReference;
             if (response.status === 'PAID') {
               const query = querystring.stringify({
                 name: order.details.name
