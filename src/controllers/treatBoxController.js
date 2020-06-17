@@ -3,13 +3,14 @@ const tag = 'whisk-management:treatBoxController';
 
 // Requirements
 const moment = require('moment-timezone');
-const url = require('url');
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
+const { priceFormat, getGoogleMapsUrl } = require('../functions/helper');
 const { verify } = require('../../lib/verify/verify')();
+const { sendConfirmationEmail } = require('../../lib/email/email')();
 const { insertTreatBoxOrder, getSettings } = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
@@ -44,15 +45,6 @@ const foodMoms = 1.12;
 const deliveryMoms = 1.25;
 
 function treatBoxController() {
-  // Format price from stored öre to krona
-  function priceFormat(num) {
-    const str = (num / 100).toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-    return parseInt(str.replace(',', ''), 10);
-  }
-
   // Function to get all relevant dates from a week number
   function getWeekData(week) {
     const data = {
@@ -81,16 +73,8 @@ function treatBoxController() {
     return data;
   }
 
-  function getGoogleMapsUrl(address) {
-    const q = querystring.stringify({
-      api: 1,
-      query: address
-    });
-    return `https://www.google.com/maps/search/?${q}`;
-  }
-
   function parseSwishAlias(telephone) {
-    let alias = telephone.replace(/\D/g,'');
+    let alias = telephone.replace(/\D/g, '');
     if (alias.charAt(0) === '0') {
       alias = `46${alias.substring(1)}`;
     } else if (alias.substring(0, 2) === '46') {
@@ -315,7 +299,7 @@ function treatBoxController() {
     const { code } = req.query;
 
     const response = await getSettings('rebatecodes');
-    const result = response.codes.filter((x) => x.value === code);
+    const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
     if (result.length === 0) {
       return res.json({ valid: false });
     }
@@ -369,7 +353,7 @@ function treatBoxController() {
 
     if (order.payment.method === 'Invoice') {
       insertTreatBoxOrder(order);
-      // sendConfirmationEmail(order);
+      sendConfirmationEmail(order);
 
       const query = querystring.stringify({
         name: order.details.name
@@ -400,10 +384,9 @@ function treatBoxController() {
         order.payment.id = response.headers.location.split('/');
         order.payment.id = order.payment.id[order.payment.id.length - 1];
       } catch (error) {
-        throw error;
         let errors = '';
         if (error.response && error.response.data.length > 0) {
-          errors = error.response.data.map(x => x.errorCode).join(',');
+          errors = error.response.data.map((x) => x.errorCode).join(',');
         } else {
           errors = 'ERROR';
         }
@@ -423,6 +406,7 @@ function treatBoxController() {
 
               order.payment.paid = true;
               insertTreatBoxOrder(order);
+              sendConfirmationEmail(order);
 
               return res.redirect(`${callbackUrl}?${query}`);
             }
@@ -435,11 +419,13 @@ function treatBoxController() {
             }
 
             checkStatus();
+            return true;
           });
         }, 1500);
       }());
+    } else {
+      return res.redirect(307, referer);
     }
-    //return res.redirect(307, referer);
   }
 
   return {

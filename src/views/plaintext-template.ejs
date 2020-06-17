@@ -1,0 +1,28 @@
+Thanks for stopping by at WHISK.se! We have your order and your treats are on their way.
+
+ITEM             QUANTITY PRICE SUB-TOTAL<%if (order.items.comboBoxes > 0) { %>
+Combo Box        <%=order.items.comboBoxes %>        490   <%=490 * order.items.comboBoxes%><% } %><%if (order.items.treatBoxes > 0) { %>
+Treat Box        <%=order.items.treatBoxes %>        250   <%=250 * order.items.treatBoxes%><% } %><%if (order.items.vegetableBoxes > 0) { %>
+Vegetable Box    <%=order.items.vegetableBoxes %>        250   <%=250 * order.items.vegetableBoxes%><% } %>
+
+Sub-Total: <%=order.cost.food %>
+Delivery: <%=order.cost.delivery %>
+MOMs: <%=order.cost.foodMoms + order.cost.deliveryMoms %>
+Total: <%=order.cost.total %>
+
+<%if (order.delivery.type === 'collection') { %>Please note, our pick up times are between 10:30-11:30 on <%=deliveryDate %>.
+<%} else if (order.delivery.type === 'delivery') { %>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm.
+<%} else if (order.delivery.type === 'split-delivery') { %>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm to the following people:
+<%for (let i = 0; i < order.recipients.length; i += 1) { %>
+<%=order.recipients[i].details.name %>
+<%=order.recipients[i].delivery.address %>
+NOTES: <%=order.recipients[i].delivery.addressNotes %>
+MESSAGE: <%=order.recipients[i].delivery.message %>
+ITEMS TO RECEIVE: <%=getReadableOrder(order.recipients[i].items) %>
+<%}} %>
+Whisk
+💌 hello@whisk.se
+☎️ +46 73 141 6585
+🏛 Vikingagatan 18, 113 42 Stockholm
+🍰 www.whisk.se
+Organisation number: 5592052277 || MOMs registration number : SE559205-2277

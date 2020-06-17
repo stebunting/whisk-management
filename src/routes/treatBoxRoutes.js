@@ -5,12 +5,11 @@ const tag = 'whisk-management:treatBoxRoutes';
 const express = require('express');
 const debug = require('debug')(tag);
 const {
-  insertTreatBoxOrder,
   getTreatBoxOrders,
   updateTreatBoxOrders,
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
-const { sendConfirmationEmail } = require('../../lib/email/email')();
+const { getReadableOrder } = require('../functions/helper');
 const { loginCheck } = require('../controllers/authController')();
 const {
   getWeekData,
@@ -23,26 +22,12 @@ const {
 function routes() {
   const treatBoxRoutes = express.Router();
 
-  function getReadableOrder(order) {
-    let str = '';
-    if (order.comboBoxes > 0) {
-      str = `${str}${order.comboBoxes} x Combo Box${order.comboBoxes !== 1 ? 'es' : ''}`;
-    }
-    if (order.treatBoxes > 0) {
-      str = `${str}${str.length > 0 ? ', ' : ''}${order.treatBoxes} x Treat Box${order.treatBoxes !== 1 ? 'es' : ''}`;
-    }
-    if (order.vegetableBoxes > 0) {
-      str = `${str}${str.length > 0 ? ', ' : ''}${order.vegetableBoxes} x Vegetable Box${order.vegetableBoxes !== 1 ? 'es' : ''}`;
-    }
-    return str;
-  }
-
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
     .get(getDetails);
 
   treatBoxRoutes.route('/lookuprebate')
-    .get(lookupRebateCode)
+    .get(lookupRebateCode);
 
   // Data Validation
   treatBoxRoutes.route('/confirmation')
@@ -91,6 +76,5 @@ function routes() {
 
   return treatBoxRoutes;
 }
-
 
 module.exports = routes;

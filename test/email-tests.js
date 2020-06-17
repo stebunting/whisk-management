@@ -20,17 +20,20 @@ describe('E-Mail Tests', () => {
 
     it('does not send email before transporter created', async () => {
       const order = {
-        purchaser: {
+        details: {
           name: 'Test User',
           email: 'stebunting@gmail.com',
           telephone: '07787448962'
+        },
+        delivery: {
+          date: '2020-05'
         }
       };
       await assert.rejects(sendConfirmationEmail(order), (error) => {
         assert.equal(error.message, 'Not connected to SMTP server');
         return true;
       });
-    })
+    });
 
     it('creates transporter', async () => {
       const response = await connect();

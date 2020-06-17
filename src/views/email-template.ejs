@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<title>WHISK Order</title>
+	<style>
+body {
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 1em;
+}
+th, td {
+	padding: 3px;
+}
+th {
+	border-top: 1px #E0E0E0 solid;
+	border-bottom: 1px #E0E0E0 solid;
+}
+.orderform { 
+	width: 30em;
+	border-collapse: collapse;
+}
+.quantity, .price, .linetotal {
+	width: 24%;
+	text-align: right;
+}
+.item {
+	width: 28%;
+	text-align: left;
+}
+.subtotal {
+	text-align: right;
+}
+.bordertop {
+	border-top: 1px #E0E0E0 solid;
+}
+.total {
+	text-align: right;
+	border: 0px;
+	font-weight: bold;
+}
+.signature {
+	padding-top: 2em;
+	width: 10em;
+}
+.signature-header, .signature-body {
+	text-align: center;
+}
+	</style>
+</head>
+
+<body>
+	<p>Thanks for stopping by at WHISK.se!  We have your order and your treats are on their way.</p>
+
+	<table class="orderform">
+		<thead>
+			<tr>
+				<th class="item">ITEM</th>
+				<th class="quantity">QUANTITY</th>
+				<th class="price">PRICE</th>
+				<th class="linetotal">SUB-TOTAL</th>
+			</tr>
+		</thead>
+		<%if (order.items.comboBoxes > 0) {
+			%><tr>
+				<td class="item">Combo Box</td>
+				<td class="quantity"><%=order.items.comboBoxes %></td>
+				<td class="price">490</td>
+				<td class="linetotal"><%=490 * order.items.comboBoxes%></td>
+			</tr><%
+		} %>
+		<%if (order.items.treatBoxes > 0) {
+			%><tr>
+				<td>Treat Box</td>
+				<td class="quantity"><%=order.items.treatBoxes %></td>
+				<td class="price">250</td>
+				<td class="linetotal"><%=250 * order.items.treatBoxes%></td>
+			</tr><%
+		} %>
+		<%if (order.items.vegetableBoxes > 0) {
+			%><tr>
+				<td>Vegetable Box</td>
+				<td class="quantity"><%=order.items.vegetableBoxes %></td>
+				<td class="price">250</td>
+				<td class="linetotal"><%=250 * order.items.vegetableBoxes%></td>
+			</tr><%
+		} %>
+		<tr>
+			<td class="subtotal bordertop" colspan="3">Sub-Total:</td>
+			<td class="subtotal bordertop"><%=order.cost.food %></td>
+		</tr>
+		<tr>
+			<td class="subtotal" colspan="3">Delivery</td>
+			<td class="subtotal"><%=order.cost.delivery %></td>
+		</tr>
+		<tr>
+			<td class="subtotal" colspan="3">MOMs</td>
+			<td class="subtotal"><%=order.cost.foodMoms + order.cost.deliveryMoms %></td>
+		</tr>
+		<tr>
+			<td class="total" colspan="3">Total</td>
+			<td class="total"><%=order.cost.total %></td>
+		</tr>
+	</table>
+
+	<%if (order.delivery.type === 'collection') {
+	%><p>Please note, our pick up times are between 10:30-11:30 on <%=deliveryDate %>.</p>
+
+	<%} else if (order.delivery.type === 'delivery') {
+	%><p>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm.</p>
+
+	<%} else if (order.delivery.type === 'split-delivery') {
+	%><p>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm to the following people:</p>
+
+	<%for (let i = 0; i < order.recipients.length; i += 1) {
+	%><p>
+		<%=order.recipients[i].details.name %><br />
+		<%=order.recipients[i].delivery.address %><br />
+		NOTES: <%=order.recipients[i].delivery.addressNotes %><br />
+		MESSAGE: <%=order.recipients[i].delivery.message %><br />
+		ITEMS TO RECEIVE: <%=getReadableOrder(order.recipients[i].items) %>
+	</p><%}} %>
+
+	<div>
+		<div class="signature-header"><a href="https://www.whisk.se/" target="_blank" rel="external"><img class="signature" src="https://www.whisk.se/images/logo.png" alt="Whisk Logo" /></a></div>
+		<div class="signature-body">
+			<div>
+				💌 <a href="mailto:hello@whisk.se">hello@whisk.se</a> ☎️ +46 73 141 6585 🏛 Vikingagatan 18, 113 42 Stockholm 🍰 <a href="https://www.whisk.se/">www.whisk.se</a>
+			</div>
+			<div>Organisation number: 5592052277 || MOMs registration number : SE559205-2277</div>
+		</div>
+	</div>
+</body>
+</html>
