@@ -1,5 +1,6 @@
 // Page Tag
 const tag = 'whisk-management:treatBoxRoutes';
+const stringify = require('csv-stringify');
 
 // Requirements
 const express = require('express');
@@ -72,6 +73,40 @@ function routes() {
       const { id } = req.params;
       await updateTreatBoxOrders(id, { 'payment.invoiced': true });
       return res.redirect('/treatbox/orders');
+    });
+
+  treatBoxRoutes.route('/csv/:week')
+    .all(loginCheck)
+    .get(async (req, res) => {
+      const { week } = req.params;
+      const orders = await getTreatBoxOrders({
+        $and: [
+          { 'delivery.date': week },
+          { 'delivery.type': { $ne: 'collection' } }
+        ]
+      });
+
+      let recipients = [];
+      orders.forEach((order) => {
+        order.recipients.forEach((recipient) => {
+          recipients.push(recipient);
+        })
+      })
+      stringify(recipients, {
+        header: true,
+
+        columns: [
+          { key: 'details.name', header: 'Name' },
+          { key: 'details.telephone', header: 'Telephone' },
+          { key: 'delivery.address', header: 'Address' },
+          { key: 'delivery.addressNotes', header: 'Notes' },
+          { key: 'delivery.message', header: 'Message' }
+        ]
+      }, (error, data) => {
+        res.setHeader('Content-disposition', `attachment; filename=${week}.csv`);
+        res.set('Content-Type', 'text/csv');
+        res.status(200).send(data);
+      });
     });
 
   return treatBoxRoutes;
