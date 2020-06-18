@@ -106,7 +106,7 @@ function routes() {
 
   userRoutes.route('/instagram')
     .get(async (req, res) => {
-      const user = await getUser('dina-offline');
+      const user = await getUser('dina');
 
       const axiosConfig = {
         method: 'get',
