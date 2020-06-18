@@ -16,7 +16,7 @@ const {
 } = require('../../lib/db-control/db-control')();
 
 // Facebook Constants
-const serverUri = 'https://d171faa0eff3.ngrok.io';
+const serverUri = 'https://whisk-management.herokuapp.com';
 const appId = process.env.FACEBOOK_APP_ID;
 const appSecret = process.env.FACEBOOK_APP_SECRET;
 const redirectUri = `${serverUri}/user/facebookcallback`;
