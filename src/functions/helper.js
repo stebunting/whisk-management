@@ -11,6 +11,12 @@ function priceFormat(num) {
   return parseInt(str.replace(',', ''), 10);
 }
 
+// Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
+function calculateMoms(price, rate) {
+  const decimalRate = 1 + (rate / 100);
+  return Math.round(price * decimalRate - price);
+}
+
 // Function to return a Google Maps URL from an address
 function getGoogleMapsUrl(address) {
   const q = querystring.stringify({
@@ -46,9 +52,20 @@ function getReadableOrder(order) {
   return str;
 }
 
+function generateRandomString(length) {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let text = '';
+
+  for (let i = 0; i < length; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
+
 module.exports = {
   priceFormat,
   getGoogleMapsUrl,
   getFormattedDeliveryDate,
-  getReadableOrder
+  getReadableOrder,
+  generateRandomString
 };

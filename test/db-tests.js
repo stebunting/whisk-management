@@ -3,6 +3,7 @@ const tag = 'whisk-management:db-tests';
 
 // Requirements
 const assert = require('assert');
+const { ObjectID } = require('mongodb');
 const {
   connect,
   isConnected,
@@ -10,6 +11,7 @@ const {
   getDb,
   setupDb,
   insertUser,
+  updateUser,
   getUser,
   getSettings,
   updateSettings,
@@ -72,6 +74,15 @@ describe('Database Control Connection Tests', () => {
       // eslint-disable-next-line no-underscore-dangle
       newUser._id = user._id;
       assert.deepEqual(user, newUser);
+    });
+
+    it('updates user', async () => {
+      newUser.surname = 'Updated';
+      const response = await updateUser(newUser);
+      assert.equal(response.modifiedCount, 1);
+      // eslint-disable-next-line no-underscore-dangle
+      const user = await getUser(newUser.username);
+      assert.equal(user.surname, 'Updated');
     });
 
     it('returns null for unregistered user', async () => {

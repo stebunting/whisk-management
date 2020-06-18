@@ -349,8 +349,6 @@ function treatBoxController() {
       paid: false
     };
 
-    debug(order);
-
     if (order.payment.method === 'Invoice') {
       insertTreatBoxOrder(order);
       sendConfirmationEmail(order);
