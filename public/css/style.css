@@ -23,3 +23,7 @@
 .info-status {
 	text-align: center;
 }
+
+.sms-textarea {
+	width: 100%;
+}

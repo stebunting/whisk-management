@@ -60,12 +60,35 @@ function generateRandomString(length) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
-};
+}
+
+function parseMarkers(str, recipient) {
+  let parsedString = str;
+
+  let order = 'Treat Box';
+  if (recipient.items.comboBoxes > 0 || recipient.items.vegetableBoxes > 0) {
+    order = `Veggie & ${order}`;
+  }
+  if (recipient.items.comboBoxes + recipient.items.treatBoxes + recipient.items.vegetableBoxes > 1) {
+    order = `${order}es`;
+  }
+
+  const markers = {
+    '%name': recipient.details.name,
+    '%message': (recipient.delivery.message !== '') ? `\n${recipient.delivery.message}\n` : '',
+    '%order': order
+  };
+  Object.keys(markers).forEach((key) => {
+    parsedString = parsedString.replace(key, markers[key]);
+  });
+  return parsedString;
+}
 
 module.exports = {
   priceFormat,
   getGoogleMapsUrl,
   getFormattedDeliveryDate,
   getReadableOrder,
-  generateRandomString
+  generateRandomString,
+  parseMarkers
 };

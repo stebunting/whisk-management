@@ -204,6 +204,14 @@ function routes() {
           updateSettings(settings);
           break;
 
+        case 'smsUpdate':
+          settings = {
+            type: 'sms',
+            defaultDelivery: req.body['default-sms']
+          }
+          updateSettings(settings);
+          break;
+
         default:
           break;
       }
@@ -213,12 +221,14 @@ function routes() {
     .get(async (req, res) => {
       const treatboxSettings = await getSettings('treatbox');
       const rebatecodeSettings = await getSettings('rebatecodes');
+      const smsSettings = await getSettings('sms');
 
       return res.render('settings.ejs', {
         user: req.user,
         priceFormat,
         treatboxSettings,
-        rebatecodeSettings
+        rebatecodeSettings,
+        smsSettings
       });
     });
 

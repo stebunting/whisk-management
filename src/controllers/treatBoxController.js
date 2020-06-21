@@ -8,7 +8,7 @@ const https = require('https');
 const fs = require('fs');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
-const { priceFormat, getGoogleMapsUrl } = require('../functions/helper');
+const { priceFormat, getGoogleMapsUrl, parseMarkers } = require('../functions/helper');
 const { verify } = require('../../lib/verify/verify')();
 const { sendConfirmationEmail } = require('../../lib/email/email')();
 const { insertTreatBoxOrder, getSettings } = require('../../lib/db-control/db-control')(tag);
@@ -348,6 +348,12 @@ function treatBoxController() {
       invoiced: false,
       paid: false
     };
+
+    const smsSettings = await getSettings('sms');
+    order.recipients.forEach((recipient) => {
+      recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+    })
+    debug(order);
 
     if (order.payment.method === 'Invoice') {
       insertTreatBoxOrder(order);

@@ -17,6 +17,7 @@ const {
   updateSettings,
   insertTreatBoxOrder,
   getTreatBoxOrders,
+  getTreatBoxOrderById,
   updateTreatBoxOrders,
   getTreatBoxTotals,
   removeTreatBoxOrder
@@ -167,6 +168,9 @@ describe('Database Control Connection Tests', () => {
       const orders = await getTreatBoxOrders();
       assert.equal(orders.length, 1);
       assert.deepEqual(orders[0], order);
+
+      const orderById = await getTreatBoxOrderById(order._id);
+      assert.deepEqual(orderById, orders[0]);
     });
 
     it('adds second order to database', async () => {
