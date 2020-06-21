@@ -1,16 +1,21 @@
 <%-include('partials/header', { title: 'Treatbox Orders', user }); %>
-<% let lastWeek='0'; %>
+<% let lastWeek='9999-99'; %>
 
-		<%for (let i = 0; i < orders.length; i += 1) {
+		<%for (let i = orders.length - 1; i >= 0; i -= 1) {
 			const timestamp = orders[i]._id.getTimestamp();
 			if (lastWeek != orders[i].delivery.date) {
+				if (lastWeek !== '9999-99') {
+					%>
+			</tbody>
+		</table><%
+				}
 				lastWeek = orders[i].delivery.date;
 				const data = getWeekData(lastWeek.substring(5));
 				const total = totals.find((x) => x._id === lastWeek);
 				%>
 		<table class="table table-bordered">
 			<thead>
-				<tr class="table-info">
+				<tr class="table-info" data-toggle="collapse" data-target="#collapse-<%=lastWeek %>">
 					<td colspan="5">
 						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
 							<div class="card">
@@ -65,14 +70,15 @@
 						</div>
 					</td>
 				</tr>
+			</thead>
+			<tbody class="collapse" id="collapse-<%=lastWeek %>">
 				<tr>
 					<th class="column">ORDER DATE</th>
 					<th class="column">ORDER TIME</th>
 					<th class="column">NAME</th>
 					<th class="column">ADDRESS</th>
 					<th class="column info-status">STATUS</th>
-				</tr>
-			</thead><% }
+				</tr><% }
 				let length;
 				let collection;
 				let trClass = '';
@@ -105,7 +111,8 @@
 							%><img class="icon" src="/icons/invoice.svg" alt="Invoiced" /><%
 						} else {
 							%><img class="icon" src="/icons/cross.svg" alt="Ordered" /><%
-						} %></td>
+						} %>
+					</td>
 				</tr>
 				<tr class="collapsingRow <%=trClass %>">
 					<td class="hiddenRow" colspan="5">
@@ -122,19 +129,20 @@
 										</li>
 										<li>
 											<span class="user-info-detail">PHONE NUMBER:</span>
-											<%=orders[i].details.telephone %>
+											<%=orders[i].details.telephone %>&nbsp;
+											<a href="tel:<%=orders[i].details.telephone %>">
+												<img class="icon" src="/icons/call.svg" alt="Call <%=orders[i].details.name %>" />
+											</a>
 										</li>
 										<li>
 											<span class="user-info-detail">E-MAIL ADDRESS:</span>
 											<a href="mailto:<%=orders[i].details.email %>"><%=orders[i].details.email %></a>
 										</li>
 									</ul>
-
 									<% if (collection) { %>
 								</div>
 
-								<div class="col-md-6">
-									<% } %>
+								<div class="col-md-6"><% } %>
 									<ul class="user-info-list">
 										<li>
 											<span class="user-info-subtitle">Payment</span>
@@ -159,19 +167,18 @@
 									</ul>
 								</div>
 
-								<div class="col-md-6">
-									<% if (!collection) { %>
+								<div class="col-md-6"><% if (!collection) { %>
 									<ul class="user-info-list">
 										<li>
 											<span class="user-info-subtitle">Recipient</span>
 										</li>
 										<li>
 											<span class="user-info-detail">NAME:</span>
-										<%=recipient.details.name %>
+											<%=recipient.details.name %>
 										</li>
 										<li>
 											<span class="user-info-detail">PHONE NUMBER:</span>
-										<%=recipient.details.telephone %>
+											<%=recipient.details.telephone %>
 										</li>
 										<li>
 											<span class="user-info-detail">NOTES:</span>
@@ -181,8 +188,7 @@
 											<span class="user-info-detail">MESSAGE:</span>
 											<%=recipient.delivery.message %>
 										</li>
-									</ul>
-									<% } %>
+									</ul><% } %>
 
 									<ul class="user-info-list">
 										<li>
@@ -195,5 +201,6 @@
 						</div>
 					</td>
 				</tr><% }} %>
-			</table>
+			</tbody>
+		</table>
 <%- include('partials/footer') %>
