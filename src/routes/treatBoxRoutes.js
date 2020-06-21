@@ -4,6 +4,7 @@ const stringify = require('csv-stringify');
 
 // Requirements
 const express = require('express');
+const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
   getTreatBoxOrders,
@@ -49,10 +50,9 @@ function routes() {
     .all(loginCheck)
     .post(async (req, res) => {
       if (req.body.submit === 'update-sms') {
-        debug(req.body['order-id']);
         const id = req.body['order-id'];
         const recipientNumber = req.body['recipient-number'];
-
+        
         const order = await getTreatBoxOrderById(id);
         order.recipients[recipientNumber].delivery.sms = req.body['sms-text'];
         updateTreatBoxOrders(id, order);
@@ -68,7 +68,8 @@ function routes() {
         orders,
         totals,
         getWeekData,
-        getReadableOrder
+        getReadableOrder,
+        querystring
       });
     });
 

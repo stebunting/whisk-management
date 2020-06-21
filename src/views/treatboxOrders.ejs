@@ -182,7 +182,7 @@
 											<a href="tel:<%=recipient.details.telephone %>">
 												<img class="icon" src="/icons/call.svg" alt="Call <%=recipient.details.name %>" />
 											</a>
-											<a href="sms:<%=recipient.details.telephone %>&body=<%=recipient.delivery.sms %>">
+											<a href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
 												<img class="icon" src="/icons/sms.svg" alt="Send Delivery SMS" />
 											</a>
 										</li>
