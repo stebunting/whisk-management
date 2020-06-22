@@ -17,7 +17,7 @@
 			<thead>
 				<tr class="table-info" data-toggle="collapse" data-target="#collapse-<%=lastWeek %>">
 					<td colspan="5">
-						<h2><%=data.delivery.format('dddd, MMMM Do YYYY [(Week] w[)]') %></h2>
+						<h2><%=data.delivery.format('dddd Do MMMM YYYY [(Week] w[)]') %></h2>
 							<div class="card">
 								<div class="card-body row">
 								<ul class="user-info-list col-md-4">
@@ -105,12 +105,14 @@
 						</a><% } %>
 					</td>
 					<td class="info-status"><%
-						if (orders[i].payment.paid) {
-							%><img class="icon" src="/icons/paid.svg" alt="Paid!" /><%
-						} else if (orders[i].payment.invoiced) {
-							%><img class="icon" src="/icons/invoice.svg" alt="Invoiced" /><%
-						} else {
-							%><img class="icon" src="/icons/cross.svg" alt="Ordered" /><%
+						if (orders[i].payment.status === 'Paid') {
+							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/paid.svg" alt="Paid!" /><%
+						} else if (orders[i].payment.status === 'Invoiced') {
+							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/invoice.svg" alt="Invoiced" /><%
+						} else if (orders[i].payment.status === 'Ordered') {
+							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/ordered.svg" alt="Ordered" /><%
+						} else if (orders[i].payment.status === 'Cancelled') {
+							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/cancelled.svg" alt="Cancelled" /><%
 						} %>
 					</td>
 				</tr>
@@ -156,14 +158,31 @@
 											<%=orders[i].payment.method%>
 										</li>
 										<li>
-											<span class="user-info-detail">STATUS:</span>
-											<%if (orders[i].payment.paid) {
-												%>Paid<%
-											} else if (orders[i].payment.invoiced) {
-												%>Invoiced <a href="/treatbox/orders/markaspaid/<%=orders[i]._id %>">(Mark as Paid)</a>
+											<span class="user-info-detail">STATUS:</span> <span class="status-<%=orders[i]._id %>">
+											<%if (orders[i].payment.status === 'Paid') {
+												%>Paid</span><%
+											} else if (orders[i].payment.status === 'Invoiced') {
+												%>Invoiced</span> <a href="#" class="markaspaid-<%=orders[i]._id %>">(Mark as Paid)</a>
 											<%
-											} else {
-												%>Ordered <a href="/treatbox/orders/markasinvoiced/<%=orders[i]._id %>">(Mark as Invoiced)</a><%} %></li>
+											} else if (orders[i].payment.status === 'Ordered') {
+												%>Ordered</span> <a href="#" class="markasinvoiced-<%=orders[i]._id %>">(Mark as Invoiced)</a>
+											<%
+											} else if (orders[i].payment.status === 'Cancelled') {
+												%>Cancelled</span><% } %>
+										</li>
+										<% if (orders[i].payment.method === 'Swish') {
+												%><li>
+											<form class="form-inline" action="/treatbox/orders/swishrefund" method="post">
+												<span class="user-info-detail">REFUND:</span>&nbsp;
+												<input class="form-control form-control-sm" type="text" name="refund-amount" placeholder="Amount" />&nbsp;
+												<input type="hidden" name="refund-id" value="<%=orders[i]._id %>" />
+												<button class="btn btn-sm btn-primary" type="submit" name="submit" value="swish-refund">Send</button>
+											</form>
+										</li><%
+											} %>
+										<li>
+											<button class="btn btn-danger" type="button" name="cancel" value="<%=orders[i]._id %>">Cancel Order</button>
+										</li>
 									</ul>
 								</div>
 
@@ -182,7 +201,7 @@
 											<a href="tel:<%=recipient.details.telephone %>">
 												<img class="icon" src="/icons/call.svg" alt="Call <%=recipient.details.name %>" />
 											</a>
-											<a href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
+											<a id="smslink-<%=orders[i]._id %>-<%=j %>" href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
 												<img class="icon" src="/icons/sms.svg" alt="Send Delivery SMS" />
 											</a>
 										</li>
@@ -212,23 +231,21 @@
 											<a href="#smsedit-<%=`${orders[i]._id}-${j}`%>" data-toggle="modal">Edit Text Message</a>
 											<div class="modal" id="smsedit-<%=`${orders[i]._id}-${j}`%>" tabindex="-1" role="dialog">
 											  <div class="modal-dialog">
-											    <form class="modal-content" method="post" action="/treatbox/orders">
+											    <div class="modal-content">
 											      <div class="modal-header">
 											        <h5 class="modal-title">Edit Delivery SMS</h5>
-											        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+											        <button type="button" class="close modal-close" data-dismiss="modal" aria-label="Close">
 											          <span aria-hidden="true">&times;</span>
 											        </button>
 											      </div>
 											      <div class="modal-body">
-											        <textarea class="form-control sms-textarea" rows="8" name="sms-text" placeholder="SMS Body"><%=recipient.delivery.sms %></textarea>
-											        <input type="hidden" name="order-id" value="<%=orders[i]._id %>" />
-											        <input type="hidden" name="recipient-number" value="<%=j %>" />
+											        <textarea class="form-control sms-textarea" rows="8" name="sms-text" id="smstext-<%=orders[i]._id %>-<%=j %>" placeholder="SMS Body"><%=recipient.delivery.sms %></textarea>
 											      </div>
 											      <div class="modal-footer">
-											        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-											        <button type="submit" name="submit" value="update-sms" class="btn btn-primary">Save changes</button>
+											        <button type="button" class="btn btn-secondary modal-close" data-dismiss="modal">Close</button>
+											        <button type="button" class="btn btn-primary" name="update-sms" value="<%=orders[i]._id %>-<%=j %>">Save changes</button>
 											      </div>
-											    </form>
+											    </div>
 											  </div>
 											</div>
 										</li>

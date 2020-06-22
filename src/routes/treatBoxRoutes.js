@@ -10,6 +10,7 @@ const {
   getTreatBoxOrders,
   getTreatBoxOrderById,
   updateTreatBoxOrders,
+  removeTreatBoxOrder,
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
 const { getReadableOrder } = require('../functions/helper');
@@ -19,7 +20,8 @@ const {
   getDetails,
   lookupRebateCode,
   orderStarted,
-  orderConfirmed
+  orderConfirmed,
+  swishRefund
 } = require('../controllers/treatBoxController')();
 
 function routes() {
@@ -48,17 +50,6 @@ function routes() {
 
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
-    .post(async (req, res) => {
-      if (req.body.submit === 'update-sms') {
-        const id = req.body['order-id'];
-        const recipientNumber = req.body['recipient-number'];
-        
-        const order = await getTreatBoxOrderById(id);
-        order.recipients[recipientNumber].delivery.sms = req.body['sms-text'];
-        updateTreatBoxOrders(id, order);
-      }
-      return res.redirect('/treatbox/orders');
-    })
     .get(async (req, res) => {
       const orders = await getTreatBoxOrders();
       const totals = await getTreatBoxTotals();
@@ -73,20 +64,82 @@ function routes() {
       });
     });
 
+  treatBoxRoutes.route('/orders/swishrefund')
+    .all(loginCheck)
+    .post(swishRefund);
+
   treatBoxRoutes.route('/orders/markaspaid/:id')
     .all(loginCheck)
     .get(async (req, res) => {
       const { id } = req.params;
-      await updateTreatBoxOrders(id, { 'payment.paid': true });
-      return res.redirect('/treatbox/orders');
+      try {
+        await updateTreatBoxOrders(id, { 'payment.status': 'Paid' });
+        return res.json({ status: 'OK' });
+      } catch {
+        return res.json({ status: 'Error' });
+      }
     });
 
   treatBoxRoutes.route('/orders/markasinvoiced/:id')
     .all(loginCheck)
     .get(async (req, res) => {
       const { id } = req.params;
-      await updateTreatBoxOrders(id, { 'payment.invoiced': true });
-      return res.redirect('/treatbox/orders');
+      try {
+        await updateTreatBoxOrders(id, { 'payment.status': 'Invoiced' });
+        return res.json({ status: 'OK' });
+      } catch {
+        return res.json({ status: 'Error' });
+      }
+    });
+
+  treatBoxRoutes.route('/orders/cancel/:id')
+    .all(loginCheck)
+    .get(async (req, res) => {
+      const { id } = req.params;
+      try {
+        await updateTreatBoxOrders(id, { 'payment.status': 'Cancelled' });
+        return res.json({ status: 'OK' });
+      } catch {
+        return res.json({ status: 'Error' });
+      }
+    });
+
+  treatBoxRoutes.route('/orders/updateSMS/:recipientCode')
+    .all(loginCheck)
+    .post(async (req, res) => {
+      const { recipientCode } = req.params;
+      const [id, recipientNumber] = recipientCode.split('-');
+      const { message } = req.body;
+
+      const order = await getTreatBoxOrderById(id);
+      const link = `sms:${order.recipients[recipientNumber].details.telephone}?body=${encodeURIComponent(querystring.escape(message))}`;
+      order.recipients[recipientNumber].delivery.sms = message;
+      try {
+        updateTreatBoxOrders(id, order);
+        return res.json({
+          status: 'OK',
+          link
+        });
+      } catch {
+        return res.json({ status: 'Error' });
+      }
+    });
+
+  treatBoxRoutes.route('/orders/getSMS/:recipientCode')
+    .all(loginCheck)
+    .get(async (req, res) => {
+      const { recipientCode } = req.params;
+      const [id, recipientNumber] = recipientCode.split('-');
+
+      try {
+        const order = await getTreatBoxOrderById(id);
+        return res.json({
+          status: 'OK',
+          message: order.recipients[recipientNumber].delivery.sms
+        });
+      } catch {
+        return res.json({ status: 'Error' });
+      }
     });
 
   treatBoxRoutes.route('/csv/:week')

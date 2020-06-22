@@ -11,14 +11,18 @@ const debug = require('debug')(tag);
 const { priceFormat, getGoogleMapsUrl, parseMarkers } = require('../functions/helper');
 const { verify } = require('../../lib/verify/verify')();
 const { sendConfirmationEmail } = require('../../lib/email/email')();
-const { insertTreatBoxOrder, getSettings } = require('../../lib/db-control/db-control')(tag);
+const {
+  insertTreatBoxOrder,
+  getTreatBoxOrderById,
+  getSettings
+} = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
 
 // Test Constants
 const swishTest = {
-  alias: '1234679304',
-  baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
+  alias: '1234567839', // '1234679304',
+  baseUrl: 'https://mss.cpc.getswish.net:443/swish-cpcapi',
   callbackRoot,
   httpsAgent: new https.Agent({
     cert: fs.readFileSync('cert/test.pem'),
@@ -29,7 +33,7 @@ const swishTest = {
 
 // Production Constants
 const swishProduction = {
-  alias: '1230655860',
+  alias: process.env.SWISH_ALIAS,
   baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
   callbackRoot,
   httpsAgent: new https.Agent({
@@ -345,14 +349,13 @@ function treatBoxController() {
     const order = await parsePostData(req.body);
     order.payment = {
       method: req.body['payment-method'],
-      invoiced: false,
-      paid: false
+      status: 'Ordered'
     };
 
     const smsSettings = await getSettings('sms');
     order.recipients.forEach((recipient) => {
       recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
-    })
+    });
     debug(order);
 
     if (order.payment.method === 'Invoice') {
@@ -412,7 +415,7 @@ function treatBoxController() {
                 name: order.details.name
               });
 
-              order.payment.paid = true;
+              order.payment.status = 'Paid';
               insertTreatBoxOrder(order);
               sendConfirmationEmail(order);
 
@@ -436,13 +439,48 @@ function treatBoxController() {
     }
   }
 
+  async function swishRefund(req, res) {
+    if (req.body.submit === 'swish-refund') {
+      const refundAmount = req.body['refund-amount'];
+      const id = req.body['refund-id'];
+
+      const order = await getTreatBoxOrderById(id);
+      const apiConfig = {
+        method: 'post',
+        url: `${swish.baseUrl}/api/v1/refunds`,
+        httpsAgent: swish.httpsAgent,
+        header: {
+          'Content-Type': 'application/json'
+        },
+        data: {
+          originalPaymentReference: order.payment.swish.id,
+          callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
+          payerAlias: swish.alias,
+          amount: refundAmount,
+          currency: 'SEK'
+        }
+      };
+      debug(apiConfig);
+
+      try {
+        const response = await axios(apiConfig);
+        debug(response);
+      } catch (error) {
+        debug(error);
+      }
+    }
+
+    return res.redirect('/treatbox/orders');
+  }
+
   return {
     parseSwishAlias,
     getWeekData,
     getDetails,
     lookupRebateCode,
     orderStarted,
-    orderConfirmed
+    orderConfirmed,
+    swishRefund
   };
 }
 
