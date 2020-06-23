@@ -11,15 +11,15 @@ const debug = require('debug')(tag);
 const {
   priceFormat,
   getGoogleMapsUrl,
-  parseMarkers
+  parseMarkers,
+  getWeek
 } = require('../functions/helper');
 const { verify } = require('../../lib/verify/verify')();
 const { sendConfirmationEmail } = require('../../lib/email/email')();
 const {
   insertTreatBoxOrder,
   getTreatBoxOrderById,
-  getSettings,
-  getWeek
+  getSettings
 } = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
@@ -439,37 +439,34 @@ function treatBoxController() {
   }
 
   async function swishRefund(req, res) {
-    if (req.body.submit === 'swish-refund') {
-      const refundAmount = req.body['refund-amount'];
-      const id = req.body['refund-id'];
+    const { id, amount } = req.body;
 
-      const order = await getTreatBoxOrderById(id);
-      const apiConfig = {
-        method: 'post',
-        url: `${swish.baseUrl}/api/v1/refunds`,
-        httpsAgent: swish.httpsAgent,
-        header: {
-          'Content-Type': 'application/json'
-        },
-        data: {
-          originalPaymentReference: order.payment.swish.id,
-          callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
-          payerAlias: swish.alias,
-          amount: refundAmount,
-          currency: 'SEK'
-        }
-      };
-      debug(apiConfig);
-
-      try {
-        const response = await axios(apiConfig);
-        debug(response);
-      } catch (error) {
-        debug(error);
+    const order = await getTreatBoxOrderById(id);
+    const apiConfig = {
+      method: 'post',
+      url: `${swish.baseUrl}/api/v1/refunds`,
+      httpsAgent: swish.httpsAgent,
+      header: {
+        'Content-Type': 'application/json'
+      },
+      data: {
+        originalPaymentReference: order.payment.swish.reference,
+        callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
+        payerAlias: swish.alias,
+        amount,
+        currency: 'SEK'
       }
+    };
+    debug(apiConfig);
+
+    try {
+      const response = await axios(apiConfig);
+      debug(response);
+    } catch (error) {
+      debug(error);
     }
 
-    return res.redirect('/treatbox/orders');
+    return res.json({ status: 'OK' });
   }
 
   return {

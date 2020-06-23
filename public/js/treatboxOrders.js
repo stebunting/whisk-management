@@ -79,13 +79,36 @@ function updateSMS() {
 
 function getSMS() {
   const [, id, recipientNumber] = $(this).attr('id').split('-');
-  const url = `${window.location.href}/getSMS/${id}-${recipientNumber}`;
+  const url = `${baseUrl}/getSMS/${id}-${recipientNumber}`;
   $.ajax({
     method: 'get',
     url
   }).done((data) => {
     if (data.status === 'OK') {
       $(`#smstext-${id}-${recipientNumber}`).val(data.message);
+    }
+  }).catch((error) => {
+    console.log(error);
+  });
+}
+
+function swishRefund() {
+  const id = $(this).attr('id').split('-')[1];
+  const amount = parseInt($(`#swishrefundamount-${id}`).val(), 10);
+  const url = `${baseUrl}/swishrefund`;
+  if (Number.isNaN(amount)) {
+    return;
+  }
+  $.ajax({
+    method: 'post',
+    url,
+    data: {
+      id,
+      amount
+    }
+  }).done((data) => {
+    if (data.status === 'OK') {
+      console.log('ok');
     }
   }).catch((error) => {
     console.log(error);
@@ -99,4 +122,6 @@ $(() => {
 
   $('.modal[id^=smsedit').on('hidden.bs.modal', getSMS);
   $('button[name=update-sms').click(updateSMS);
+
+  $('button[id^=swishrefund-]').click(swishRefund);
 });
