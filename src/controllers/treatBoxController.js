@@ -352,7 +352,7 @@ function treatBoxController() {
       status: 'Ordered'
     };
 
-    if(delivery.type !== 'collection') {
+    if(order.delivery.type !== 'collection') {
       const smsSettings = await getSettings('sms');
       order.recipients.forEach((recipient) => {
         recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
