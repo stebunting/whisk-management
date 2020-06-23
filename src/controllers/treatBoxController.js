@@ -352,10 +352,12 @@ function treatBoxController() {
       status: 'Ordered'
     };
 
-    const smsSettings = await getSettings('sms');
-    order.recipients.forEach((recipient) => {
-      recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
-    });
+    if(delivery.type !== 'collection') {
+      const smsSettings = await getSettings('sms');
+      order.recipients.forEach((recipient) => {
+        recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+      });
+    }
 
     if (order.payment.method === 'Invoice') {
       insertTreatBoxOrder(order);
