@@ -26,6 +26,14 @@ function getGoogleMapsUrl(address) {
   return `https://www.google.com/maps/search/?${q}`;
 }
 
+function getWeek(offset = 0) {
+  if (moment().isoWeekday() < 3) {
+    return moment().add(offset, 'weeks').week();
+  } else {
+    return moment().add(1 + offset, 'weeks').week();
+  }
+}
+
 // Convert year / date to formatted string
 function getFormattedDeliveryDate(date) {
   const [year, week] = date.split('-');
@@ -87,6 +95,7 @@ function parseMarkers(str, recipient) {
 module.exports = {
   priceFormat,
   getGoogleMapsUrl,
+  getWeek,
   getFormattedDeliveryDate,
   getReadableOrder,
   generateRandomString,

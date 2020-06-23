@@ -5,15 +5,15 @@ const stringify = require('csv-stringify');
 // Requirements
 const express = require('express');
 const querystring = require('querystring');
+const moment = require('moment-timezone');
 const debug = require('debug')(tag);
 const {
   getTreatBoxOrders,
   getTreatBoxOrderById,
   updateTreatBoxOrders,
-  removeTreatBoxOrder,
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
-const { getReadableOrder } = require('../functions/helper');
+const { getReadableOrder, getWeek } = require('../functions/helper');
 const { loginCheck } = require('../controllers/authController')();
 const {
   getWeekData,
@@ -51,10 +51,41 @@ function routes() {
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
     .get(async (req, res) => {
-      const orders = await getTreatBoxOrders();
-      const totals = await getTreatBoxTotals();
+      const { date } = req.query;
+      let query;
+      if (date === undefined) {
+        query = {};
+      } else if (date === 'thisweek') {
+        const week = getWeek();
+        const year = moment().week(week).year();
+        const dateCode = `${year}-${week}`;
+        query = { 'delivery.date': dateCode };
+      } else if (date === 'nextweek') {
+        const week = getWeek(1);
+        const year = moment().week(week).year();
+        const dateCode = `${year}-${week}`;
+        query = { 'delivery.date': dateCode };
+      } else {
+        query = { 'delivery.date': date };
+      }
 
-      res.render('treatboxOrders', {
+      const promises = [
+        getTreatBoxOrders(query),
+        getTreatBoxTotals(query)
+      ];
+      let orders;
+      let totals;
+      await Promise.allSettled(promises)
+        .then((data) => {
+          if (data[0].status === 'fulfilled') {
+            orders = data[0].value;
+          }
+          if (data[1].status === 'fulfilled') {
+            totals = data[1].value;
+          }
+        });
+
+      return res.render('treatboxOrders', {
         user: req.user,
         orders,
         totals,
@@ -153,12 +184,12 @@ function routes() {
         ]
       });
 
-      let recipients = [];
+      const recipients = [];
       orders.forEach((order) => {
         order.recipients.forEach((recipient) => {
           recipients.push(recipient);
-        })
-      })
+        });
+      });
       stringify(recipients, {
         header: true,
 

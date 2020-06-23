@@ -1,8 +1,10 @@
+const baseUrl = `${window.location.origin}${window.location.pathname}`;
+
 function markAsPaid(e) {
   e.preventDefault();
 
   const id = $(this).attr('class').split('-')[1];
-  const url = `${window.location.href}/markaspaid/${id}`;
+  const url = `${baseUrl}/markaspaid/${id}`;
   $.ajax({
     method: 'get',
     url
@@ -21,7 +23,7 @@ function markAsInvoiced(e) {
   e.preventDefault();
 
   const id = $(this).attr('class').split('-')[1];
-  const url = `${window.location.href}/markasinvoiced/${id}`;
+  const url = `${baseUrl}/markasinvoiced/${id}`;
   $.ajax({
     method: 'get',
     url
@@ -39,7 +41,7 @@ function markAsInvoiced(e) {
 
 function cancelOrder() {
   const id = $(this).val();
-  const url = `${window.location.href}/cancel/${id}`;
+  const url = `${baseUrl}/cancel/${id}`;
   $.ajax({
     method: 'get',
     url
@@ -58,7 +60,7 @@ function cancelOrder() {
 function updateSMS() {
   const recipientCode = $(this).val();
   const message = $(`#smstext-${recipientCode}`).val();
-  const url = `${window.location.href}/updateSMS/${recipientCode}`;
+  const url = `${baseUrl}/updateSMS/${recipientCode}`;
   $.ajax({
     method: 'post',
     url,

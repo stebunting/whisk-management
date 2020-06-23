@@ -17,8 +17,13 @@
 
     <div class="collapse navbar-collapse" id="whiskManagementNavbar">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="/treatbox/orders">Treatbox Orders</a>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="treatboxDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Treatbox Orders</a>
+          <div class="dropdown-menu" aria-labelledby="treatboxDropdown">
+            <a class="dropdown-item" href="/treatbox/orders?date=thisweek">This Week</a>
+            <a class="dropdown-item" href="/treatbox/orders?date=nextweek">Next Week</a>
+            <a class="dropdown-item" href="/treatbox/orders">All Time</a>
+          </div>
         </li>
 
         <%if (typeof user != 'undefined') {

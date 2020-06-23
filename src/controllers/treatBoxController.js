@@ -8,13 +8,18 @@ const https = require('https');
 const fs = require('fs');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
-const { priceFormat, getGoogleMapsUrl, parseMarkers } = require('../functions/helper');
+const {
+  priceFormat,
+  getGoogleMapsUrl,
+  parseMarkers
+} = require('../functions/helper');
 const { verify } = require('../../lib/verify/verify')();
 const { sendConfirmationEmail } = require('../../lib/email/email')();
 const {
   insertTreatBoxOrder,
   getTreatBoxOrderById,
-  getSettings
+  getSettings,
+  getWeek
 } = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
@@ -263,12 +268,7 @@ function treatBoxController() {
   async function getDetails(req, res) {
     const settings = await getSettings('treatbox');
 
-    let week;
-    if (moment().isoWeekday() < 3) {
-      week = moment().week();
-    } else {
-      week = moment().week() + 1;
-    }
+    const week = getWeek();
     const week1 = getWeekData(week);
     const week2 = getWeekData(week + 1);
     const timeframe = {
@@ -356,7 +356,6 @@ function treatBoxController() {
     order.recipients.forEach((recipient) => {
       recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
     });
-    debug(order);
 
     if (order.payment.method === 'Invoice') {
       insertTreatBoxOrder(order);
