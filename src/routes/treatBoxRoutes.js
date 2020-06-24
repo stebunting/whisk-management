@@ -6,7 +6,6 @@ const stringify = require('csv-stringify');
 const express = require('express');
 const querystring = require('querystring');
 const moment = require('moment-timezone');
-const { ObjectID } = require('mongodb');
 const debug = require('debug')(tag);
 const {
   getTreatBoxOrders,
@@ -50,12 +49,6 @@ function routes() {
       return res.send('ok');
     });
 
-  treatBoxRoutes.route('/show')
-    .get(async (req, res) => {
-      const orders = await getRecipients();
-      return res.json(orders);
-    })
-
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
     .get(async (req, res) => {
@@ -63,40 +56,38 @@ function routes() {
       let query;
       if (date === undefined) {
         query = {};
+
       } else if (date === 'thisweek') {
         const week = getWeek();
         const year = moment().week(week).year();
         const dateCode = `${year}-${week}`;
         query = { 'delivery.date': dateCode };
+
       } else if (date === 'nextweek') {
         const week = getWeek(1);
         const year = moment().week(week).year();
         const dateCode = `${year}-${week}`;
         query = { 'delivery.date': dateCode };
+        
       } else {
         query = { 'delivery.date': date };
       }
 
       const promises = [
-        //getTreatBoxOrders(query),
-        getRecipients(),
+        getRecipients(query),
         getTreatBoxTotals(query)
       ];
       let orders;
       let totals;
-      await Promise.allSettled(promises)
-        .then((data) => {
-          if (data[0].status === 'fulfilled') {
-            orders = data[0].value;
-          }
-          if (data[1].status === 'fulfilled') {
-            totals = data[1].value;
-          }
-        });
+      const data = await Promise.allSettled(promises);
+      if (data[0].status === 'fulfilled' && data[1].status === 'fulfilled') {
+        orders = data[0].value;
+        totals = data[1].value;
+      }
 
       return res.render('treatboxOrders', {
         user: req.user,
-        orders: orders,
+        orders,
         totals,
         getWeekData,
         getReadableOrder,

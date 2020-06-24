@@ -99,7 +99,7 @@ function moveUp(e) {
   const htmlId = $(this).attr('id');
   const [, year, week, id, recipientNumber] = htmlId.split('-');
 
-  if (recipientNumber === '') {
+  if ($(this).hasClass('top')) {
     return false;
   }
 

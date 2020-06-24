@@ -6,6 +6,7 @@
 			let recipient = orders[i].recipient;
 			if (order.delivery.type === 'collection') {
 				recipient = order;
+				recipient.index = 0;
 			}
 			
 			let top = false;
@@ -124,7 +125,7 @@
 				</tr>
 				<tr class="collapsingRow <%=trClass %>" id="inforow-<%=order._id %>-<%=recipient.index %>">
 					<td class="hiddenRow" colspan="6">
-						<div class="card collapse" id="<%=`ID-${order._id}-${order.recipient.index}` %>">
+						<div class="card collapse" id="<%=`ID-${order._id}-${recipient.index}` %>">
 							<div class="card-body row">
 								<div class="col-md-6">
 									<ul class="user-info-list">

@@ -6,6 +6,7 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
@@ -27,9 +28,9 @@ const callbackRoot = 'https://whisk-management.herokuapp.com';
 
 // Test Constants
 const swishTest = {
-  alias: '1234567839', // '1234679304',
-  baseUrl: 'https://mss.cpc.getswish.net:443/swish-cpcapi',
-  callbackRoot,
+  alias: '9871065216',
+  baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
+  callbackRoot: 'https://536405b74ff7.ngrok.io',
   httpsAgent: new https.Agent({
     cert: fs.readFileSync('cert/test.pem'),
     key: fs.readFileSync('cert/test.key'),
@@ -384,9 +385,11 @@ function treatBoxController() {
       order.payment.swish = {
         payerAlias: parseSwishAlias(order.details.telephone)
       };
+
+      const uuid = uuidv4();
       const apiConfig = {
         method: 'post',
-        url: `${swish.baseUrl}/api/v1/paymentrequests`,
+        url: `${swish.baseUrl}/api/v1/paymentrequests`, //${uuid}`,
         httpsAgent: swish.httpsAgent,
         header: {
           'Content-Type': 'application/json'
@@ -421,6 +424,13 @@ function treatBoxController() {
       (async function checkStatus() {
         setTimeout(() => {
           getPaymentResult(order.payment.swish.id).then((response) => {
+            // if (response.id !== uuid) {
+            //   const query = querystring.stringify({
+            //     status: 'INVALID_UUID'
+            //   });
+            //   return res.redirect(307, `${referer}?${query}`);
+            // }
+
             order.payment.swish.reference = response.paymentReference;
             if (response.status === 'PAID') {
               const query = querystring.stringify({
@@ -476,7 +486,7 @@ function treatBoxController() {
       const response = await axios(apiConfig);
       debug(response);
     } catch (error) {
-      debug(error);
+      debug(error.response);
     }
 
     return res.json({ status: 'OK' });
