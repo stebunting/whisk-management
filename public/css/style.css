@@ -31,3 +31,7 @@ nav {
 .sms-textarea {
 	width: 100%;
 }
+
+.top {
+	opacity: 0.5;
+}

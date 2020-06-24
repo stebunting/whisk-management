@@ -2,21 +2,26 @@
 <% let lastWeek='9999-99'; %>
 
 		<%for (let i = orders.length - 1; i >= 0; i -= 1) {
-			const timestamp = orders[i]._id.getTimestamp();
-			if (lastWeek != orders[i].delivery.date) {
+			const order = orders[i];
+			const recipient = orders[i].recipient;
+			
+			let top = false;
+			const timestamp = order._id.getTimestamp();
+			if (lastWeek != order.delivery.date) {
 				if (lastWeek !== '9999-99') {
 					%>
 			</tbody>
 		</table><%
 				}
-				lastWeek = orders[i].delivery.date;
+				lastWeek = order.delivery.date;
+				top = true;
 				const data = getWeekData(lastWeek.substring(5));
 				const total = totals.find((x) => x._id === lastWeek);
 				%>
 		<table class="table table-bordered">
 			<thead>
 				<tr class="table-info" data-toggle="collapse" data-target="#collapse-<%=lastWeek %>">
-					<td colspan="5">
+					<td colspan="6">
 						<h2><%=data.delivery.format('dddd Do MMMM YYYY [(Week] w[)]') %></h2>
 							<div class="card">
 								<div class="card-body row">
@@ -78,47 +83,45 @@
 					<th class="column">NAME</th>
 					<th class="column">ADDRESS</th>
 					<th class="column info-status">STATUS</th>
+					<th class="column info-status">MOVE</th>
 				</tr><% }
-				let length;
 				let collection;
 				let trClass = '';
-				if (orders[i].delivery.type === 'collection') {
+				if (order.delivery.type === 'collection') {
 					collection = true;
-					length = 1;
 					trClass = 'table-warning';
 				} else {
 					collection = false;
-					length = orders[i].recipients.length;
-				}
-				for (let j = 0; j < length; j += 1) {
-					let recipient;
-					recipient = collection ? orders[i] : orders[i].recipients[j];
-				%>
-				<tr class="<%=trClass %>" data-toggle="collapse" data-target="<%=`#ID-${j}-${orders[i]._id}` %>">
+				} %>
+				<tr class="<%=trClass %>" id="row-<%=order._id %>-<%=recipient.index %>" data-toggle="collapse" data-target="<%=`#ID-${order._id}-${recipient.index}` %>">
 					<td><%=timestamp.toLocaleDateString() %></td>
 					<td><%=timestamp.toLocaleTimeString() %></td>
 					<td><%=recipient.details.name %></td>
 					<td>
 						<% if (collection) { %>Collection<% } else { %><%=recipient.delivery.address %>&nbsp;
 						<a href="<%=recipient.delivery.url %>" target="_blank" rel="external">
-							<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
+							<img class="icon map-icon" src="/icons/location.svg" alt="View in Google Maps" />
 						</a><% } %>
 					</td>
 					<td class="info-status"><%
-						if (orders[i].payment.status === 'Paid') {
-							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/paid.svg" alt="Paid!" /><%
-						} else if (orders[i].payment.status === 'Invoiced') {
-							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/invoice.svg" alt="Invoiced" /><%
-						} else if (orders[i].payment.status === 'Ordered') {
-							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/ordered.svg" alt="Ordered" /><%
-						} else if (orders[i].payment.status === 'Cancelled') {
-							%><img class="icon statusicon-<%=orders[i]._id %>" src="/icons/cancelled.svg" alt="Cancelled" /><%
+						if (order.payment.status === 'Paid') {
+							%><img class="icon statusicon-<%=order._id %>" src="/icons/paid.svg" alt="Paid!" /><%
+						} else if (order.payment.status === 'Invoiced') {
+							%><img class="icon statusicon-<%=order._id %>" src="/icons/invoice.svg" alt="Invoiced" /><%
+						} else if (order.payment.status === 'Ordered') {
+							%><img class="icon statusicon-<%=order._id %>" src="/icons/ordered.svg" alt="Ordered" /><%
+						} else if (order.payment.status === 'Cancelled') {
+							%><img class="icon statusicon-<%=order._id %>" src="/icons/cancelled.svg" alt="Cancelled" /><%
 						} %>
 					</td>
+					<td class="info-status">
+						<a href="#" class="<%=top ? 'top' : '' %>" id="moveup-<%=lastWeek %>-<%=order._id %>-<%=recipient.index %>"><img class="icon" src="/icons/up.svg" alt="Up" />
+						</span>
+					</td>
 				</tr>
-				<tr class="collapsingRow <%=trClass %>">
-					<td class="hiddenRow" colspan="5">
-						<div class="card collapse" id="<%=`ID-${j}-${orders[i]._id}` %>">
+				<tr class="collapsingRow <%=trClass %>" id="inforow-<%=order._id %>-<%=recipient.index %>">
+					<td class="hiddenRow" colspan="6">
+						<div class="card collapse" id="<%=`ID-${order._id}-${order.recipient.index}` %>">
 							<div class="card-body row">
 								<div class="col-md-6">
 									<ul class="user-info-list">
@@ -127,18 +130,18 @@
 										</li>
 										<li>
 											<span class="user-info-detail">NAME:</span>
-											<%=orders[i].details.name %>
+											<%=order.details.name %>
 										</li>
 										<li>
 											<span class="user-info-detail">PHONE NUMBER:</span>
-											<%=orders[i].details.telephone %>&nbsp;
-											<a href="tel:<%=orders[i].details.telephone %>">
-												<img class="icon" src="/icons/call.svg" alt="Call <%=orders[i].details.name %>" />
+											<%=order.details.telephone %>&nbsp;
+											<a href="tel:<%=order.details.telephone %>">
+												<img class="icon" src="/icons/call.svg" alt="Call <%=order.details.name %>" />
 											</a>
 										</li>
 										<li>
 											<span class="user-info-detail">E-MAIL ADDRESS:</span>
-											<a href="mailto:<%=orders[i].details.email %>"><%=orders[i].details.email %></a>
+											<a href="mailto:<%=order.details.email %>"><%=order.details.email %></a>
 										</li>
 									</ul>
 									<% if (collection) { %>
@@ -151,36 +154,36 @@
 										</li>
 										<li>
 											<span class="user-info-detail">COST:</span>
-											<%=orders[i].cost.total%> SEK
+											<%=order.cost.total%> SEK
 										</li>
 										<li>
 											<span class="user-info-detail">PAYMENT METHOD:</span>
-											<%=orders[i].payment.method%>
+											<%=order.payment.method%>
 										</li>
 										<li>
-											<span class="user-info-detail">STATUS:</span> <span class="status-<%=orders[i]._id %>">
-											<%if (orders[i].payment.status === 'Paid') {
+											<span class="user-info-detail">STATUS:</span> <span class="status-<%=order._id %>">
+											<%if (order.payment.status === 'Paid') {
 												%>Paid</span><%
-											} else if (orders[i].payment.status === 'Invoiced') {
-												%>Invoiced</span> <a href="#" class="markaspaid-<%=orders[i]._id %>">(Mark as Paid)</a>
+											} else if (order.payment.status === 'Invoiced') {
+												%>Invoiced</span> <a href="#" class="markaspaid-<%=order._id %>">(Mark as Paid)</a>
 											<%
-											} else if (orders[i].payment.status === 'Ordered') {
-												%>Ordered</span> <a href="#" class="markasinvoiced-<%=orders[i]._id %>">(Mark as Invoiced)</a>
+											} else if (order.payment.status === 'Ordered') {
+												%>Ordered</span> <a href="#" class="markasinvoiced-<%=order._id %>">(Mark as Invoiced)</a>
 											<%
-											} else if (orders[i].payment.status === 'Cancelled') {
+											} else if (order.payment.status === 'Cancelled') {
 												%>Cancelled</span><% } %>
 										</li>
-										<% if (orders[i].payment.method === 'Swish') {
+										<% if (order.payment.method === 'Swish') {
 												%><li>
 											<div class="form-inline">
 												<span class="user-info-detail">REFUND:</span>&nbsp;
-												<input class="form-control form-control-sm" type="text" id="swishrefundamount-<%=orders[i]._id %>" placeholder="Amount" />&nbsp;
-												<button class="btn btn-sm btn-primary" type="submit" id="swishrefund-<%=orders[i]._id %>">Send</button>
+												<input class="form-control form-control-sm" type="text" id="swishrefundamount-<%=order._id %>" placeholder="Amount" />&nbsp;
+												<button class="btn btn-sm btn-primary" type="submit" id="swishrefund-<%=order._id %>">Send</button>
 											</div>
 										</li><%
 											} %>
 										<li>
-											<button class="btn btn-danger" type="button" name="cancel" value="<%=orders[i]._id %>">Cancel Order</button>
+											<button class="btn btn-danger" type="button" name="cancel" value="<%=order._id %>">Cancel Order</button>
 										</li>
 									</ul>
 								</div>
@@ -200,7 +203,7 @@
 											<a href="tel:<%=recipient.details.telephone %>">
 												<img class="icon" src="/icons/call.svg" alt="Call <%=recipient.details.name %>" />
 											</a>
-											<a id="smslink-<%=orders[i]._id %>-<%=j %>" href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
+											<a id="smslink-<%=order._id %>-<%=order.recipient.index %>" href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
 												<img class="icon" src="/icons/sms.svg" alt="Send Delivery SMS" />
 											</a>
 										</li>
@@ -227,8 +230,8 @@
 											<%=getReadableOrder(recipient.items) %>
 										</li>
 										<li>
-											<a href="#smsedit-<%=`${orders[i]._id}-${j}`%>" data-toggle="modal">Edit Text Message</a>
-											<div class="modal" id="smsedit-<%=`${orders[i]._id}-${j}`%>" tabindex="-1" role="dialog">
+											<a href="#smsedit-<%=`${order._id}-${order.recipient.index}`%>" data-toggle="modal">Edit Text Message</a>
+											<div class="modal" id="smsedit-<%=`${order._id}-${order.recipient.index}`%>" tabindex="-1" role="dialog">
 											  <div class="modal-dialog">
 											    <div class="modal-content">
 											      <div class="modal-header">
@@ -238,11 +241,11 @@
 											        </button>
 											      </div>
 											      <div class="modal-body">
-											        <textarea class="form-control sms-textarea" rows="8" name="sms-text" id="smstext-<%=orders[i]._id %>-<%=j %>" placeholder="SMS Body"><%=recipient.delivery.sms %></textarea>
+											        <textarea class="form-control sms-textarea" rows="8" name="sms-text" id="smstext-<%=order._id %>-<%=order.recipient.index %>" placeholder="SMS Body"><%=recipient.delivery.sms %></textarea>
 											      </div>
 											      <div class="modal-footer">
 											        <button type="button" class="btn btn-secondary modal-close" data-dismiss="modal">Close</button>
-											        <button type="button" class="btn btn-primary" name="update-sms" value="<%=orders[i]._id %>-<%=j %>">Save changes</button>
+											        <button type="button" class="btn btn-primary" name="update-sms" value="<%=order._id %>-<%=order.recipient.index %>">Save changes</button>
 											      </div>
 											    </div>
 											  </div>
@@ -253,7 +256,7 @@
 							</div>
 						</div>
 					</td>
-				</tr><% }} %>
+				</tr><% } %>
 			</tbody>
 		</table>
 <%- include('partials/footer') %>

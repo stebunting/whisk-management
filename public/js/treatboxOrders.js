@@ -92,6 +92,43 @@ function getSMS() {
   });
 }
 
+function moveUp(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const htmlId = $(this).attr('id');
+  const [, year, week, id, recipientNumber] = htmlId.split('-');
+
+  let prevId = '';
+  $(`a[id^=moveup-${year}-${week}-`).each(function callback() {
+    if ($(this).attr('id') === htmlId) {
+      return false;
+    }
+    prevId = $(this).attr('id');
+    return true;
+  });
+
+  if (prevId === '') {
+    return;
+  }
+
+  const [,,, previousId, previousRecipientNumber] = prevId.split('-');
+  const url = `${baseUrl}/swapOrder/${id}-${recipientNumber}-${previousId}-${previousRecipientNumber}`;
+  $.ajax({
+    method: 'get',
+    url
+  }).done((data) => {
+    $(`#row-${id}-${recipientNumber}`).hide().insertBefore(`#row-${previousId}-${previousRecipientNumber}`).show();
+    $(`#inforow-${id}-${recipientNumber}`).hide().insertBefore(`#row-${previousId}-${previousRecipientNumber}`).show();
+    if ($(`#${prevId}`).hasClass('top')) {
+      $(`#${htmlId}`).addClass('top');
+      $(`#${prevId}`).removeClass('top');
+    }
+  }).catch((error) => {
+    console.log(error);
+  });
+}
+
 function swishRefund() {
   const id = $(this).attr('id').split('-')[1];
   const amount = parseInt($(`#swishrefundamount-${id}`).val(), 10);
@@ -116,12 +153,17 @@ function swishRefund() {
 }
 
 $(() => {
-  $('a[class^=\'markasinvoiced-\']').click(markAsInvoiced);
-  $('a[class^=\'markaspaid-\']').click(markAsPaid);
+  $('a[class^=markasinvoiced-]').click(markAsInvoiced);
+  $('a[class^=markaspaid-]').click(markAsPaid);
   $('button[name=cancel]').click(cancelOrder);
 
-  $('.modal[id^=smsedit').on('hidden.bs.modal', getSMS);
-  $('button[name=update-sms').click(updateSMS);
+  $('a[id^=moveup-').click(moveUp);
+  $('.map-icon').click(function(e) {
+    e.stopPropagation();
+  });
+
+  $('.modal[id^=smsedit]').on('hidden.bs.modal', getSMS);
+  $('button[name=update-sms]').click(updateSMS);
 
   $('button[id^=swishrefund-]').click(swishRefund);
 });

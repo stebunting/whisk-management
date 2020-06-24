@@ -19,6 +19,7 @@ const { sendConfirmationEmail } = require('../../lib/email/email')();
 const {
   insertTreatBoxOrder,
   getTreatBoxOrderById,
+  getHighestOrder,
   getSettings
 } = require('../../lib/db-control/db-control')(tag);
 
@@ -273,7 +274,7 @@ function treatBoxController() {
     const week2 = getWeekData(week + 1);
     const timeframe = {
       [`${week1.year}-${week1.week}`]: week1,
-      [`${week2.year}-${week2.week}`]: week2
+      //[`${week2.year}-${week2.week}`]: week2
     };
 
     const info = {
@@ -353,6 +354,16 @@ function treatBoxController() {
     };
 
     if(order.delivery.type !== 'collection') {
+      const highestOrder = await getHighestOrder();
+      let nextOrder = 0
+      if (highestOrder !== undefined) {
+        nextOrder = highestOrder.highestOrder + 1;
+      }
+      order.recipients.forEach((recipient) => {
+        recipient.delivery.order = nextOrder;
+        nextOrder += 1;
+      })
+
       const smsSettings = await getSettings('sms');
       order.recipients.forEach((recipient) => {
         recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);

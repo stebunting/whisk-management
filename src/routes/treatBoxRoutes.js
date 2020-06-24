@@ -6,10 +6,12 @@ const stringify = require('csv-stringify');
 const express = require('express');
 const querystring = require('querystring');
 const moment = require('moment-timezone');
+const { ObjectID } = require('mongodb');
 const debug = require('debug')(tag);
 const {
   getTreatBoxOrders,
   getTreatBoxOrderById,
+  getRecipients,
   updateTreatBoxOrders,
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
@@ -48,6 +50,25 @@ function routes() {
       return res.send('ok');
     });
 
+  treatBoxRoutes.route('/addorder')
+    .all(loginCheck)
+    .get(async (req, res) => {
+      const { getDb } = require('../controllers/treatBoxController')();
+      const orders = await getTreatBoxOrders();
+
+      let index = 0;
+      orders.forEach((order) => {
+        if (order.delivery.type !== 'collection') {
+          order.recipients.forEach((recipient) => {
+            recipient.delivery.order = index;
+            index += 1;
+          })
+        }
+        updateTreatBoxOrders(order._id, order);
+      })
+      return res.json(orders);
+    })
+
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
     .get(async (req, res) => {
@@ -70,7 +91,8 @@ function routes() {
       }
 
       const promises = [
-        getTreatBoxOrders(query),
+        //getTreatBoxOrders(query),
+        getRecipients(),
         getTreatBoxTotals(query)
       ];
       let orders;
@@ -87,7 +109,7 @@ function routes() {
 
       return res.render('treatboxOrders', {
         user: req.user,
-        orders,
+        orders: orders,
         totals,
         getWeekData,
         getReadableOrder,
@@ -133,6 +155,44 @@ function routes() {
       } catch {
         return res.json({ status: 'Error' });
       }
+    });
+
+  treatBoxRoutes.route('/orders/swapOrder/:recipientCodes')
+    .all(loginCheck)
+    .get(async (req, res) => {
+      const [id1, recipient1, id2, recipient2] = req.params.recipientCodes.split('-');
+
+      // Get values from MongoDB
+      let value1;
+      let value2;
+      let promises = [
+        getTreatBoxOrderById(id1),
+        getTreatBoxOrderById(id2)
+      ];
+      let data = await Promise.allSettled(promises);
+      if (data[0].status === 'fulfilled' && data[1].status === 'fulfilled') {
+        value1 = data[0].value.recipients[recipient1].delivery.order;
+        value2 = data[1].value.recipients[recipient2].delivery.order;
+      } else {
+        return res.json({ status: 'Error' });
+      }
+
+      // Set up queries
+      const query1 = {};
+      query1[`recipients.${recipient1}.delivery.order`] = value2;
+      const query2 = {};
+      query2[`recipients.${recipient2}.delivery.order`] = value1;
+
+      // Update values in MongoDB
+      promises = [
+        updateTreatBoxOrders(id1, query1),
+        updateTreatBoxOrders(id2, query2)
+      ];
+      data = await Promise.allSettled(promises);
+      if (data[0].status === 'fulfilled' && data[1].status === 'fulfilled') {
+        return res.json({ status: 'OK' });
+      }
+      return res.json({ status: 'Error' });
     });
 
   treatBoxRoutes.route('/orders/updateSMS/:recipientCode')

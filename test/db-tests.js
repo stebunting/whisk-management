@@ -3,7 +3,6 @@ const tag = 'whisk-management:db-tests';
 
 // Requirements
 const assert = require('assert');
-const { ObjectID } = require('mongodb');
 const {
   connect,
   isConnected,
@@ -18,7 +17,9 @@ const {
   insertTreatBoxOrder,
   getTreatBoxOrders,
   getTreatBoxOrderById,
+  getRecipients,
   updateTreatBoxOrders,
+  getHighestOrder,
   getTreatBoxTotals,
   removeTreatBoxOrder
 } = require('../lib/db-control/db-control')(tag, 'whisk-management-test');
@@ -145,7 +146,8 @@ describe('Database Control Connection Tests', () => {
             addressNotes: 'Doorcode 1234',
             zone: 1,
             message: '',
-            url: 'https://www.google.com/maps/search/?api=1&query=Roslagsgatan%2034%2C%20113%2055%20Stockholm%2C%20Sweden'
+            url: 'https://www.google.com/maps/search/?api=1&query=Roslagsgatan%2034%2C%20113%2055%20Stockholm%2C%20Sweden',
+            order: 8
           }
         }
       ]
@@ -175,6 +177,26 @@ describe('Database Control Connection Tests', () => {
 
     it('adds second order to database', async () => {
       delete order._id;
+      order.recipients.push({
+        items: {
+          comboBoxes: 0,
+          treatBoxes: 1,
+          vegetableBoxes: 0
+        },
+        details: {
+          name: 'John',
+          telephone: '078326478264'
+        },
+        delivery: {
+          address: 'Heleneborgsgatan, Stockholm, Sweden',
+          addressNotes: '',
+          url: 'https://www.google.com/maps/search/?api=1&query=Heleneborgsgatan%2C%20Stockholm%2C%20Sweden',
+          googleFormattedAddress: 'Heleneborgsgatan, Stockholm, Sweden',
+          zone: 1,
+          message: '',
+          order: 4
+        }
+      });
       const insertedOrder = await insertTreatBoxOrder(order);
       assert.equal(insertedOrder.insertedCount, 1);
       assert.deepEqual(insertedOrder.ops[0], order);
@@ -187,7 +209,7 @@ describe('Database Control Connection Tests', () => {
       assert.equal(response[0].vegetableBoxes, 8);
       assert.equal(response[0].treatBoxesToMake, 10);
       assert.equal(response[0].vegetableBoxesToOrder, 14);
-      assert.equal(response[0].deliveries, 2);
+      assert.equal(response[0].deliveries, 3);
       assert.equal(response[0].income, 980);
     });
 
@@ -195,20 +217,61 @@ describe('Database Control Connection Tests', () => {
       const orders = await getTreatBoxOrders();
       assert.equal(orders[1].payment.paid, false);
 
-      const response = await updateTreatBoxOrders(orders[1]._id, { 'payment.paid': true });
+      await updateTreatBoxOrders(orders[1]._id, { 'payment.paid': true });
       const updatedOrders = await getTreatBoxOrders();
       assert.equal(updatedOrders[1].payment.paid, true);
     });
 
+    it('adds new collection method', async () => {
+      const insertedOrder = await insertTreatBoxOrder({
+        items: {
+          comboBoxes: 3,
+          treatBoxes: 2,
+          vegetableBoxes: 4
+        },
+        details: {
+          name: 'Collecter',
+          email: 'hi@collection.se',
+          telephone: '07756867321'
+        },
+        delivery: {
+          date: '2020-25',
+          type: 'collection'
+        },
+        cost: {
+          food: 490,
+          delivery: 0,
+          foodMoms: 53,
+          deliveryMoms: 0,
+          total: 490
+        },
+        payment: {
+          method: 'Invoice',
+          paid: false
+        }
+      });
+      assert.equal(insertedOrder.insertedCount, 1);
+    });
+
+    it('gets array of recipients', async () => {
+      const response = await getRecipients();
+      assert.equal(response.length, 3);
+    });
+
+    it('gets highest order', async () => {
+      const response = await getHighestOrder();
+      assert.equal(response.highestOrder, 8);
+    })
+
     it('removes one item from database', async () => {
       const orders = await getTreatBoxOrders();
-      assert.equal(orders.length, 2);
+      assert.equal(orders.length, 3);
 
       const response = await removeTreatBoxOrder(orders[0]._id);
       assert.equal(response.deletedCount, 1);
 
       const newOrders = await getTreatBoxOrders();
-      assert.equal(newOrders.length, 1);
+      assert.equal(newOrders.length, 2);
     });
 
     it('disconnects', () => {
@@ -223,7 +286,7 @@ describe('Database Control Connection Tests', () => {
       price: {
         comboBox: 49000
       }
-    }
+    };
 
     it('connects to client', async () => {
       await connect();
@@ -237,20 +300,20 @@ describe('Database Control Connection Tests', () => {
     });
 
     it('update settings', async () => {
-      settings.price.comboBox = 50000
-      const response = await updateSettings(settings);
-    })
+      settings.price.comboBox = 50000;
+      await updateSettings(settings);
+    });
 
     it('retrieves settings', async () => {
       const response = await getSettings('treatbox');
       assert.deepEqual(response.price, settings.price);
-    })
+    });
 
     it('disconnects', () => {
       disconnect();
       assert.ok(!isConnected());
     });
-  })
+  });
 
   describe('Attempt to perform functions when not connected', () => {
     const newUser = {
