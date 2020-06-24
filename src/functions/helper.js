@@ -12,9 +12,15 @@ function priceFormat(num) {
 }
 
 // Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
-function calculateMoms(price, rate) {
-  const decimalRate = 1 + (rate / 100);
-  return Math.round(price * decimalRate - price);
+function calculateMoms(gross, momsRate) {
+  const decimalRate = 1 + (momsRate / 100);
+  return Math.round(gross - (gross / decimalRate));
+}
+
+// Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
+function calculateNetCost(gross, momsRate) {
+  const decimalRate = 1 + (momsRate / 100);
+  return Math.round(gross / decimalRate);
 }
 
 // Function to return a Google Maps URL from an address
@@ -94,6 +100,8 @@ function parseMarkers(str, recipient) {
 
 module.exports = {
   priceFormat,
+  calculateMoms,
+  calculateNetCost,
   getGoogleMapsUrl,
   getWeek,
   getFormattedDeliveryDate,

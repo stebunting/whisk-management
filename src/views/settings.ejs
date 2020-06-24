@@ -9,6 +9,67 @@
 		</div>
 
 		<div class="card-body">
+			<h5 class="card-title">Add Product</h5>
+			<form action="/user/settings" method="post">
+				<div class="form-group row">
+					<label for="add-product-name" class="col-md-3 col-form-label">Name</label>
+					<div class="col-md-3">
+						<input type="text" class="form-control" id="add-product-name" name="add-product-name" placeholder="Product Name" />
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="add-product-price" class="col-md-3 col-form-label">Price (including MOMs)</label>
+					<div class="input-group col-md-3">
+						<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price" />
+						<div class="input-group-append">
+							<span class="input-group-text">SEK</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="add-product-moms" class="col-md-3 col-form-label">MOMs Rate</label>
+					<div class="col-md-3">
+						<select class="form-control" id="add-product-moms" name="add-product-moms">
+							<option value="0">0%</option>
+							<option value="6">6%</option>
+							<option value="12" selected>12%</option>
+							<option value="25">25%</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-6 offset-md-3">
+						<button type="submit" class="btn btn-primary" name="submit" value="add-product">Add</button>
+					</div>
+				</div>
+			</form>
+
+			<table class="table">
+				<thead>
+					<tr>
+						<th>NAME</th>
+						<th>GROSS PRICE</th>
+						<th>MOMS RATE</th>
+						<th>NET PRICE</th>
+						<th>MOMS AMOUNT</th>
+					</tr>
+				</thead>
+				<tbody>
+			<% for (let i = 0; i < products.length; i += 1) { %>
+					<tr>
+						<td><%=products[i].name %></td>
+						<td><%=priceFormat(products[i].grossPrice) %> SEK</td>
+						<td><%=products[i].momsRate %> %</td>
+						<td><%=priceFormat(products[i].netPrice) %> SEK</td>
+						<td><%=priceFormat(products[i].momsAmount) %> SEK</td>
+					</tr>
+					<% } %>
+				</tbody>
+			</table>
+
 			<h5 class="card-title">Treatbox Settings</h5>
 			<form action="/user/settings" method="post">
 				<div class="form-group row">

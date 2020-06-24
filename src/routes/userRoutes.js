@@ -7,12 +7,19 @@ const querystring = require('querystring');
 const axios = require('axios');
 const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
-const { priceFormat, calculateMoms, generateRandomString } = require('../functions/helper');
+const {
+  priceFormat,
+  calculateMoms,
+  calculateNetCost,
+  generateRandomString
+} = require('../functions/helper');
 const {
   getUser,
   updateUser,
   getSettings,
-  updateSettings
+  updateSettings,
+  addProduct,
+  getProducts
 } = require('../../lib/db-control/db-control')();
 
 // Facebook Constants
@@ -142,6 +149,18 @@ function routes() {
 
       let settings;
       switch (submit) {
+        case 'add-product': {
+          const product = {
+            name: req.body['add-product-name'],
+            grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
+            momsRate: parseInt(req.body['add-product-moms'], 10),
+          };
+          product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
+          product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
+          addProduct(product);
+          break;
+        }
+
         case 'treatboxUpdate':
           settings = {
             type: 'treatbox',
@@ -219,16 +238,26 @@ function routes() {
       return res.redirect('/user/settings');
     })
     .get(async (req, res) => {
-      const treatboxSettings = await getSettings('treatbox');
-      const rebatecodeSettings = await getSettings('rebatecodes');
-      const smsSettings = await getSettings('sms');
+      const promises = [
+        getProducts(),
+        getSettings('treatbox'),
+        getSettings('rebatecodes'),
+        getSettings('sms')
+      ]
+      const data = await Promise.allSettled(promises);
+      const products = data[0].value;
+      const treatboxSettings = data[1].value;
+      const rebatecodeSettings = data[2].value;
+      const smsSettings = data[3].value;
 
       return res.render('settings.ejs', {
         user: req.user,
+        products,
         priceFormat,
         treatboxSettings,
         rebatecodeSettings,
-        smsSettings
+        smsSettings,
+        priceFormat
       });
     });
 

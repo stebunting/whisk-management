@@ -21,7 +21,8 @@ const {
   insertTreatBoxOrder,
   getTreatBoxOrderById,
   getHighestOrder,
-  getSettings
+  getSettings,
+  getProducts
 } = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
@@ -268,7 +269,16 @@ function treatBoxController() {
   }
 
   async function getDetails(req, res) {
-    const settings = await getSettings('treatbox');
+    const promises = [
+      getSettings('treatbox'),
+      getProducts()
+    ]
+    const data = await Promise.allSettled(promises);
+    if (data[0].status !== 'fulfilled' || data[1].status !== 'fulfilled') {
+      return res.json({ status: 'Error' });
+    }
+    const settings = data[0].value;
+    const products = data[1].value;
 
     const week = getWeek();
     const week1 = getWeekData(week);
@@ -279,6 +289,8 @@ function treatBoxController() {
     };
 
     const info = {
+      status: 'OK',
+      products,
       cost: {
         food: {
           comboBox: settings.food.comboBox.price,
