@@ -50,22 +50,9 @@ function routes() {
       return res.send('ok');
     });
 
-  treatBoxRoutes.route('/addorder')
-    .all(loginCheck)
+  treatBoxRoutes.route('/show')
     .get(async (req, res) => {
-      const { getDb } = require('../controllers/treatBoxController')();
-      const orders = await getTreatBoxOrders();
-
-      let index = 0;
-      orders.forEach((order) => {
-        if (order.delivery.type !== 'collection') {
-          order.recipients.forEach((recipient) => {
-            recipient.delivery.order = index;
-            index += 1;
-          })
-        }
-        updateTreatBoxOrders(order._id, order);
-      })
+      const orders = await getRecipients();
       return res.json(orders);
     })
 

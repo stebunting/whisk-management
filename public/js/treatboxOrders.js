@@ -99,6 +99,10 @@ function moveUp(e) {
   const htmlId = $(this).attr('id');
   const [, year, week, id, recipientNumber] = htmlId.split('-');
 
+  if (recipientNumber === '') {
+    return false;
+  }
+
   let prevId = '';
   $(`a[id^=moveup-${year}-${week}-`).each(function callback() {
     if ($(this).attr('id') === htmlId) {

@@ -3,7 +3,10 @@
 
 		<%for (let i = orders.length - 1; i >= 0; i -= 1) {
 			const order = orders[i];
-			const recipient = orders[i].recipient;
+			let recipient = orders[i].recipient;
+			if (order.delivery.type === 'collection') {
+				recipient = order;
+			}
 			
 			let top = false;
 			const timestamp = order._id.getTimestamp();
@@ -115,7 +118,7 @@
 						} %>
 					</td>
 					<td class="info-status">
-						<a href="#" class="<%=top ? 'top' : '' %>" id="moveup-<%=lastWeek %>-<%=order._id %>-<%=recipient.index %>"><img class="icon" src="/icons/up.svg" alt="Up" />
+						<a href="#" class="<%=top || collection ? 'top' : '' %>" id="moveup-<%=lastWeek %>-<%=order._id %>-<%=recipient.index %>"><img class="icon" src="/icons/up.svg" alt="Up" />
 						</span>
 					</td>
 				</tr>
