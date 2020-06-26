@@ -33,11 +33,12 @@ const callbackRoot = 'https://whisk-management.herokuapp.com';
 const swishTest = {
   alias: '1234679304',
   baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
-  callbackRoot: 'https://536405b74ff7.ngrok.io',
+  callbackRoot,
   httpsAgent: new https.Agent({
-    cert: fs.readFileSync('cert/Swish_Merchant_TestSigningCertificate_1234679304.pem'),
-    key: fs.readFileSync('cert/Swish_Merchant_TestSigningCertificate_1234679304.key'),
-    ca: fs.readFileSync('cert/Swish_TLS_RootCA.pem')
+    cert: fs.readFileSync('cert/test.pem'),
+    key: fs.readFileSync('cert/test.key'),
+    ca: fs.readFileSync('cert/test-ca.pem'),
+    passphrase: 'swish'
   })
 };
 
@@ -52,7 +53,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishTest;
+const swish = swishProduction;
 
 // Pricing
 const foodMoms = 1.12;
@@ -317,6 +318,7 @@ function treatBoxController() {
 
   async function lookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
+    const delivery = JSON.parse(req.body.delivery);
     const statement = {
       status: 'OK',
       bottomLine : {
@@ -328,6 +330,8 @@ function treatBoxController() {
         total: 0
       }
     };
+
+    // Get Food Cost
     const promises = []
     for (let i = 0; i < basket.length; i += 1) {
       promises.push(getProductById(basket[i].id));
@@ -352,6 +356,17 @@ function treatBoxController() {
       }
     }
 
+    // Get Delivery Cost
+    const treatboxSettings = await getSettings('treatbox')
+    statement.delivery = {
+      zone2Price: treatboxSettings.delivery.zone2.price
+    }
+    statement.bottomLine.deliveryCost = treatboxSettings.delivery.zone2.price * delivery.zone2;
+    statement.bottomLine.deliveryMoms = treatboxSettings.delivery.zone2.momsAmount * delivery.zone2;
+    statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
+    statement.bottomLine.total += statement.bottomLine.deliveryCost;
+
+    debug(statement);
     return res.json(statement);
   }
 
