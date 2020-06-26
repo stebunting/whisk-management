@@ -19,6 +19,7 @@ const { loginCheck } = require('../controllers/authController')();
 const {
   getWeekData,
   getDetails,
+  lookupPrice,
   lookupRebateCode,
   orderStarted,
   orderConfirmed,
@@ -31,6 +32,9 @@ function routes() {
   // API to return important information
   treatBoxRoutes.route('/orderdetails')
     .get(getDetails);
+
+  treatBoxRoutes.route('/lookupprice')
+    .post(lookupPrice);
 
   treatBoxRoutes.route('/lookuprebate')
     .get(lookupRebateCode);

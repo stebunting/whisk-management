@@ -7,6 +7,7 @@ const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const { ObjectID } = require('mongodb');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
@@ -22,20 +23,21 @@ const {
   getTreatBoxOrderById,
   getHighestOrder,
   getSettings,
-  getProducts
+  getProducts,
+  getProductById
 } = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
 
 // Test Constants
 const swishTest = {
-  alias: '9871065216',
+  alias: '1234679304',
   baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
   callbackRoot: 'https://536405b74ff7.ngrok.io',
   httpsAgent: new https.Agent({
-    cert: fs.readFileSync('cert/test.pem'),
-    key: fs.readFileSync('cert/test.key'),
-    ca: fs.readFileSync('cert/test-ca.pem')
+    cert: fs.readFileSync('cert/Swish_Merchant_TestSigningCertificate_1234679304.pem'),
+    key: fs.readFileSync('cert/Swish_Merchant_TestSigningCertificate_1234679304.key'),
+    ca: fs.readFileSync('cert/Swish_TLS_RootCA.pem')
   })
 };
 
@@ -50,7 +52,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishProduction;
+const swish = swishTest;
 
 // Pricing
 const foodMoms = 1.12;
@@ -282,10 +284,10 @@ function treatBoxController() {
 
     const week = getWeek();
     const week1 = getWeekData(week);
-    const week2 = getWeekData(week + 1);
+    // const week2 = getWeekData(week + 1);
     const timeframe = {
       [`${week1.year}-${week1.week}`]: week1,
-      //[`${week2.year}-${week2.week}`]: week2
+      // [`${week2.year}-${week2.week}`]: week2
     };
 
     const info = {
@@ -311,6 +313,46 @@ function treatBoxController() {
     };
 
     return res.json(info);
+  }
+
+  async function lookupPrice(req, res) {
+    const basket = JSON.parse(req.body.basket);
+    const statement = {
+      status: 'OK',
+      bottomLine : {
+        foodCost: 0,
+        deliveryCost: 0,
+        foodMoms: 0,
+        deliveryMoms: 0,
+        totalMoms: 0,
+        total: 0
+      }
+    };
+    const promises = []
+    for (let i = 0; i < basket.length; i += 1) {
+      promises.push(getProductById(basket[i].id));
+    }
+    const data = await Promise.allSettled(promises)
+    for (let i = 0; i < data.length; i += 1) {
+      if (data[i].status === 'fulfilled' && data[i].value._id.equals(basket[i].id)) {
+        product = data[i].value;
+        statement[product._id] = {
+          name: product.name,
+          quantity: parseInt(basket[i].quantity, 10),
+          price: parseInt(product.grossPrice, 10),
+          momsSubTotal: parseInt(basket[i].quantity, 10) * parseInt(product.momsAmount, 10),
+          subTotal: parseInt(basket[i].quantity, 10) * parseInt(product.grossPrice, 10)
+        }
+        statement.bottomLine.foodCost += statement[product._id].subTotal;
+        statement.bottomLine.foodMoms += statement[product._id].momsSubTotal;
+        statement.bottomLine.totalMoms += statement[product._id].momsSubTotal;
+        statement.bottomLine.total += statement[product._id].subTotal;
+      } else {
+        return res.json({ status: 'Error '});
+      }
+    }
+
+    return res.json(statement);
   }
 
   async function lookupRebateCode(req, res) {
@@ -421,6 +463,7 @@ function treatBoxController() {
         order.payment.swish.id = response.headers.location.split('/');
         order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
       } catch (error) {
+        debug(error);
         let errors = '';
         if (error.response && error.response.data.length > 0) {
           errors = error.response.data.map((x) => x.errorCode).join(',');
@@ -497,8 +540,9 @@ function treatBoxController() {
     try {
       const response = await axios(apiConfig);
       debug(response);
+      debug('hi');
     } catch (error) {
-      debug(error.response);
+      debug(error);
     }
 
     return res.json({ status: 'OK' });
@@ -508,6 +552,7 @@ function treatBoxController() {
     parseSwishAlias,
     getWeekData,
     getDetails,
+    lookupPrice,
     lookupRebateCode,
     orderStarted,
     orderConfirmed,

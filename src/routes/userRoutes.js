@@ -154,6 +154,7 @@ function routes() {
             name: req.body['add-product-name'],
             grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
             momsRate: parseInt(req.body['add-product-moms'], 10),
+            deliverable: req.body['add-product-deliverable'] === 'true'
           };
           product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
           product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
