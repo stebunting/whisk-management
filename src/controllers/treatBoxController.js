@@ -321,6 +321,7 @@ function treatBoxController() {
     const delivery = JSON.parse(req.body.delivery);
     const statement = {
       status: 'OK',
+      products: [],
       bottomLine : {
         foodCost: 0,
         deliveryCost: 0,
@@ -340,17 +341,19 @@ function treatBoxController() {
     for (let i = 0; i < data.length; i += 1) {
       if (data[i].status === 'fulfilled' && data[i].value._id.equals(basket[i].id)) {
         product = data[i].value;
-        statement[product._id] = {
+        const newProduct = {
+          id: product._id,
           name: product.name,
           quantity: parseInt(basket[i].quantity, 10),
           price: parseInt(product.grossPrice, 10),
           momsSubTotal: parseInt(basket[i].quantity, 10) * parseInt(product.momsAmount, 10),
           subTotal: parseInt(basket[i].quantity, 10) * parseInt(product.grossPrice, 10)
-        }
-        statement.bottomLine.foodCost += statement[product._id].subTotal;
-        statement.bottomLine.foodMoms += statement[product._id].momsSubTotal;
-        statement.bottomLine.totalMoms += statement[product._id].momsSubTotal;
-        statement.bottomLine.total += statement[product._id].subTotal;
+        };
+        statement.bottomLine.foodCost += newProduct.subTotal;
+        statement.bottomLine.foodMoms += newProduct.momsSubTotal;
+        statement.bottomLine.totalMoms += newProduct.momsSubTotal;
+        statement.bottomLine.total += newProduct.subTotal;
+        statement.products.push(newProduct);
       } else {
         return res.json({ status: 'Error '});
       }
@@ -366,7 +369,6 @@ function treatBoxController() {
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
 
-    debug(statement);
     return res.json(statement);
   }
 
