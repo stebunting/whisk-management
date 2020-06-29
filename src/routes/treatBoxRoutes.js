@@ -19,9 +19,10 @@ const { loginCheck } = require('../controllers/authController')();
 const {
   getWeekData,
   getDetails,
-  lookupPrice,
+  apiLookupPrice,
   lookupRebateCode,
   orderStarted,
+  legacyOrderConfirmed,
   orderConfirmed,
   swishRefund
 } = require('../controllers/treatBoxController')();
@@ -34,7 +35,7 @@ function routes() {
     .get(getDetails);
 
   treatBoxRoutes.route('/lookupprice')
-    .post(lookupPrice);
+    .post(apiLookupPrice);
 
   treatBoxRoutes.route('/lookuprebate')
     .get(lookupRebateCode);
@@ -45,6 +46,10 @@ function routes() {
 
   // Invoice payment route
   treatBoxRoutes.route('/invoicepayment')
+    .post(legacyOrderConfirmed);
+
+  // Invoice payment route
+  treatBoxRoutes.route('/payment')
     .post(orderConfirmed);
 
   treatBoxRoutes.route('/swishcallback')

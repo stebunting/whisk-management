@@ -53,7 +53,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishProduction;
+const swish = swishTest;
 
 // Pricing
 const foodMoms = 1.12;
@@ -102,15 +102,6 @@ function treatBoxController() {
     return alias;
   }
 
-  function validateItems(items) {
-    return Object.prototype.hasOwnProperty.call(items, 'comboBoxes')
-        && verify(items.comboBoxes, 'number')
-        && Object.prototype.hasOwnProperty.call(items, 'treatBoxes')
-        && verify(items.treatBoxes, 'number')
-        && Object.prototype.hasOwnProperty.call(items, 'vegetableBoxes')
-        && verify(items.vegetableBoxes, 'number');
-  }
-
   function validateDetails(details) {
     return Object.prototype.hasOwnProperty.call(details, 'name')
         && verify(details.name, 'name')
@@ -120,7 +111,6 @@ function treatBoxController() {
 
   function validateRecipient(recipient) {
     return Object.prototype.hasOwnProperty.call(recipient, 'items')
-        && validateItems(recipient.items)
         && Object.prototype.hasOwnProperty.call(recipient, 'details')
         && validateDetails(recipient.details)
         && Object.prototype.hasOwnProperty.call(recipient, 'delivery')
@@ -137,20 +127,13 @@ function treatBoxController() {
 
   function validateOrder(order) {
     let valid = Object.prototype.hasOwnProperty.call(order, 'items')
-             && validateItems(order.items)
              && Object.prototype.hasOwnProperty.call(order, 'details')
              && validateDetails(order.details)
              && Object.prototype.hasOwnProperty.call(order.details, 'email')
              && verify(order.details.email, 'email')
              && Object.prototype.hasOwnProperty.call(order, 'delivery')
              && Object.prototype.hasOwnProperty.call(order.delivery, 'date')
-             && Object.prototype.hasOwnProperty.call(order.delivery, 'type')
-             && Object.prototype.hasOwnProperty.call(order, 'cost')
-             && Object.prototype.hasOwnProperty.call(order.cost, 'food')
-             && Object.prototype.hasOwnProperty.call(order.cost, 'delivery')
-             && Object.prototype.hasOwnProperty.call(order.cost, 'foodMoms')
-             && Object.prototype.hasOwnProperty.call(order.cost, 'deliveryMoms')
-             && Object.prototype.hasOwnProperty.call(order.cost, 'total');
+             && Object.prototype.hasOwnProperty.call(order.delivery, 'type');
 
     switch (order.delivery.type) {
       case 'collection':
@@ -182,11 +165,7 @@ function treatBoxController() {
     const settings = await getSettings('treatbox');
 
     const order = {
-      items: {
-        comboBoxes: parseInt(postData['num-comboboxes'], 10) || 0,
-        treatBoxes: parseInt(postData['num-treatboxes'], 10) || 0,
-        vegetableBoxes: parseInt(postData['num-vegetableboxes'], 10) || 0
-      },
+      items: [],
       details: {
         name: postData.name,
         email: postData.email,
@@ -197,9 +176,15 @@ function treatBoxController() {
         type: postData['delivery-type']
       }
     };
-    const cost = {
-      delivery: 0
-    };
+
+    const items = Object.entries(postData).filter((x) => x[0].startsWith('quantity-'));
+    for (const [key, q] of items) {
+      const [, id] = key.split('-');
+      const quantity = parseInt(q, 10);
+      if (quantity > 0) {
+        order.items.push({ id, quantity });
+      }
+    }
 
     if (order.delivery.type === 'delivery') {
       const recipient = {
@@ -218,55 +203,42 @@ function treatBoxController() {
         }
       };
       order.recipients = [recipient];
-      if (recipient.delivery.zone === 2) {
-        cost.delivery += settings.delivery.zone2.price;
-      }
-    } else if (order.delivery.type === 'split-delivery') {
-      const numRecipients = parseInt(postData.recipients, 10);
-      const recipients = [];
-      let recipientId = 0;
-      let i = 0;
-      while (i < numRecipients) {
-        if (`name-${recipientId}` in postData) {
-          const recipient = {
-            items: {
-              comboBoxes: parseInt(postData[`recipient-num-comboboxes-${recipientId}`], 10),
-              treatBoxes: parseInt(postData[`recipient-num-treatboxes-${recipientId}`], 10),
-              vegetableBoxes: parseInt(postData[`recipient-num-vegetableboxes-${recipientId}`], 10)
-            },
-            details: {
-              name: postData[`name-${recipientId}`],
-              telephone: postData[`telephone-${recipientId}`]
-            },
-            delivery: {
-              address: postData[`address-${recipientId}`],
-              addressNotes: postData[`notes-address-${recipientId}`],
-              url: getGoogleMapsUrl(postData[`address-${recipientId}`]),
-              googleFormattedAddress: postData[`google-formatted-address-${recipientId}`],
-              zone: parseInt(postData[`zone-${recipientId}`], 10),
-              message: postData[`message-${recipientId}`]
-            }
-          };
-          if (recipient.delivery.zone === 2) {
-            cost.delivery += settings.delivery.zone2.price;
-          }
-          recipients.push(recipient);
-          i += 1;
-        }
-        recipientId += 1;
-      }
-      order.recipients = recipients;
+    // } else if (order.delivery.type === 'split-delivery') {
+    //   const numRecipients = parseInt(postData.recipients, 10);
+    //   const recipients = [];
+    //   let recipientId = 0;
+    //   let i = 0;
+    //   while (i < numRecipients) {
+    //     if (`name-${recipientId}` in postData) {
+    //       const recipient = {
+    //         items: {
+    //           comboBoxes: parseInt(postData[`recipient-num-comboboxes-${recipientId}`], 10),
+    //           treatBoxes: parseInt(postData[`recipient-num-treatboxes-${recipientId}`], 10),
+    //           vegetableBoxes: parseInt(postData[`recipient-num-vegetableboxes-${recipientId}`], 10)
+    //         },
+    //         details: {
+    //           name: postData[`name-${recipientId}`],
+    //           telephone: postData[`telephone-${recipientId}`]
+    //         },
+    //         delivery: {
+    //           address: postData[`address-${recipientId}`],
+    //           addressNotes: postData[`notes-address-${recipientId}`],
+    //           url: getGoogleMapsUrl(postData[`address-${recipientId}`]),
+    //           googleFormattedAddress: postData[`google-formatted-address-${recipientId}`],
+    //           zone: parseInt(postData[`zone-${recipientId}`], 10),
+    //           message: postData[`message-${recipientId}`]
+    //         }
+    //       };
+    //       if (recipient.delivery.zone === 2) {
+    //         cost.delivery += settings.delivery.zone2.price;
+    //       }
+    //       recipients.push(recipient);
+    //       i += 1;
+    //     }
+    //     recipientId += 1;
+    //   }
+    //   order.recipients = recipients;
     }
-
-    cost.food = order.items.comboBoxes * settings.food.comboBox.price
-      + order.items.treatBoxes * settings.food.treatBox.price
-      + order.items.vegetableBoxes * settings.food.vegetableBox.price;
-    cost.foodMoms = priceFormat(cost.food - (cost.food / foodMoms));
-    cost.deliveryMoms = priceFormat(cost.delivery - (cost.delivery / deliveryMoms));
-    cost.total = priceFormat(cost.food + cost.delivery);
-    cost.food = priceFormat(cost.food);
-    cost.delivery = priceFormat(cost.delivery);
-    order.cost = cost;
 
     return order;
   }
@@ -316,11 +288,22 @@ function treatBoxController() {
     return res.json(info);
   }
 
-  async function lookupPrice(req, res) {
+  // Take properties from req.body and lookup price
+  async function apiLookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
     const delivery = JSON.parse(req.body.delivery);
+    
+    try {
+      const statement = await lookupPrice(basket, delivery);
+      statement.status = 'OK';
+      return res.json(statement);
+    } catch (error) {
+      return res.json({ status: 'Error' });
+    }
+  }
+
+  async function lookupPrice(basket, delivery) {
     const statement = {
-      status: 'OK',
       products: [],
       bottomLine : {
         foodCost: 0,
@@ -355,7 +338,7 @@ function treatBoxController() {
         statement.bottomLine.total += newProduct.subTotal;
         statement.products.push(newProduct);
       } else {
-        return res.json({ status: 'Error '});
+        throw new Error('Promise unfulfilled');
       }
     }
 
@@ -369,7 +352,7 @@ function treatBoxController() {
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
 
-    return res.json(statement);
+    return statement;
   }
 
   async function lookupRebateCode(req, res) {
@@ -415,7 +398,7 @@ function treatBoxController() {
     return response.data;
   }
 
-  async function orderConfirmed(req, res) {
+  async function legacyOrderConfirmed(req, res) {
     const referer = req.headers.referer.split('?')[0];
     const { 'callback-url': callbackUrl } = req.body;
 
@@ -532,6 +515,141 @@ function treatBoxController() {
       return res.redirect(307, referer);
     }
   }
+ 
+  async function calculatePrice(order) {
+    let zone2Deliveries = 0;
+    if (order.delivery.type !== 'collection') {
+      order.recipients.forEach((recipient) => {
+        if (recipient.delivery.zone === 2) {
+          zone2Deliveries += 1;
+        }
+      })
+    }
+    const statement = await lookupPrice(order.items, { zone2: zone2Deliveries })
+    return statement
+  }
+
+  async function orderConfirmed(req, res) {
+    const referer = req.headers.referer.split('?')[0];
+    const { 'callback-url': callbackUrl } = req.body;
+
+    const order = await parsePostData(req.body);
+    const statement = await calculatePrice(order);
+    order.statement = statement
+    delete order.items;
+
+    order.payment = {
+      method: req.body['payment-method'],
+      status: 'Ordered'
+    };
+
+    if(order.delivery.type !== 'collection') {
+      const highestOrder = await getHighestOrder();
+      let nextOrder = 0
+      if (highestOrder !== undefined) {
+        nextOrder = highestOrder.highestOrder + 1;
+      }
+      order.recipients.forEach((recipient) => {
+        recipient.delivery.order = nextOrder;
+        nextOrder += 1;
+      })
+
+      const smsSettings = await getSettings('sms');
+      order.recipients.forEach((recipient) => {
+        recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+      });
+    }
+
+    if (order.payment.method === 'Invoice') {
+      insertTreatBoxOrder(order);
+      sendConfirmationEmail(order);
+
+      const query = querystring.stringify({
+        name: order.details.name
+      });
+      return res.redirect(`${callbackUrl}?${query}`);
+    }
+
+    if (order.payment.method === 'Swish') {
+      order.payment.swish = {
+        payerAlias: parseSwishAlias(order.details.telephone)
+      };
+
+      const uuid = uuidv4();
+      const apiConfig = {
+        method: 'post',
+        url: `${swish.baseUrl}/api/v1/paymentrequests`, //${uuid}`,
+        httpsAgent: swish.httpsAgent,
+        header: {
+          'Content-Type': 'application/json'
+        },
+        data: {
+          callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
+          payeeAlias: swish.alias,
+          payerAlias: order.payment.swish.payerAlias,
+          amount: order.statement.bottomLine.total,
+          currency: 'SEK',
+          message: 'WHISK.se Order'
+        }
+      };
+
+      try {
+        const response = await axios(apiConfig);
+        order.payment.swish.id = response.headers.location.split('/');
+        order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
+      } catch (error) {
+        debug(error);
+        let errors = '';
+        if (error.response && error.response.data.length > 0) {
+          errors = error.response.data.map((x) => x.errorCode).join(',');
+        } else {
+          errors = 'ERROR';
+        }
+        const query = querystring.stringify({
+          status: errors
+        });
+        return res.redirect(307, `${referer}?${query}`);
+      }
+
+      (async function checkStatus() {
+        setTimeout(() => {
+          getPaymentResult(order.payment.swish.id).then((response) => {
+            // if (response.id !== uuid) {
+            //   const query = querystring.stringify({
+            //     status: 'INVALID_UUID'
+            //   });
+            //   return res.redirect(307, `${referer}?${query}`);
+            // }
+
+            order.payment.swish.reference = response.paymentReference;
+            if (response.status === 'PAID') {
+              const query = querystring.stringify({
+                name: order.details.name
+              });
+
+              order.payment.status = 'Paid';
+              insertTreatBoxOrder(order);
+              sendConfirmationEmail(order);
+
+              return res.redirect(`${callbackUrl}?${query}`);
+            }
+
+            if (response.status === 'DECLINED' || response.status === 'ERROR') {
+              const query = querystring.stringify({
+                status: response.status
+              });
+              return res.redirect(307, `${referer}?${query}`);
+            }
+
+            checkStatus();
+            return true;
+          });
+        }, 1500);
+      }());
+    } else {
+      return res.redirect(307, referer);
+    }
+  }
 
   async function swishRefund(req, res) {
     const { id, amount } = req.body;
@@ -569,9 +687,10 @@ function treatBoxController() {
     parseSwishAlias,
     getWeekData,
     getDetails,
-    lookupPrice,
+    apiLookupPrice,
     lookupRebateCode,
     orderStarted,
+    legacyOrderConfirmed,
     orderConfirmed,
     swishRefund
   };
