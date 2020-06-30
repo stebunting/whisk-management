@@ -53,7 +53,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishProduction;
+const swish = swishTest;
 
 // Pricing
 const foodMoms = 1.12;
@@ -415,6 +415,22 @@ function treatBoxController() {
     return response.data;
   }
 
+  async function getRefundResult(paymentId) {
+    const apiConfig = {
+      method: 'get',
+      url: `${swish.baseUrl}/api/v1/refunds/${paymentId}`,
+      httpsAgent: swish.httpsAgent
+    };
+
+    let response;
+    try {
+      response = await axios(apiConfig);
+    } catch {
+      // hi
+    }
+    return response.data;
+  }
+
   async function orderConfirmed(req, res) {
     const referer = req.headers.referer.split('?')[0];
     const { 'callback-url': callbackUrl } = req.body;
@@ -549,19 +565,31 @@ function treatBoxController() {
         callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
         payerAlias: swish.alias,
         amount,
-        currency: 'SEK'
+        currency: 'SEK',
+        message: ''
       }
     };
-    debug(apiConfig);
 
+    let refundId;
     try {
       const response = await axios(apiConfig);
-      debug(response);
-      debug('hi');
+      let location = response.headers.location.split('/')
+      refundId = location[location.length - 1];
     } catch (error) {
       debug(error);
     }
 
+    (async function checkStatus() {
+      setTimeout(() => {
+        getRefundResult(refundId).then((response) => {
+          if (response.status === 'PAID') {
+            debug('Refunded!');
+          } else {
+            checkStatus();
+          }
+        });
+      }, 1500);
+    }());
     return res.json({ status: 'OK' });
   }
 
