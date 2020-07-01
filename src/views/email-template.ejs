@@ -60,45 +60,30 @@ th {
 				<th class="linetotal">SUB-TOTAL</th>
 			</tr>
 		</thead>
-		<%if (order.items.comboBoxes > 0) {
+		<% for (let i = 0; i < order.statement.products.length; i += 1) {
+			const product = order.statement.products[i];
 			%><tr>
-				<td class="item">Combo Box</td>
-				<td class="quantity"><%=order.items.comboBoxes %></td>
-				<td class="price">490</td>
-				<td class="linetotal"><%=490 * order.items.comboBoxes%></td>
-			</tr><%
-		} %>
-		<%if (order.items.treatBoxes > 0) {
-			%><tr>
-				<td>Treat Box</td>
-				<td class="quantity"><%=order.items.treatBoxes %></td>
-				<td class="price">250</td>
-				<td class="linetotal"><%=250 * order.items.treatBoxes%></td>
-			</tr><%
-		} %>
-		<%if (order.items.vegetableBoxes > 0) {
-			%><tr>
-				<td>Vegetable Box</td>
-				<td class="quantity"><%=order.items.vegetableBoxes %></td>
-				<td class="price">250</td>
-				<td class="linetotal"><%=250 * order.items.vegetableBoxes%></td>
+				<td class="item"><%=product.name %></td>
+				<td class="quantity"><%=product.quantity %></td>
+				<td class="price"><%=priceFormat(product.price) %></td>
+				<td class="linetotal"><%=priceFormat(product.subTotal) %></td>
 			</tr><%
 		} %>
 		<tr>
 			<td class="subtotal bordertop" colspan="3">Sub-Total:</td>
-			<td class="subtotal bordertop"><%=order.cost.food %></td>
+			<td class="subtotal bordertop"><%=priceFormat(order.statement.bottomLine.foodCost) %></td>
 		</tr>
 		<tr>
 			<td class="subtotal" colspan="3">Delivery</td>
-			<td class="subtotal"><%=order.cost.delivery %></td>
+			<td class="subtotal"><%=priceFormat(order.statement.bottomLine.deliveryCost) %></td>
 		</tr>
 		<tr>
 			<td class="subtotal" colspan="3">MOMs</td>
-			<td class="subtotal"><%=order.cost.foodMoms + order.cost.deliveryMoms %></td>
+			<td class="subtotal"><%=priceFormat(order.statement.bottomLine.totalMoms) %></td>
 		</tr>
 		<tr>
 			<td class="total" colspan="3">Total</td>
-			<td class="total"><%=order.cost.total %></td>
+			<td class="total"><%=priceFormat(order.statement.bottomLine.total) %></td>
 		</tr>
 	</table>
 

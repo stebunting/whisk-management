@@ -14,7 +14,7 @@ const {
   updateTreatBoxOrders,
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
-const { getReadableOrder, getWeek } = require('../functions/helper');
+const { priceFormat, getReadableOrder, getWeek } = require('../functions/helper');
 const { loginCheck } = require('../controllers/authController')();
 const {
   getWeekData,
@@ -65,19 +65,16 @@ function routes() {
       let query;
       if (date === undefined) {
         query = {};
-
       } else if (date === 'thisweek') {
         const week = getWeek();
         const year = moment().week(week).year();
         const dateCode = `${year}-${week}`;
         query = { 'delivery.date': dateCode };
-
       } else if (date === 'nextweek') {
         const week = getWeek(1);
         const year = moment().week(week).year();
         const dateCode = `${year}-${week}`;
         query = { 'delivery.date': dateCode };
-        
       } else {
         query = { 'delivery.date': date };
       }
@@ -100,7 +97,8 @@ function routes() {
         totals,
         getWeekData,
         getReadableOrder,
-        querystring
+        querystring,
+        priceFormat
       });
     });
 

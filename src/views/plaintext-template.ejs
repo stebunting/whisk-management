@@ -1,14 +1,16 @@
 Thanks for stopping by at WHISK.se! We have your order and your treats are on their way.
 
-ITEM             QUANTITY PRICE SUB-TOTAL<%if (order.items.comboBoxes > 0) { %>
-Combo Box        <%=order.items.comboBoxes %>        490   <%=490 * order.items.comboBoxes%><% } %><%if (order.items.treatBoxes > 0) { %>
-Treat Box        <%=order.items.treatBoxes %>        250   <%=250 * order.items.treatBoxes%><% } %><%if (order.items.vegetableBoxes > 0) { %>
-Vegetable Box    <%=order.items.vegetableBoxes %>        250   <%=250 * order.items.vegetableBoxes%><% } %>
+<%='ITEM'.padEnd(20) + 'QUANTITY'.padEnd(10) + 'PRICE'.padEnd(10) + 'SUB-TOTAL' %><%
+for (let i = 0; i < order.statement.products.length; i += 1) {
+	const product = order.statement.products[i]; %>
+<%=product.name.padEnd(20) + product.quantity.toString().padEnd(10) + priceFormat(product.price).padEnd(10) + priceFormat(product.subTotal) %><%
+}
+%>
 
-Sub-Total: <%=order.cost.food %>
-Delivery: <%=order.cost.delivery %>
-MOMs: <%=order.cost.foodMoms + order.cost.deliveryMoms %>
-Total: <%=order.cost.total %>
+Sub-Total: <%=priceFormat(order.statement.bottomLine.foodCost) %>
+Delivery: <%=priceFormat(order.statement.bottomLine.deliveryCost) %>
+MOMs: <%=priceFormat(order.statement.bottomLine.totalMoms) %>
+Total: <%=priceFormat(order.statement.bottomLine.total) %>
 
 <%if (order.delivery.type === 'collection') { %>Please note, our pick up times are between 10:30-11:30 on <%=deliveryDate %>.
 <%} else if (order.delivery.type === 'delivery') { %>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm.

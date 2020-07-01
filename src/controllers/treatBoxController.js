@@ -7,11 +7,9 @@ const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { ObjectID } = require('mongodb');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
-  priceFormat,
   getGoogleMapsUrl,
   parseMarkers,
   getWeek
@@ -54,10 +52,6 @@ const swishProduction = {
 };
 
 const swish = swishTest;
-
-// Pricing
-const foodMoms = 1.12;
-const deliveryMoms = 1.25;
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
@@ -162,8 +156,6 @@ function treatBoxController() {
   }
 
   async function parsePostData(postData) {
-    const settings = await getSettings('treatbox');
-
     const order = {
       items: [],
       details: {
@@ -247,7 +239,7 @@ function treatBoxController() {
     const promises = [
       getSettings('treatbox'),
       getProducts()
-    ]
+    ];
     const data = await Promise.allSettled(promises);
     if (data[0].status !== 'fulfilled' || data[1].status !== 'fulfilled') {
       return res.json({ status: 'Error' });
@@ -288,24 +280,10 @@ function treatBoxController() {
     return res.json(info);
   }
 
-  // Take properties from req.body and lookup price
-  async function apiLookupPrice(req, res) {
-    const basket = JSON.parse(req.body.basket);
-    const delivery = JSON.parse(req.body.delivery);
-    
-    try {
-      const statement = await lookupPrice(basket, delivery);
-      statement.status = 'OK';
-      return res.json(statement);
-    } catch (error) {
-      return res.json({ status: 'Error' });
-    }
-  }
-
   async function lookupPrice(basket, delivery) {
     const statement = {
       products: [],
-      bottomLine : {
+      bottomLine: {
         foodCost: 0,
         deliveryCost: 0,
         foodMoms: 0,
@@ -316,21 +294,25 @@ function treatBoxController() {
     };
 
     // Get Food Cost
-    const promises = []
+    const promises = [];
     for (let i = 0; i < basket.length; i += 1) {
       promises.push(getProductById(basket[i].id));
     }
-    const data = await Promise.allSettled(promises)
+    const data = await Promise.allSettled(promises);
     for (let i = 0; i < data.length; i += 1) {
+      // eslint-disable-next-line no-underscore-dangle
       if (data[i].status === 'fulfilled' && data[i].value._id.equals(basket[i].id)) {
-        product = data[i].value;
+        const product = data[i].value;
         const newProduct = {
+          // eslint-disable-next-line no-underscore-dangle
           id: product._id,
           name: product.name,
           quantity: parseInt(basket[i].quantity, 10),
           price: parseInt(product.grossPrice, 10),
-          momsSubTotal: parseInt(basket[i].quantity, 10) * parseInt(product.momsAmount, 10),
-          subTotal: parseInt(basket[i].quantity, 10) * parseInt(product.grossPrice, 10)
+          momsAmount: parseInt(product.momsAmount, 10),
+          momsRate: product.momsRate,
+          subTotal: parseInt(basket[i].quantity, 10) * parseInt(product.grossPrice, 10),
+          momsSubTotal: parseInt(basket[i].quantity, 10) * parseInt(product.momsAmount, 10)
         };
         statement.bottomLine.foodCost += newProduct.subTotal;
         statement.bottomLine.foodMoms += newProduct.momsSubTotal;
@@ -343,16 +325,30 @@ function treatBoxController() {
     }
 
     // Get Delivery Cost
-    const treatboxSettings = await getSettings('treatbox')
+    const treatboxSettings = await getSettings('treatbox');
     statement.delivery = {
       zone2Price: treatboxSettings.delivery.zone2.price
-    }
+    };
     statement.bottomLine.deliveryCost = treatboxSettings.delivery.zone2.price * delivery.zone2;
     statement.bottomLine.deliveryMoms = treatboxSettings.delivery.zone2.momsAmount * delivery.zone2;
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
 
     return statement;
+  }
+
+  // Take properties from req.body and lookup price
+  async function apiLookupPrice(req, res) {
+    const basket = JSON.parse(req.body.basket);
+    const delivery = JSON.parse(req.body.delivery);
+
+    try {
+      const statement = await lookupPrice(basket, delivery);
+      statement.status = 'OK';
+      return res.json(statement);
+    } catch (error) {
+      return res.json({ status: 'Error' });
+    }
   }
 
   async function lookupRebateCode(req, res) {
@@ -408,16 +404,16 @@ function treatBoxController() {
       status: 'Ordered'
     };
 
-    if(order.delivery.type !== 'collection') {
+    if (order.delivery.type !== 'collection') {
       const highestOrder = await getHighestOrder();
-      let nextOrder = 0
+      let nextOrder = 0;
       if (highestOrder !== undefined) {
         nextOrder = highestOrder.highestOrder + 1;
       }
       order.recipients.forEach((recipient) => {
         recipient.delivery.order = nextOrder;
         nextOrder += 1;
-      })
+      });
 
       const smsSettings = await getSettings('sms');
       order.recipients.forEach((recipient) => {
@@ -443,7 +439,7 @@ function treatBoxController() {
       const uuid = uuidv4();
       const apiConfig = {
         method: 'post',
-        url: `${swish.baseUrl}/api/v1/paymentrequests`, //${uuid}`,
+        url: `${swish.baseUrl}/api/v1/paymentrequests`, // ${uuid}`,
         httpsAgent: swish.httpsAgent,
         header: {
           'Content-Type': 'application/json'
@@ -515,7 +511,7 @@ function treatBoxController() {
       return res.redirect(307, referer);
     }
   }
- 
+
   async function calculatePrice(order) {
     let zone2Deliveries = 0;
     if (order.delivery.type !== 'collection') {
@@ -523,10 +519,10 @@ function treatBoxController() {
         if (recipient.delivery.zone === 2) {
           zone2Deliveries += 1;
         }
-      })
+      });
     }
-    const statement = await lookupPrice(order.items, { zone2: zone2Deliveries })
-    return statement
+    const statement = await lookupPrice(order.items, { zone2: zone2Deliveries });
+    return statement;
   }
 
   async function orderConfirmed(req, res) {
@@ -535,7 +531,7 @@ function treatBoxController() {
 
     const order = await parsePostData(req.body);
     const statement = await calculatePrice(order);
-    order.statement = statement
+    order.statement = statement;
     delete order.items;
 
     order.payment = {
@@ -543,16 +539,16 @@ function treatBoxController() {
       status: 'Ordered'
     };
 
-    if(order.delivery.type !== 'collection') {
+    if (order.delivery.type !== 'collection') {
       const highestOrder = await getHighestOrder();
-      let nextOrder = 0
+      let nextOrder = 0;
       if (highestOrder !== undefined) {
         nextOrder = highestOrder.highestOrder + 1;
       }
       order.recipients.forEach((recipient) => {
         recipient.delivery.order = nextOrder;
         nextOrder += 1;
-      })
+      });
 
       const smsSettings = await getSettings('sms');
       order.recipients.forEach((recipient) => {
@@ -578,7 +574,7 @@ function treatBoxController() {
       const uuid = uuidv4();
       const apiConfig = {
         method: 'post',
-        url: `${swish.baseUrl}/api/v1/paymentrequests`, //${uuid}`,
+        url: `${swish.baseUrl}/api/v1/paymentrequests`, // ${uuid}`,
         httpsAgent: swish.httpsAgent,
         header: {
           'Content-Type': 'application/json'

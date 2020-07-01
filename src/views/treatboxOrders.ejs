@@ -20,7 +20,7 @@
 				lastWeek = order.delivery.date;
 				top = true;
 				const data = getWeekData(lastWeek.substring(5));
-				const total = totals.find((x) => x._id === lastWeek);
+				//const total = totals.find((x) => x._id === lastWeek);
 				%>
 		<table class="table table-bordered">
 			<thead>
@@ -35,15 +35,15 @@
 									</li>
 									<li>
 										<span class="user-info-detail">COMBO BOXES:</span>
-										<%=total.comboBoxes %>
+										<%=// total.comboBoxes %>
 									</li>
 									<li>
 										<span class="user-info-detail">TREAT BOXES:</span>
-										<%=total.treatBoxes %>
+										<%=// total.treatBoxes %>
 									</li>
 									<li>
 										<span class="user-info-detail">VEGETABLE BOXES:</span>
-										<%=total.vegetableBoxes %>
+										<%=// total.vegetableBoxes %>
 									</li>
 								</ul>
 								<ul class="user-info-list col-md-4">
@@ -52,11 +52,11 @@
 									</li>
 									<li>
 										<span class="user-info-detail">TREAT BOXES TO MAKE:</span>
-										<%=total.treatBoxesToMake %>
+										<%=// total.treatBoxesToMake %>
 									</li>
 									<li>
 										<span class="user-info-detail">VEGETABLE BOXES TO ORDER:</span>
-										<%=total.vegetableBoxesToOrder %>
+										<%=// total.vegetableBoxesToOrder %>
 									</li>
 								</ul>
 								<ul class="user-info-list col-md-4">
@@ -65,11 +65,11 @@
 									</li>
 									<li>
 										<span class="user-info-detail">NUMBER OF DELIVERIES:</span>
-										<%=total.deliveries %>
+										<%=// total.deliveries %>
 									</li>
 									<li>
 										<span class="user-info-detail">INCOME:</span>
-										<%=total.income %> SEK
+										<%=// total.income %> SEK
 									</li>
 									<li>
 										<a href="/treatbox/csv/<%=lastWeek %>">Download CSV</a>
@@ -158,7 +158,7 @@
 										</li>
 										<li>
 											<span class="user-info-detail">COST:</span>
-											<%=order.cost.total%> SEK
+											<%=priceFormat(order.statement.bottomLine.total) %>
 										</li>
 										<li>
 											<span class="user-info-detail">PAYMENT METHOD:</span>

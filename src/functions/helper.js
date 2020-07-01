@@ -1,14 +1,21 @@
 // Requirements
 const querystring = require('querystring');
 const moment = require('moment-timezone');
+const { getProductById } = require('../../lib/db-control/db-control');
 
 // Format price from stored öre to krona
-function priceFormat(num) {
-  const str = (num / 100).toLocaleString(undefined, {
+function priceFormat(num, userOptions = {}) {
+  const options = {
+    includeSymbol: userOptions.includeSymbol || true,
+    includeOre: userOptions.includeOre || false
+  }
+  let str = (num / 100).toLocaleString(undefined, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: options.includeOre ? 2 : 0
   });
-  return parseInt(str.replace(',', ''), 10);
+  str = str.replace(',', '');
+  str += options.includeSymbol ? ' SEK' : '';
+  return str;
 }
 
 // Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
@@ -35,9 +42,8 @@ function getGoogleMapsUrl(address) {
 function getWeek(offset = 0) {
   if (moment().isoWeekday() < 3) {
     return moment().add(offset, 'weeks').week();
-  } else {
-    return moment().add(1 + offset, 'weeks').week();
   }
+  return moment().add(1 + offset, 'weeks').week();
 }
 
 // Convert year / date to formatted string
@@ -52,18 +58,12 @@ function getFormattedDeliveryDate(date) {
 }
 
 // Return readable order description
-function getReadableOrder(order) {
-  let str = '';
-  if (order.comboBoxes > 0) {
-    str = `${str}${order.comboBoxes} x Combo Box${order.comboBoxes !== 1 ? 'es' : ''}`;
-  }
-  if (order.treatBoxes > 0) {
-    str = `${str}${str.length > 0 ? ', ' : ''}${order.treatBoxes} x Treat Box${order.treatBoxes !== 1 ? 'es' : ''}`;
-  }
-  if (order.vegetableBoxes > 0) {
-    str = `${str}${str.length > 0 ? ', ' : ''}${order.vegetableBoxes} x Vegetable Box${order.vegetableBoxes !== 1 ? 'es' : ''}`;
-  }
-  return str;
+function getReadableOrder(items) {
+  const list = [];
+  items.forEach((item) => {
+    list.push(`${item.quantity} x ${item.id}`);
+  });
+  return list.join(', ');
 }
 
 function generateRandomString(length) {
