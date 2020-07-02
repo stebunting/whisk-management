@@ -1,5 +1,5 @@
 <%-include('partials/header', { title: 'Treatbox Orders', user }); %>
-<% let lastWeek='9999-99'; %>
+<% let lastWeek='9999-99-9'; %>
 
 		<%for (let i = orders.length - 1; i >= 0; i -= 1) {
 			const order = orders[i];
@@ -7,26 +7,26 @@
 			if (order.delivery.type === 'collection') {
 				recipient = order;
 				recipient.index = 0;
+				recipient.items = order.statement.products;
 			}
-			
+
 			let top = false;
 			const timestamp = order._id.getTimestamp();
 			if (lastWeek != order.delivery.date) {
-				if (lastWeek !== '9999-99') {
+				if (lastWeek !== '9999-99-9') {
 					%>
 			</tbody>
 		</table><%
 				}
 				lastWeek = order.delivery.date;
 				top = true;
-				const data = getWeekData(lastWeek.substring(5));
 				//const total = totals.find((x) => x._id === lastWeek);
 				%>
 		<table class="table table-bordered">
 			<thead>
 				<tr class="table-info" data-toggle="collapse" data-target="#collapse-<%=lastWeek %>">
 					<td colspan="6">
-						<h2><%=data.delivery.format('dddd Do MMMM YYYY [(Week] w[)]') %></h2>
+						<h2><%=dateFormat(parseDateCode(lastWeek).date) %></h2>
 							<div class="card">
 								<div class="card-body row">
 								<ul class="user-info-list col-md-4">
@@ -103,7 +103,7 @@
 					<td><%=recipient.details.name %></td>
 					<td>
 						<% if (collection) { %>Collection<% } else { %><%=recipient.delivery.address %>&nbsp;
-						<a href="<%=recipient.delivery.url %>" target="_blank" rel="external">
+						<a href="<%=getGoogleMapsUrl(recipient.delivery.address) %>" target="_blank" rel="external">
 							<img class="icon map-icon" src="/icons/location.svg" alt="View in Google Maps" />
 						</a><% } %>
 					</td>
@@ -207,14 +207,14 @@
 											<a href="tel:<%=recipient.details.telephone %>">
 												<img class="icon" src="/icons/call.svg" alt="Call <%=recipient.details.name %>" />
 											</a>
-											<a id="smslink-<%=order._id %>-<%=order.recipient.index %>" href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
+											<a id="smslink-<%=order._id %>-<%=recipient.index %>" href="sms:<%=recipient.details.telephone %>?body=<%=encodeURIComponent(querystring.escape(recipient.delivery.sms)) %>">
 												<img class="icon" src="/icons/sms.svg" alt="Send Delivery SMS" />
 											</a>
 										</li>
 										<li>
 											<span class="user-info-detail">ADDRESS:</span>
 											<%=recipient.delivery.address %>
-											<a href="<%=recipient.delivery.url %>" target="_blank" rel="external">
+											<a href="<%=getGoogleMapsUrl(recipient.delivery.address) %>" target="_blank" rel="external">
 												<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
 											</a>
 										</li>
@@ -234,8 +234,8 @@
 											<%=getReadableOrder(recipient.items) %>
 										</li>
 										<li>
-											<a href="#smsedit-<%=`${order._id}-${order.recipient.index}`%>" data-toggle="modal">Edit Text Message</a>
-											<div class="modal" id="smsedit-<%=`${order._id}-${order.recipient.index}`%>" tabindex="-1" role="dialog">
+											<a href="#smsedit-<%=`${order._id}-${recipient.index}`%>" data-toggle="modal">Edit Text Message</a>
+											<div class="modal" id="smsedit-<%=`${order._id}-${recipient.index}`%>" tabindex="-1" role="dialog">
 											  <div class="modal-dialog">
 											    <div class="modal-content">
 											      <div class="modal-header">
@@ -245,11 +245,11 @@
 											        </button>
 											      </div>
 											      <div class="modal-body">
-											        <textarea class="form-control sms-textarea" rows="8" name="sms-text" id="smstext-<%=order._id %>-<%=order.recipient.index %>" placeholder="SMS Body"><%=recipient.delivery.sms %></textarea>
+											        <textarea class="form-control sms-textarea" rows="8" name="sms-text" id="smstext-<%=order._id %>-<%=recipient.index %>" placeholder="SMS Body"><%=recipient.delivery.sms %></textarea>
 											      </div>
 											      <div class="modal-footer">
 											        <button type="button" class="btn btn-secondary modal-close" data-dismiss="modal">Close</button>
-											        <button type="button" class="btn btn-primary" name="update-sms" value="<%=order._id %>-<%=order.recipient.index %>">Save changes</button>
+											        <button type="button" class="btn btn-primary" name="update-sms" value="<%=order._id %>-<%=recipient.index %>">Save changes</button>
 											      </div>
 											    </div>
 											  </div>

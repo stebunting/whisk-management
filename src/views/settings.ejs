@@ -73,10 +73,10 @@
 					<tr>
 						<td><%=products[i].name %></td>
 						<td><% if (products[i].deliverable) { %>Yes<% } else { %>No<% } %></td>
-						<td><%=priceFormat(products[i].grossPrice) %> SEK</td>
+						<td><%=priceFormat(products[i].grossPrice) %></td>
 						<td><%=products[i].momsRate %> %</td>
-						<td><%=priceFormat(products[i].netPrice) %> SEK</td>
-						<td><%=priceFormat(products[i].momsAmount) %> SEK</td>
+						<td><%=priceFormat(products[i].netPrice, { includeOre: true }) %></td>
+						<td><%=priceFormat(products[i].momsAmount, { includeOre: true }) %></td>
 					</tr>
 					<% } %>
 				</tbody>

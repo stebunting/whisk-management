@@ -22,7 +22,8 @@ const {
   getHighestOrder,
   getSettings,
   getProducts,
-  getProductById
+  getProductById,
+  logError
 } = require('../../lib/db-control/db-control')(tag);
 
 const callbackRoot = 'https://whisk-management.herokuapp.com';
@@ -56,12 +57,15 @@ const swish = swishTest;
 function treatBoxController() {
   // Function to get all relevant dates from a week number
   function getWeekData(week) {
+    // Set Delivery day to Wednesday
+    const deliveryDay = 3;
+
     const data = {
       delivery: moment()
         .tz('Europe/Stockholm')
         .week(week)
         .startOf('isoWeek')
-        .add(2, 'days')
+        .add(deliveryDay - 1, 'days')
     };
     data.deadline = data.delivery.clone()
       .subtract(1, 'day')
@@ -79,9 +83,11 @@ function treatBoxController() {
     data.vegetablesOrderable = data.vegetableDeadline.isAfter();
     data.week = data.delivery.week();
     data.year = data.delivery.year();
+    data.day = data.delivery.day();
     return data;
   }
 
+  // Function to convert inserted phone number to Swish alias
   function parseSwishAlias(telephone) {
     let alias = telephone.replace(/\D/g, '');
     if (alias.charAt(0) === '0') {
@@ -113,12 +119,12 @@ function treatBoxController() {
         && verify(recipient.delivery.address, 'string')
         && recipient.delivery.address === recipient.delivery.googleFormattedAddress
         && Object.prototype.hasOwnProperty.call(recipient.delivery, 'addressNotes')
-        && Object.prototype.hasOwnProperty.call(recipient.delivery, 'url')
         && Object.prototype.hasOwnProperty.call(recipient.delivery, 'zone')
         && verify(recipient.delivery.zone, 'number')
         && Object.prototype.hasOwnProperty.call(recipient.delivery, 'message');
   }
 
+  // Function to validate order
   function validateOrder(order) {
     let valid = Object.prototype.hasOwnProperty.call(order, 'items')
              && Object.prototype.hasOwnProperty.call(order, 'details')
@@ -155,7 +161,15 @@ function treatBoxController() {
     }
   }
 
+  // Function to convert posted data to an order object
   async function parsePostData(postData) {
+    // Get list of products
+    const rawProducts = await getProducts();
+    const products = {};
+    for (let i = 0; i < rawProducts.length; i += 1) {
+      products[rawProducts[i]._id] = rawProducts[i].name;
+    }
+
     const order = {
       items: [],
       details: {
@@ -170,13 +184,14 @@ function treatBoxController() {
     };
 
     const items = Object.entries(postData).filter((x) => x[0].startsWith('quantity-'));
-    for (const [key, q] of items) {
-      const [, id] = key.split('-');
-      const quantity = parseInt(q, 10);
+    items.forEach((item) => {
+      const [, id] = item[0].split('-');
+      const quantity = parseInt(item[1], 10);
+      const name = products[id];
       if (quantity > 0) {
-        order.items.push({ id, quantity });
+        order.items.push({ id, quantity, name });
       }
-    }
+    });
 
     if (order.delivery.type === 'delivery') {
       const recipient = {
@@ -188,7 +203,6 @@ function treatBoxController() {
         delivery: {
           address: postData.address,
           addressNotes: postData['notes-address'],
-          url: getGoogleMapsUrl(postData.address),
           googleFormattedAddress: postData['google-formatted-address'],
           zone: parseInt(postData.zone, 10),
           message: ''
@@ -235,6 +249,7 @@ function treatBoxController() {
     return order;
   }
 
+  // Return products and timeframes to browser
   async function getDetails(req, res) {
     const promises = [
       getSettings('treatbox'),
@@ -251,8 +266,8 @@ function treatBoxController() {
     const week1 = getWeekData(week);
     // const week2 = getWeekData(week + 1);
     const timeframe = {
-      [`${week1.year}-${week1.week}`]: week1,
-      // [`${week2.year}-${week2.week}`]: week2
+      [`${week1.year}-${week1.week}-${week1.day}`]: week1,
+      // [`${week2.year}-${week2.week}-${week2.day}`]: week2
     };
 
     const info = {
@@ -280,6 +295,7 @@ function treatBoxController() {
     return res.json(info);
   }
 
+  // Function to generate a statement of costs from products and delivery
   async function lookupPrice(basket, delivery) {
     const statement = {
       products: [],
@@ -337,7 +353,7 @@ function treatBoxController() {
     return statement;
   }
 
-  // Take properties from req.body and lookup price
+  // Take properties from req.body and call lookupPrice
   async function apiLookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
     const delivery = JSON.parse(req.body.delivery);
@@ -351,6 +367,7 @@ function treatBoxController() {
     }
   }
 
+  // Function to look up a rebate code
   async function lookupRebateCode(req, res) {
     const { code } = req.query;
 
@@ -365,6 +382,8 @@ function treatBoxController() {
     });
   }
 
+  // Function to validate order server-side
+  // If valid, redirects to confirmation page, else returns to order form
   async function orderStarted(req, res) {
     const { referer } = req.headers;
     const { 'callback-url': callbackUrl } = req.body;
@@ -378,6 +397,7 @@ function treatBoxController() {
     return res.redirect(307, referer);
   }
 
+  // Function to call Swish to check payment status
   async function getPaymentResult(paymentId) {
     const apiConfig = {
       method: 'get',
@@ -388,10 +408,11 @@ function treatBoxController() {
     let response;
     try {
       response = await axios(apiConfig);
-    } catch {
-      // hi
+      return response.data;
+    } catch (error) {
+      logError('Error while calling Swish API to call get payment result', error);
+      return { status: 'GET_RESULT_ERROR' };
     }
-    return response.data;
   }
 
   async function legacyOrderConfirmed(req, res) {
@@ -512,6 +533,7 @@ function treatBoxController() {
     }
   }
 
+  // Function to calculate order price
   async function calculatePrice(order) {
     let zone2Deliveries = 0;
     if (order.delivery.type !== 'collection') {
@@ -540,19 +562,27 @@ function treatBoxController() {
     };
 
     if (order.delivery.type !== 'collection') {
-      const highestOrder = await getHighestOrder();
       let nextOrder = 0;
-      if (highestOrder !== undefined) {
-        nextOrder = highestOrder.highestOrder + 1;
-      }
-      order.recipients.forEach((recipient) => {
-        recipient.delivery.order = nextOrder;
-        nextOrder += 1;
+      let smsSettings;
+      const promises = [
+        getHighestOrder(),
+        getSettings('sms')
+      ];
+      await Promise.allSettled(promises).then((data) => {
+        if (data[0].status === 'fulfilled') {
+          if (data[0].value) {
+            nextOrder = data[0].value.highestOrder + 1;
+          }
+        }
+        if (data[1].status === 'fulfilled') {
+          smsSettings = data[1].value;
+        }
       });
 
-      const smsSettings = await getSettings('sms');
-      order.recipients.forEach((recipient) => {
-        recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+      order.recipients.forEach((recipient, index) => {
+        order.recipients[index].delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+        order.recipients[index].delivery.order = nextOrder;
+        nextOrder += 1;
       });
     }
 
@@ -571,7 +601,7 @@ function treatBoxController() {
         payerAlias: parseSwishAlias(order.details.telephone)
       };
 
-      const uuid = uuidv4();
+      // const uuid = uuidv4();
       const apiConfig = {
         method: 'post',
         url: `${swish.baseUrl}/api/v1/paymentrequests`, // ${uuid}`,
@@ -594,7 +624,7 @@ function treatBoxController() {
         order.payment.swish.id = response.headers.location.split('/');
         order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
       } catch (error) {
-        debug(error);
+        logError('Error sending Swift payment request', error);
         let errors = '';
         if (error.response && error.response.data.length > 0) {
           errors = error.response.data.map((x) => x.errorCode).join(',');
@@ -666,7 +696,6 @@ function treatBoxController() {
         currency: 'SEK'
       }
     };
-    debug(apiConfig);
 
     try {
       const response = await axios(apiConfig);

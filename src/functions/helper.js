@@ -10,7 +10,7 @@ function priceFormat(num, userOptions = {}) {
     includeOre: userOptions.includeOre || false
   }
   let str = (num / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: options.includeOre ? 2 : 0,
     maximumFractionDigits: options.includeOre ? 2 : 0
   });
   str = str.replace(',', '');
@@ -18,16 +18,23 @@ function priceFormat(num, userOptions = {}) {
   return str;
 }
 
+function dateFormat(date) {
+  const preferredFormat = 'dddd Do MMMM YYYY';
+  return moment(date)
+    .tz('Europe/Stockholm')
+    .format(preferredFormat);
+}
+
 // Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
 function calculateMoms(gross, momsRate) {
   const decimalRate = 1 + (momsRate / 100);
-  return Math.round(gross - (gross / decimalRate));
+  return gross - (gross / decimalRate);
 }
 
 // Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
 function calculateNetCost(gross, momsRate) {
   const decimalRate = 1 + (momsRate / 100);
-  return Math.round(gross / decimalRate);
+  return gross / decimalRate;
 }
 
 // Function to return a Google Maps URL from an address
@@ -47,21 +54,32 @@ function getWeek(offset = 0) {
 }
 
 // Convert year / date to formatted string
-function getFormattedDeliveryDate(date) {
-  const [year, week] = date.split('-');
+function getFormattedDeliveryDate(date, userOptions = {}) {
+  const format = userOptions.displayWeek ? 'dddd Do MMMM YYYY [(Week ]W[)]' : 'dddd Do MMMM YYYY';
+  const [year, week, day] = date.split('-');
   return moment()
     .week(week)
     .year(year)
-    .startOf('isoWeek')
-    .add(2, 'days')
-    .format('dddd Do MMMM YYYY');
+    .day(day)
+    .format(format);
+}
+
+// Parse Date Code
+function parseDateCode(code) {
+  const [year, week, day] = code.split('-');
+  return {
+    date: moment().tz('Europe/Stockholm').year(year).week(week).day(day).format(),
+    year,
+    week,
+    day
+  };
 }
 
 // Return readable order description
 function getReadableOrder(items) {
   const list = [];
   items.forEach((item) => {
-    list.push(`${item.quantity} x ${item.id}`);
+    list.push(`${item.quantity} x ${item.name}`);
   });
   return list.join(', ');
 }
@@ -100,10 +118,12 @@ function parseMarkers(str, recipient) {
 
 module.exports = {
   priceFormat,
+  dateFormat,
   calculateMoms,
   calculateNetCost,
   getGoogleMapsUrl,
   getWeek,
+  parseDateCode,
   getFormattedDeliveryDate,
   getReadableOrder,
   generateRandomString,

@@ -7,6 +7,7 @@ const express = require('express');
 const querystring = require('querystring');
 const moment = require('moment-timezone');
 const debug = require('debug')(tag);
+const { dateFormat } = require('../functions/helper');
 const {
   getTreatBoxOrders,
   getTreatBoxOrderById,
@@ -14,10 +15,15 @@ const {
   updateTreatBoxOrders,
   getTreatBoxTotals
 } = require('../../lib/db-control/db-control')(tag);
-const { priceFormat, getReadableOrder, getWeek } = require('../functions/helper');
+const {
+  priceFormat,
+  getReadableOrder,
+  getWeek,
+  parseDateCode,
+  getGoogleMapsUrl
+} = require('../functions/helper');
 const { loginCheck } = require('../controllers/authController')();
 const {
-  getWeekData,
   getDetails,
   apiLookupPrice,
   lookupRebateCode,
@@ -90,15 +96,18 @@ function routes() {
         orders = data[0].value;
         totals = data[1].value;
       }
+      debug(orders);
 
       return res.render('treatboxOrders', {
         user: req.user,
         orders,
         totals,
-        getWeekData,
         getReadableOrder,
         querystring,
-        priceFormat
+        priceFormat,
+        dateFormat,
+        parseDateCode,
+        getGoogleMapsUrl
       });
     });
 
