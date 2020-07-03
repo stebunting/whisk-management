@@ -41,15 +41,15 @@ const swishTest = {
 };
 
 // Production Constants
-const swishProduction = {
-  alias: process.env.SWISH_ALIAS,
-  baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
-  callbackRoot,
-  httpsAgent: new https.Agent({
-    cert: Buffer.from(JSON.parse(`"${process.env.SWISH_CERT}"`)),
-    key: Buffer.from(JSON.parse(`"${process.env.SWISH_KEY}"`))
-  })
-};
+// const swishProduction = {
+//   alias: process.env.SWISH_ALIAS,
+//   baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
+//   callbackRoot,
+//   httpsAgent: new https.Agent({
+//     cert: Buffer.from(JSON.parse(`"${process.env.SWISH_CERT}"`)),
+//     key: Buffer.from(JSON.parse(`"${process.env.SWISH_KEY}"`))
+//   })
+// };
 
 const swish = swishTest;
 

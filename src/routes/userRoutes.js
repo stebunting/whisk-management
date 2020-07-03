@@ -246,6 +246,7 @@ function routes() {
         getSettings('sms')
       ]
       const data = await Promise.allSettled(promises);
+      debug(data);
       const products = data[0].value;
       const treatboxSettings = data[1].value;
       const rebatecodeSettings = data[2].value;

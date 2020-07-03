@@ -5,4 +5,5 @@ private
 cert
 db-backup
 mongobackup
-
+stderr.log
+tmp/
