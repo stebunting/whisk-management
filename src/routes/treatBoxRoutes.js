@@ -75,12 +75,12 @@ function routes() {
         const week = getWeek();
         const year = moment().week(week).year();
         const dateCode = `${year}-${week}`;
-        query = { 'delivery.date': dateCode };
+        query = { 'delivery.date': { $regex: `^${dateCode}` } };
       } else if (date === 'nextweek') {
         const week = getWeek(1);
         const year = moment().week(week).year();
         const dateCode = `${year}-${week}`;
-        query = { 'delivery.date': dateCode };
+        query = { 'delivery.date': { $regex: `^${dateCode}` } };
       } else {
         query = { 'delivery.date': date };
       }

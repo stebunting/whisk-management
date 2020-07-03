@@ -10,7 +10,6 @@ const { v4: uuidv4 } = require('uuid');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
-  getGoogleMapsUrl,
   parseMarkers,
   getWeek
 } = require('../functions/helper');
@@ -227,8 +226,8 @@ function treatBoxController() {
         Object.entries(counts).forEach((item) => {
           recipientsItems.push({
             id: item[0],
-            name: item[1].name,
             quantity: item[1].quantity,
+            name: item[1].name
           });
         });
         const newRecipient = {
@@ -248,7 +247,7 @@ function treatBoxController() {
         order.recipients.push(newRecipient);
       });
     }
-    debug(order);
+
     return order;
   }
 
