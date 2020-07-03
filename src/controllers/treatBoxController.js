@@ -209,43 +209,46 @@ function treatBoxController() {
         }
       };
       order.recipients = [recipient];
-    // } else if (order.delivery.type === 'split-delivery') {
-    //   const numRecipients = parseInt(postData.recipients, 10);
-    //   const recipients = [];
-    //   let recipientId = 0;
-    //   let i = 0;
-    //   while (i < numRecipients) {
-    //     if (`name-${recipientId}` in postData) {
-    //       const recipient = {
-    //         items: {
-    //           comboBoxes: parseInt(postData[`recipient-num-comboboxes-${recipientId}`], 10),
-    //           treatBoxes: parseInt(postData[`recipient-num-treatboxes-${recipientId}`], 10),
-    //           vegetableBoxes: parseInt(postData[`recipient-num-vegetableboxes-${recipientId}`], 10)
-    //         },
-    //         details: {
-    //           name: postData[`name-${recipientId}`],
-    //           telephone: postData[`telephone-${recipientId}`]
-    //         },
-    //         delivery: {
-    //           address: postData[`address-${recipientId}`],
-    //           addressNotes: postData[`notes-address-${recipientId}`],
-    //           url: getGoogleMapsUrl(postData[`address-${recipientId}`]),
-    //           googleFormattedAddress: postData[`google-formatted-address-${recipientId}`],
-    //           zone: parseInt(postData[`zone-${recipientId}`], 10),
-    //           message: postData[`message-${recipientId}`]
-    //         }
-    //       };
-    //       if (recipient.delivery.zone === 2) {
-    //         cost.delivery += settings.delivery.zone2.price;
-    //       }
-    //       recipients.push(recipient);
-    //       i += 1;
-    //     }
-    //     recipientId += 1;
-    //   }
-    //   order.recipients = recipients;
-    }
+    } else if (order.delivery.type === 'split-delivery') {
+      const recipients = JSON.parse(postData.recipients);
+      const allItems = JSON.parse(postData.items);
+      order.recipients = [];
 
+      recipients.forEach((recipient) => {
+        let recipientsItems = allItems.filter((x) => x.recipient === recipient);
+        const counts = {};
+        recipientsItems.forEach((item) => {
+          counts[item.id] = {
+            quantity: (counts[item.id.quantity] || 0) + 1,
+            name: item.name
+          };
+        });
+        recipientsItems = [];
+        Object.entries(counts).forEach((item) => {
+          recipientsItems.push({
+            id: item[0],
+            name: item[1].name,
+            quantity: item[1].quantity,
+          });
+        });
+        const newRecipient = {
+          items: recipientsItems,
+          details: {
+            name: postData[`name-${recipient}`],
+            telephone: postData[`telephone-${recipient}`]
+          },
+          delivery: {
+            address: postData[`address-${recipient}`],
+            addressNotes: postData[`notes-address-${recipient}`],
+            googleFormattedAddress: postData[`google-formatted-address-${recipient}`],
+            zone: parseInt(postData[`zone-${recipient}`], 10),
+            message: postData[`message-${recipient}`]
+          }
+        };
+        order.recipients.push(newRecipient);
+      });
+    }
+    debug(order);
     return order;
   }
 
@@ -387,6 +390,8 @@ function treatBoxController() {
   async function orderStarted(req, res) {
     const { referer } = req.headers;
     const { 'callback-url': callbackUrl } = req.body;
+
+    debug(req.body);
 
     const order = await parsePostData(req.body);
     const valid = validateOrder(order);
