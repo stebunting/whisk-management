@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
+  priceFormat,
   parseMarkers,
   getWeek
 } = require('../functions/helper');
@@ -41,17 +42,17 @@ const swishTest = {
 };
 
 // Production Constants
-// const swishProduction = {
-//   alias: process.env.SWISH_ALIAS,
-//   baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
-//   callbackRoot,
-//   httpsAgent: new https.Agent({
-//     cert: Buffer.from(JSON.parse(`"${process.env.SWISH_CERT}"`)),
-//     key: Buffer.from(JSON.parse(`"${process.env.SWISH_KEY}"`))
-//   })
-// };
+const swishProduction = {
+  alias: process.env.SWISH_ALIAS,
+  baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
+  callbackRoot,
+  httpsAgent: new https.Agent({
+    cert: Buffer.from(JSON.parse(`"${process.env.SWISH_CERT}"`)),
+    key: Buffer.from(JSON.parse(`"${process.env.SWISH_KEY}"`))
+  })
+};
 
-const swish = swishTest;
+const swish = swishProduction;
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
@@ -277,9 +278,9 @@ function treatBoxController() {
       products,
       cost: {
         food: {
-          comboBox: settings.food.comboBox.price,
-          treatBox: settings.food.treatBox.price,
-          vegetableBox: settings.food.vegetableBox.price
+          comboBox: 490,
+          treatBox: 250,
+          vegetableBox: 250
         },
         delivery: {
           local: 0,
@@ -478,6 +479,7 @@ function treatBoxController() {
           message: 'WHISK.se Order'
         }
       };
+      debug(apiConfig);
 
       try {
         const response = await axios(apiConfig);
@@ -617,7 +619,7 @@ function treatBoxController() {
           callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
           payeeAlias: swish.alias,
           payerAlias: order.payment.swish.payerAlias,
-          amount: order.statement.bottomLine.total,
+          amount: priceFormat(order.statement.bottomLine.total, { includeSymbol: false }),
           currency: 'SEK',
           message: 'WHISK.se Order'
         }

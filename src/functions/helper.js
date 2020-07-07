@@ -6,8 +6,12 @@ const { getProductById } = require('../../lib/db-control/db-control');
 // Format price from stored öre to krona
 function priceFormat(num, userOptions = {}) {
   const options = {
-    includeSymbol: userOptions.includeSymbol || true,
     includeOre: userOptions.includeOre || false
+  }
+  if (userOptions.includeSymbol === false) {
+    options['includeSymbol'] = false;
+  } else {
+    options['includeSymbol'] = true;
   }
   let str = (num / 100).toLocaleString(undefined, {
     minimumFractionDigits: options.includeOre ? 2 : 0,
