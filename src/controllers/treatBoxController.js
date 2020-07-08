@@ -346,11 +346,31 @@ function treatBoxController() {
 
     // Get Delivery Cost
     const treatboxSettings = await getSettings('treatbox');
-    statement.delivery = {
-      zone2Price: treatboxSettings.delivery.zone2.price
-    };
-    statement.bottomLine.deliveryCost = treatboxSettings.delivery.zone2.price * delivery.zone2;
-    statement.bottomLine.deliveryMoms = treatboxSettings.delivery.zone2.momsAmount * delivery.zone2;
+    statement.delivery = {};
+    if (delivery.zone2 > 0) {
+      statement.delivery.zone2 = {
+        price: treatboxSettings.delivery.zone2.price,
+        quantity: delivery.zone2,
+        momsAmount: treatboxSettings.delivery.zone2.momsAmount,
+        momsRate: treatboxSettings.delivery.zone2.momsRate,
+        momsSubTotal: treatboxSettings.delivery.zone2.momsAmount * delivery.zone2,
+        subTotal: treatboxSettings.delivery.zone2.price * delivery.zone2
+      };
+      statement.bottomLine.deliveryCost += statement.delivery.zone2.subTotal;
+      statement.bottomLine.deliveryMoms += statement.delivery.zone2.momsSubTotal;
+    }
+    if (delivery.zone3 > 0) {
+      statement.delivery.zone3 = {
+        price: treatboxSettings.delivery.zone2.price,
+        quantity: delivery.zone3,
+        momsAmount: treatboxSettings.delivery.zone2.momsAmount,
+        momsRate: treatboxSettings.delivery.zone2.momsRate,
+        momsSubTotal: treatboxSettings.delivery.zone2.momsAmount * delivery.zone3,
+        subTotal: treatboxSettings.delivery.zone2.price * delivery.zone3
+      };
+      statement.bottomLine.deliveryCost += statement.delivery.zone3.subTotal;
+      statement.bottomLine.deliveryMoms += statement.delivery.zone3.momsSubTotal;
+    }
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
 
