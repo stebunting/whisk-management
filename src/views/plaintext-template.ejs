@@ -9,7 +9,7 @@ for (let i = 0; i < order.statement.products.length; i += 1) {
 
 Sub-Total: <%=priceFormat(order.statement.bottomLine.foodCost) %>
 Delivery: <%=priceFormat(order.statement.bottomLine.deliveryCost) %>
-MOMs: <%=priceFormat(order.statement.bottomLine.totalMoms) %>
+MOMs: <%=priceFormat(order.statement.bottomLine.totalMoms, { includeOre: true }) %>
 Total: <%=priceFormat(order.statement.bottomLine.total) %>
 
 <%if (order.delivery.type === 'collection') { %>Please note, our pick up times are between 10:30-11:30 on <%=deliveryDate %>.

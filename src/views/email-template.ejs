@@ -79,7 +79,7 @@ th {
 		</tr>
 		<tr>
 			<td class="subtotal" colspan="3">MOMs</td>
-			<td class="subtotal"><%=priceFormat(order.statement.bottomLine.totalMoms) %></td>
+			<td class="subtotal"><%=priceFormat(order.statement.bottomLine.totalMoms, { includeOre: true }) %></td>
 		</tr>
 		<tr>
 			<td class="total" colspan="3">Total</td>
