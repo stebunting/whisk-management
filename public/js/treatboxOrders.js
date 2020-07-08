@@ -97,7 +97,7 @@ function moveUp(e) {
   e.stopPropagation();
 
   const htmlId = $(this).attr('id');
-  const [, year, week, id, recipientNumber] = htmlId.split('-');
+  const [, year, week, day, id, recipientNumber] = htmlId.split('-');
 
   if ($(this).hasClass('top')) {
     return false;
@@ -116,7 +116,7 @@ function moveUp(e) {
     return;
   }
 
-  const [,,, previousId, previousRecipientNumber] = prevId.split('-');
+  const [,,,, previousId, previousRecipientNumber] = prevId.split('-');
   const url = `${baseUrl}/swapOrder/${id}-${recipientNumber}-${previousId}-${previousRecipientNumber}`;
   $.ajax({
     method: 'get',

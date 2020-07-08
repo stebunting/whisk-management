@@ -60,7 +60,6 @@ function routes() {
 
   treatBoxRoutes.route('/swishcallback')
     .post((req, res) => {
-      debug(req.body);
       return res.send('ok');
     });
 
@@ -96,7 +95,6 @@ function routes() {
         orders = data[0].value;
         totals = data[1].value;
       }
-      debug(orders);
 
       return res.render('treatboxOrders', {
         user: req.user,
