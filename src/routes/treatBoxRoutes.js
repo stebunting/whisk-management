@@ -28,7 +28,6 @@ const {
   apiLookupPrice,
   lookupRebateCode,
   orderStarted,
-  legacyOrderConfirmed,
   orderConfirmed,
   swishRefund
 } = require('../controllers/treatBoxController')();
@@ -51,8 +50,8 @@ function routes() {
     .post(orderStarted);
 
   // Invoice payment route
-  treatBoxRoutes.route('/invoicepayment')
-    .post(legacyOrderConfirmed);
+  // treatBoxRoutes.route('/invoicepayment')
+  //   .post(legacyOrderConfirmed);
 
   // Invoice payment route
   treatBoxRoutes.route('/payment')

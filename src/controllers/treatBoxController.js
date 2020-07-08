@@ -167,6 +167,7 @@ function treatBoxController() {
     const rawProducts = await getProducts();
     const products = {};
     for (let i = 0; i < rawProducts.length; i += 1) {
+      /* eslint-disable-next-line no-underscore-dangle */
       products[rawProducts[i]._id] = rawProducts[i].name;
     }
 
@@ -391,8 +392,6 @@ function treatBoxController() {
     const { referer } = req.headers;
     const { 'callback-url': callbackUrl } = req.body;
 
-    debug(req.body);
-
     const order = await parsePostData(req.body);
     const valid = validateOrder(order);
 
@@ -420,124 +419,124 @@ function treatBoxController() {
     }
   }
 
-  async function legacyOrderConfirmed(req, res) {
-    const referer = req.headers.referer.split('?')[0];
-    const { 'callback-url': callbackUrl } = req.body;
+  // async function legacyOrderConfirmed(req, res) {
+  //   const referer = req.headers.referer.split('?')[0];
+  //   const { 'callback-url': callbackUrl } = req.body;
 
-    const order = await parsePostData(req.body);
-    order.payment = {
-      method: req.body['payment-method'],
-      status: 'Ordered'
-    };
+  //   const order = await parsePostData(req.body);
+  //   order.payment = {
+  //     method: req.body['payment-method'],
+  //     status: 'Ordered'
+  //   };
 
-    if (order.delivery.type !== 'collection') {
-      const highestOrder = await getHighestOrder();
-      let nextOrder = 0;
-      if (highestOrder !== undefined) {
-        nextOrder = highestOrder.highestOrder + 1;
-      }
-      order.recipients.forEach((recipient) => {
-        recipient.delivery.order = nextOrder;
-        nextOrder += 1;
-      });
+  //   if (order.delivery.type !== 'collection') {
+  //     const highestOrder = await getHighestOrder();
+  //     let nextOrder = 0;
+  //     if (highestOrder !== undefined) {
+  //       nextOrder = highestOrder.highestOrder + 1;
+  //     }
+  //     order.recipients.forEach((recipient) => {
+  //       recipient.delivery.order = nextOrder;
+  //       nextOrder += 1;
+  //     });
 
-      const smsSettings = await getSettings('sms');
-      order.recipients.forEach((recipient) => {
-        recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
-      });
-    }
+  //     const smsSettings = await getSettings('sms');
+  //     order.recipients.forEach((recipient) => {
+  //       recipient.delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+  //     });
+  //   }
 
-    if (order.payment.method === 'Invoice') {
-      insertTreatBoxOrder(order);
-      sendConfirmationEmail(order);
+  //   if (order.payment.method === 'Invoice') {
+  //     insertTreatBoxOrder(order);
+  //     sendConfirmationEmail(order);
 
-      const query = querystring.stringify({
-        name: order.details.name
-      });
-      return res.redirect(`${callbackUrl}?${query}`);
-    }
+  //     const query = querystring.stringify({
+  //       name: order.details.name
+  //     });
+  //     return res.redirect(`${callbackUrl}?${query}`);
+  //   }
 
-    if (order.payment.method === 'Swish') {
-      order.payment.swish = {
-        payerAlias: parseSwishAlias(order.details.telephone)
-      };
+  //   if (order.payment.method === 'Swish') {
+  //     order.payment.swish = {
+  //       payerAlias: parseSwishAlias(order.details.telephone)
+  //     };
 
-      const uuid = uuidv4();
-      const apiConfig = {
-        method: 'post',
-        url: `${swish.baseUrl}/api/v1/paymentrequests`, // ${uuid}`,
-        httpsAgent: swish.httpsAgent,
-        header: {
-          'Content-Type': 'application/json'
-        },
-        data: {
-          callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
-          payeeAlias: swish.alias,
-          payerAlias: order.payment.swish.payerAlias,
-          amount: order.cost.total,
-          currency: 'SEK',
-          message: 'WHISK.se Order'
-        }
-      };
-      debug(apiConfig);
+  //     const uuid = uuidv4();
+  //     const apiConfig = {
+  //       method: 'post',
+  //       url: `${swish.baseUrl}/api/v1/paymentrequests`, // ${uuid}`,
+  //       httpsAgent: swish.httpsAgent,
+  //       header: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       data: {
+  //         callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
+  //         payeeAlias: swish.alias,
+  //         payerAlias: order.payment.swish.payerAlias,
+  //         amount: order.cost.total,
+  //         currency: 'SEK',
+  //         message: 'WHISK.se Order'
+  //       }
+  //     };
+  //     debug(apiConfig);
 
-      try {
-        const response = await axios(apiConfig);
-        order.payment.swish.id = response.headers.location.split('/');
-        order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
-      } catch (error) {
-        debug(error);
-        let errors = '';
-        if (error.response && error.response.data.length > 0) {
-          errors = error.response.data.map((x) => x.errorCode).join(',');
-        } else {
-          errors = 'ERROR';
-        }
-        const query = querystring.stringify({
-          status: errors
-        });
-        return res.redirect(307, `${referer}?${query}`);
-      }
+  //     try {
+  //       const response = await axios(apiConfig);
+  //       order.payment.swish.id = response.headers.location.split('/');
+  //       order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
+  //     } catch (error) {
+  //       debug(error);
+  //       let errors = '';
+  //       if (error.response && error.response.data.length > 0) {
+  //         errors = error.response.data.map((x) => x.errorCode).join(',');
+  //       } else {
+  //         errors = 'ERROR';
+  //       }
+  //       const query = querystring.stringify({
+  //         status: errors
+  //       });
+  //       return res.redirect(307, `${referer}?${query}`);
+  //     }
 
-      (async function checkStatus() {
-        setTimeout(() => {
-          getPaymentResult(order.payment.swish.id).then((response) => {
-            // if (response.id !== uuid) {
-            //   const query = querystring.stringify({
-            //     status: 'INVALID_UUID'
-            //   });
-            //   return res.redirect(307, `${referer}?${query}`);
-            // }
+  //     (async function checkStatus() {
+  //       setTimeout(() => {
+  //         getPaymentResult(order.payment.swish.id).then((response) => {
+  //           // if (response.id !== uuid) {
+  //           //   const query = querystring.stringify({
+  //           //     status: 'INVALID_UUID'
+  //           //   });
+  //           //   return res.redirect(307, `${referer}?${query}`);
+  //           // }
 
-            order.payment.swish.reference = response.paymentReference;
-            if (response.status === 'PAID') {
-              const query = querystring.stringify({
-                name: order.details.name
-              });
+  //           order.payment.swish.reference = response.paymentReference;
+  //           if (response.status === 'PAID') {
+  //             const query = querystring.stringify({
+  //               name: order.details.name
+  //             });
 
-              order.payment.status = 'Paid';
-              insertTreatBoxOrder(order);
-              sendConfirmationEmail(order);
+  //             order.payment.status = 'Paid';
+  //             insertTreatBoxOrder(order);
+  //             sendConfirmationEmail(order);
 
-              return res.redirect(`${callbackUrl}?${query}`);
-            }
+  //             return res.redirect(`${callbackUrl}?${query}`);
+  //           }
 
-            if (response.status === 'DECLINED' || response.status === 'ERROR') {
-              const query = querystring.stringify({
-                status: response.status
-              });
-              return res.redirect(307, `${referer}?${query}`);
-            }
+  //           if (response.status === 'DECLINED' || response.status === 'ERROR') {
+  //             const query = querystring.stringify({
+  //               status: response.status
+  //             });
+  //             return res.redirect(307, `${referer}?${query}`);
+  //           }
 
-            checkStatus();
-            return true;
-          });
-        }, 1500);
-      }());
-    } else {
-      return res.redirect(307, referer);
-    }
-  }
+  //           checkStatus();
+  //           return true;
+  //         });
+  //       }, 1500);
+  //     }());
+  //   } else {
+  //     return res.redirect(307, referer);
+  //   }
+  // }
 
   // Function to calculate order price
   async function calculatePrice(order) {
@@ -563,6 +562,7 @@ function treatBoxController() {
     delete order.items;
 
     order.payment = {
+      rebateCode: req.body['rebate-code'],
       method: req.body['payment-method'],
       status: 'Ordered'
     };
@@ -721,7 +721,6 @@ function treatBoxController() {
     apiLookupPrice,
     lookupRebateCode,
     orderStarted,
-    legacyOrderConfirmed,
     orderConfirmed,
     swishRefund
   };
