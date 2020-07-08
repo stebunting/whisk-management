@@ -561,14 +561,20 @@ function treatBoxController() {
   // Function to calculate order price
   async function calculatePrice(order) {
     let zone2Deliveries = 0;
+    let zone3Deliveries = 0;
     if (order.delivery.type !== 'collection') {
       order.recipients.forEach((recipient) => {
         if (recipient.delivery.zone === 2) {
           zone2Deliveries += 1;
+        } else if (recipient.delivery.zone === 3) {
+          zone3Deliveries += 1;
         }
       });
     }
-    const statement = await lookupPrice(order.items, { zone2: zone2Deliveries });
+    const statement = await lookupPrice(order.items, {
+      zone2: zone2Deliveries,
+      zone3: zone3Deliveries
+    });
     return statement;
   }
 
