@@ -20,7 +20,7 @@
 				}
 				lastWeek = order.delivery.date;
 				top = true;
-				//const total = totals.find((x) => x._id === lastWeek);
+				const total = totals.find((x) => x._id === lastWeek);
 				%>
 		<table class="table table-bordered">
 			<thead>
@@ -32,19 +32,12 @@
 								<ul class="user-info-list col-md-4">
 									<li>
 										<span class="user-info-subtitle">Orders</span>
-									</li>
+									</li><%
+									for (let i = 0; i < total.items.length; i += 1) { %>
 									<li>
-										<span class="user-info-detail">COMBO BOXES:</span>
-										<%=// total.comboBoxes %>
-									</li>
-									<li>
-										<span class="user-info-detail">TREAT BOXES:</span>
-										<%=// total.treatBoxes %>
-									</li>
-									<li>
-										<span class="user-info-detail">VEGETABLE BOXES:</span>
-										<%=// total.vegetableBoxes %>
-									</li>
+										<span class="user-info-detail"><%=total.items[i].name %>:</span>
+										<%=total.items[i].total %>
+									</li><% } %>
 								</ul>
 								<ul class="user-info-list col-md-4">
 									<li>
@@ -65,11 +58,11 @@
 									</li>
 									<li>
 										<span class="user-info-detail">NUMBER OF DELIVERIES:</span>
-										<%=// total.deliveries %>
+										<%=total.deliveries %>
 									</li>
 									<li>
 										<span class="user-info-detail">INCOME:</span>
-										<%=// total.income %> SEK
+										<%=priceFormat(total.income) %>
 									</li>
 									<li>
 										<a href="/treatbox/csv/<%=lastWeek %>">Download CSV</a>

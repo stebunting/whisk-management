@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node app",
     "dev": "nodemon app",
-    "test": "npx mocha"
+    "test": "npx mocha",
+    "dbtest": "npx mocha test/db-tests"
   },
   "repository": {
     "type": "git",

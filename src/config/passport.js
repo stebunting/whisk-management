@@ -29,7 +29,7 @@ function passportConfig(app) {
     passwordField: 'password'
   }, async (username, password, done) => {
     try {
-      const user = await getUser(username);
+      const user = await getUser(username.toLowerCase());
 
       // User not found in database
       if (user === null) {
