@@ -412,6 +412,8 @@ function treatBoxController() {
     const { referer } = req.headers;
     const { 'callback-url': callbackUrl } = req.body;
 
+    debug(req.body);
+
     const order = await parsePostData(req.body);
     const valid = validateOrder(order);
 
@@ -588,7 +590,7 @@ function treatBoxController() {
     delete order.items;
 
     order.payment = {
-      rebateCode: req.body['rebate-code'],
+      rebateCodes: req.body['rebate-codes'].split(','),
       method: req.body['payment-method'],
       status: 'Ordered'
     };
