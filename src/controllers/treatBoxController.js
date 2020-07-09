@@ -590,10 +590,12 @@ function treatBoxController() {
     delete order.items;
 
     order.payment = {
-      rebateCodes: req.body['rebate-codes'].split(','),
       method: req.body['payment-method'],
       status: 'Ordered'
     };
+    if (req.body['rebate-codes'] != null) {
+      order.rebateCodes = req.body['rebate-codes'].split(',')
+    }
 
     if (order.delivery.type !== 'collection') {
       let nextOrder = 0;
