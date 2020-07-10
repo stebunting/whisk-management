@@ -29,30 +29,17 @@
 						<h2><%=dateFormat(parseDateCode(lastWeek).date) %></h2>
 							<div class="card">
 								<div class="card-body row">
-								<ul class="user-info-list col-md-4">
+								<ul class="user-info-list col-md-6">
 									<li>
 										<span class="user-info-subtitle">Orders</span>
 									</li><%
 									for (let i = 0; i < total.items.length; i += 1) { %>
 									<li>
-										<span class="user-info-detail"><%=total.items[i].name %>:</span>
-										<%=total.items[i].total %>
+										<span class="user-info-detail"><%=total.items[i].name.toUpperCase() %>:</span>
+										<%=total.items[i].quantity %>
 									</li><% } %>
 								</ul>
-								<ul class="user-info-list col-md-4">
-									<li>
-										<span class="user-info-subtitle">To Make</span>
-									</li>
-									<li>
-										<span class="user-info-detail">TREAT BOXES TO MAKE:</span>
-										<%=// total.treatBoxesToMake %>
-									</li>
-									<li>
-										<span class="user-info-detail">VEGETABLE BOXES TO ORDER:</span>
-										<%=// total.vegetableBoxesToOrder %>
-									</li>
-								</ul>
-								<ul class="user-info-list col-md-4">
+								<ul class="user-info-list col-md-6">
 									<li>
 										<span class="user-info-subtitle">Deliveries</span>
 									</li>
