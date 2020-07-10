@@ -242,17 +242,6 @@ describe('Database Control Connection Tests', () => {
       assert.deepEqual(insertedOrder.ops[0], order);
     });
 
-    it('gets total items by week', async () => {
-      const response = await getTreatBoxTotals();
-      const treatBoxIndex = response[0].items.findIndex((x) => x.name === 'Treat Box');
-      assert.equal(response[0].items[treatBoxIndex].name, 'Treat Box');
-      assert.equal(response[0].items[treatBoxIndex].quantity, 10);
-      assert.equal(response[0].items[1 - treatBoxIndex].name, 'Vegetable Box');
-      assert.equal(response[0].items[1 - treatBoxIndex].quantity, 8);
-      assert.equal(response[0].deliveries, 4);
-      assert.equal(response[0].income, 280000);
-    });
-
     it('updates order to paid', async () => {
       const orders = await getTreatBoxOrders();
       assert.equal(orders[1].payment.status, 'Ordered');
@@ -300,6 +289,17 @@ describe('Database Control Connection Tests', () => {
         }
       });
       assert.equal(insertedOrder.insertedCount, 1);
+    });
+
+    it('gets total items by week', async () => {
+      const response = await getTreatBoxTotals();
+      const treatBoxIndex = response[0].items.findIndex((x) => x.name === 'Treat Box');
+      assert.equal(response[0].items[treatBoxIndex].name, 'Treat Box');
+      assert.equal(response[0].items[treatBoxIndex].quantity, 10);
+      assert.equal(response[0].items[1 - treatBoxIndex].name, 'Vegetable Box');
+      assert.equal(response[0].items[1 - treatBoxIndex].quantity, 8);
+      assert.equal(response[0].deliveries, 4);
+      assert.equal(response[0].income, 280000);
     });
 
     it('gets array of recipients', async () => {
