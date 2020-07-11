@@ -22,8 +22,11 @@ function priceFormat(num, userOptions = {}) {
   return str;
 }
 
-function dateFormat(date) {
-  const preferredFormat = 'dddd Do MMMM YYYY';
+function dateFormat(date, userOptions = {}) {
+  let preferredFormat = 'dddd Do MMMM YYYY';
+  if (userOptions.format === 'short') {
+    preferredFormat = 'YYYY/M/D h:mm:ssa';
+  }
   return moment(date)
     .tz('Europe/Stockholm')
     .format(preferredFormat);

@@ -167,12 +167,32 @@
 												<span class="user-info-detail">REFUND:</span>&nbsp;
 												<input class="form-control form-control-sm" type="text" id="swishrefundamount-<%=order._id %>" placeholder="Amount" />&nbsp;
 												<button class="btn btn-sm btn-primary" type="submit" id="swishrefund-<%=order._id %>">Send</button>
+												<ul class="refund-error refunderror-<%=order._id %>"></ul>
 											</div>
 										</li><%
 											} %>
 										<li>
 											<button class="btn btn-danger" type="button" name="cancel" value="<%=order._id %>">Cancel Order</button>
 										</li>
+									</ul><%
+
+									let display = 'none';
+									if (order.payment.method === 'Swish' && order.payment.swish.refunds.length > 0) {
+										display = 'show';
+									}
+									%>
+
+									<ul class="user-info-list" id="refunds-<%=order._id %>" style="display: <%=display %>;">
+										<li>
+											<span class="user-info-subtitle">Refunds</span>
+										</li><%
+										if (display === 'show') {
+										for (let i = 0; i < order.payment.swish.refunds.length; i += 1) {
+											const refund = order.payment.swish.refunds[i]; %>
+										<li>
+											<%=dateFormat(refund.timestamp, { format: 'short' }) %> -
+											<%=priceFormat(refund.amount) %>
+										</li><% }} %>
 									</ul>
 								</div>
 

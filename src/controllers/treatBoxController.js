@@ -11,6 +11,7 @@ const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
   priceFormat,
+  dateFormat,
   parseMarkers,
   getWeek
 } = require('../functions/helper');
@@ -413,8 +414,6 @@ function treatBoxController() {
     const { referer } = req.headers;
     const { 'callback-url': callbackUrl } = req.body;
 
-    debug(req.body);
-
     const order = await parsePostData(req.body);
     const valid = validateOrder(order);
 
@@ -644,24 +643,33 @@ function treatBoxController() {
       const location = response.headers.location.split('/');
       refundId = location[location.length - 1];
     } catch (error) {
-      debug(error);
+      return res.json({
+        status: 'Error',
+        error: error.response.data.errors
+      })
     }
 
     (async function checkStatus() {
       setTimeout(() => {
         getRefundResult(refundId).then((response) => {
           if (response.status === 'PAID') {
+            const timestamp = new Date();
+            const intAmount = parseInt(amount, 10) * 100
             recordSwishRefund(id, {
-              'payment.swish.refunds': {
-                id: refundId,
-                amount: parseInt(amount, 10) * 100,
-              }
+              timestamp,
+              id: refundId,
+              amount: intAmount,
             });
 
             return res.json({
               status: 'Paid',
-              refundId
+              timestamp: dateFormat(timestamp, { format: 'short' }),
+              amount: priceFormat(intAmount)
             });
+          } else if (response.status === 'ERROR') {
+            return res.json({
+              status: 'Error'
+            })
           }
 
           checkStatus();

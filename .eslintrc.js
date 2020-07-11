@@ -3,7 +3,8 @@ module.exports = {
     browser: true,
     es2020: true,
     node: true,
-    mocha: true
+    mocha: true,
+    jquery: true
   },
   extends: [
     'airbnb-base',

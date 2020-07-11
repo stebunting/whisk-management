@@ -1,5 +1,72 @@
 const baseUrl = `${window.location.origin}${window.location.pathname}`;
 
+function lookupSwishErrorMessage(message) {
+  switch (message) {
+    case 'FF08':
+      return 'PaymentReference is invalid.';
+
+    case 'RP03':
+      return 'Callback URL is missing or does not use HTTPS.';
+
+    case 'PA02':
+      return 'Amount value is missing or not a valid number.';
+
+    case 'AM03':
+      return 'Invalid or missing Currency.';
+
+    case 'AM04':
+      return 'Insufficient funds in account.';
+
+    case 'AM06':
+      return 'Specified transaction amount is less than agreed minimum.';
+
+    case 'RP01':
+      return 'Missing Merchant Swish Number.';
+
+    case 'RP02':
+      return 'Wrong formatted message.';
+
+    case 'ACMT07':
+      return 'Payee not Enrolled.';
+
+    case 'ACMT01':
+      return 'Counterpart is not activated.';
+
+    case 'RF02':
+      return 'Original Payment not found or original payment is more than 13 months old.';
+
+    case 'RF03':
+      return 'Payer alias in the refund does not match the payee alias in the original payment.';
+
+    case 'RF04':
+      return 'Payer organization number do not match original payment payee organization number.';
+
+    case 'RF06':
+      return 'The Payer SSN in the original payment is not the same as the SSN for the current Payee. Note: Typically, this means that the Mobile number has been transferred to another person.';
+
+    case 'RF07':
+      return 'Transaction declined.';
+
+    case 'RF08':
+      return 'Amount value is too large, or amount exceeds the amount of the original payment minus any previous refunds. Note: the remaining available amount is put into the additional information field.';
+
+    case 'RF09':
+      return 'Refund already in progress.';
+
+    case 'RP09':
+      return 'InstructionUUID not available.';
+
+    case 'FF10':
+      return 'Bank system processing error.';
+
+    case 'BE18':
+      return 'Payer alias is invalid.';
+
+    default:
+      return '';
+  }
+}
+
 function markAsPaid(e) {
   e.preventDefault();
 
@@ -98,7 +165,7 @@ function moveUp(e) {
   e.stopPropagation();
 
   const htmlId = $(this).attr('id');
-  const [, year, week, day, id, recipientNumber] = htmlId.split('-');
+  const [, year, week,, id, recipientNumber] = htmlId.split('-');
 
   if ($(this).hasClass('top')) {
     return false;
@@ -138,9 +205,11 @@ function swishRefund() {
   const id = $(this).attr('id').split('-')[1];
   const amount = parseInt($(`#swishrefundamount-${id}`).val(), 10);
   const url = `${baseUrl}/swishrefund`;
-  if (Number.isNaN(amount)) {
+  if (Number.isNaN(amount) || amount < 0) {
     return;
   }
+  $(this).prop('disabled', true).text('Refunding...')
+    .prepend(`<span id="spinner-${id}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;`);
   $.ajax({
     method: 'post',
     url,
@@ -149,7 +218,18 @@ function swishRefund() {
       amount
     }
   }).done((data) => {
-    console.log(data);
+    $(this).prop('disabled', false).text('Send');
+    $(`#spinner-${id}`).remove();
+
+    if (data.status === 'Paid') {
+      $(`.refunderror-${id}`).empty();
+      const html = `<li class="new-refund">${data.timestamp} - ${data.amount}</li>`;
+      $(`#refunds-${id}`).append(html).show();
+    } else if (data.status === 'Error') {
+      for (let i = 0; i < data.error.length; i += 1) {
+        $(`.refunderror-${id}`).append(`<li>${lookupSwishErrorMessage(data.error[i].defaultMessage)}</li>`);
+      }
+    }
   }).catch((error) => {
     console.log(error);
   });
@@ -161,7 +241,7 @@ $(() => {
   $('button[name=cancel]').click(cancelOrder);
 
   $('a[id^=moveup-').click(moveUp);
-  $('.map-icon').click(function(e) {
+  $('.map-icon').click((e) => {
     e.stopPropagation();
   });
 

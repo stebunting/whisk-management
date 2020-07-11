@@ -35,3 +35,11 @@ nav {
 .top {
 	opacity: 0.5;
 }
+
+.refund-error {
+	color: #FF0000;
+}
+
+.new-refund {
+	font-weight: bold;
+}
