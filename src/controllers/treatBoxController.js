@@ -23,6 +23,7 @@ const {
   getSettings,
   getProducts,
   getProductById,
+  recordSwishRefund,
   logError
 } = require('../../lib/db-control/db-control')(tag);
 
@@ -52,7 +53,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishProduction;
+const swish = swishTest;
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
@@ -441,6 +442,27 @@ function treatBoxController() {
     }
   }
 
+  // Function to call Swish to check payment status
+  async function getRefundResult(refundId) {
+    const apiConfig = {
+      method: 'get',
+      url: `${swish.baseUrl}/api/v1/refunds/${refundId}`,
+      httpsAgent: swish.httpsAgent,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    let response;
+    try {
+      response = await axios(apiConfig);  
+      return response.data;
+    } catch (error) {
+      logError('Error while calling Swish API to call get refund result', error);
+      return { status: 'GET_RESULT_ERROR' };
+    }
+  }
+
   // Function to calculate order price
   async function calculatePrice(order) {
     let zone2Deliveries = 0;
@@ -540,6 +562,7 @@ function treatBoxController() {
         const response = await axios(apiConfig);
         order.payment.swish.id = response.headers.location.split('/');
         order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
+        order.payment.swish.refunds = [];
       } catch (error) {
         logError(`Error sending Swift payment request (${order.details.name} - ${order.details.telephone})`, error);
         let errors = '';
@@ -610,19 +633,42 @@ function treatBoxController() {
         callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
         payerAlias: swish.alias,
         amount,
-        currency: 'SEK'
+        currency: 'SEK',
+        message: ''
       }
     };
 
+    let refundId;
     try {
       const response = await axios(apiConfig);
-      debug(response);
-      debug('hi');
+      const location = response.headers.location.split('/');
+      refundId = location[location.length - 1];
     } catch (error) {
       debug(error);
     }
 
-    return res.json({ status: 'OK' });
+    (async function checkStatus() {
+      setTimeout(() => {
+        getRefundResult(refundId).then((response) => {
+          if (response.status === 'PAID') {
+            recordSwishRefund(id, {
+              'payment.swish.refunds': {
+                id: refundId,
+                amount: parseInt(amount, 10) * 100,
+              }
+            });
+
+            return res.json({
+              status: 'Paid',
+              refundId
+            });
+          }
+
+          checkStatus();
+          return true;
+        });
+      }, 1500);
+    }());
   }
 
   return {

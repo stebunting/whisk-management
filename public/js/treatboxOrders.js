@@ -149,9 +149,7 @@ function swishRefund() {
       amount
     }
   }).done((data) => {
-    if (data.status === 'OK') {
-      console.log('ok');
-    }
+    console.log(data);
   }).catch((error) => {
     console.log(error);
   });
