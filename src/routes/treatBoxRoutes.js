@@ -143,7 +143,9 @@ function routes() {
     .get(async (req, res) => {
       const { id } = req.params;
       try {
-        await updateTreatBoxOrders(id, { 'payment.status': 'Cancelled' });
+        await updateTreatBoxOrders(id, {
+          'payment.status': 'Cancelled'
+        });
         return res.json({ status: 'OK' });
       } catch {
         return res.json({ status: 'Error' });

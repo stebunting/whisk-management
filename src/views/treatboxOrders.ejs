@@ -73,13 +73,13 @@
 					<th class="column info-status">STATUS</th>
 					<th class="column info-status">MOVE</th>
 				</tr><% }
-				let collection;
+				let collection = false;
 				let trClass = '';
 				if (order.delivery.type === 'collection') {
 					collection = true;
 					trClass = 'table-warning';
-				} else {
-					collection = false;
+				} else if (order.payment.status === 'Cancelled') {
+					trClass = 'table-danger';
 				} %>
 				<tr class="<%=trClass %>" id="row-<%=order._id %>-<%=recipient.index %>" data-toggle="collapse" data-target="<%=`#ID-${order._id}-${recipient.index}` %>">
 					<td><%=timestamp.toLocaleDateString() %></td>

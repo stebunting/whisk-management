@@ -47,6 +47,7 @@ function cancelOrder() {
     url
   }).done((data) => {
     if (data.status === 'OK') {
+      $(`tr[id^=row-${id}`).addClass('table-warning');
       $(`.statusicon-${id}`).attr('src', '/icons/cancelled.svg').attr('alt', 'Cancelled');
       $(`.status-${id}`).text('Cancelled');
       $(`.markaspaid-${id}`).remove();
