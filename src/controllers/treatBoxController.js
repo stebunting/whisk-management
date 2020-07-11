@@ -54,7 +54,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishTest;
+const swish = swishProduction;
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
