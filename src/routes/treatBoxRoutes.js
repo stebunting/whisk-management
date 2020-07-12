@@ -71,12 +71,17 @@ function routes() {
       } else if (date === 'thisweek') {
         const week = getWeek();
         const year = moment().week(week).year();
-        const dateCode = `${year}-${week}`;
+        const dateCode = `${year}-${week}-3`;
         query = { 'delivery.date': { $regex: `^${dateCode}` } };
       } else if (date === 'nextweek') {
         const week = getWeek(1);
         const year = moment().week(week).year();
-        const dateCode = `${year}-${week}`;
+        const dateCode = `${year}-${week}-3`;
+        query = { 'delivery.date': { $regex: `^${dateCode}` } };
+      } else if (date === 'lastweek') {
+        const week = getWeek(-1);
+        const year = moment().week(week).year();
+        const dateCode = `${year}-${week}-3`;
         query = { 'delivery.date': { $regex: `^${dateCode}` } };
       } else {
         query = { 'delivery.date': date };

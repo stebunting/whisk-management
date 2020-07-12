@@ -23,11 +23,12 @@
           <div class="dropdown-menu" aria-labelledby="treatboxDropdown">
             <a class="dropdown-item" href="/treatbox/orders?date=thisweek">This Week</a>
             <a class="dropdown-item" href="/treatbox/orders?date=nextweek">Next Week</a>
+            <a class="dropdown-item" href="/treatbox/orders?date=lastweek">Last Week</a>
             <div class="dropdown-divider"></div><%
               let year = '';
               for (let i = 0; i < treatboxDates.length; i += 1) {
                 if (treatboxDates[i].year !== year) {} %>
-            <a class="dropdown-item" href="/treatbox/orders?date=<%=treatboxDates[i].link %>"><%=treatboxDates[i].week %></a><% } %>
+            <a class="dropdown-item" href="/treatbox/orders?date=<%=treatboxDates[i].link %>">Week <%=treatboxDates[i].week %></a><% } %>
             %>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="/treatbox/orders">All Time</a>

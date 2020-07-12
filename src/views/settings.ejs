@@ -19,9 +19,19 @@
 				</div>
 
 				<div class="form-group row">
-					<label for="add-product-price" class="col-md-3 col-form-label">Price (including MOMs)</label>
+					<label for="add-product-price" class="col-md-3 col-form-label">Sale Price (including MOMs)</label>
 					<div class="input-group col-md-3">
 						<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price" />
+						<div class="input-group-append">
+							<span class="input-group-text">SEK</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="add-product-cost-price" class="col-md-3 col-form-label">Cost Price (including MOMs)</label>
+					<div class="input-group col-md-3">
+						<input type="text" class="form-control" id="add-product-cost-price" name="add-product-cost-price" placeholder="Cost Price" />
 						<div class="input-group-append">
 							<span class="input-group-text">SEK</span>
 						</div>
@@ -66,6 +76,7 @@
 						<th>MOMS RATE</th>
 						<th>NET PRICE</th>
 						<th>MOMS AMOUNT</th>
+						<th>COST PRICE</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -77,6 +88,7 @@
 						<td><%=products[i].momsRate %> %</td>
 						<td><%=priceFormat(products[i].netPrice, { includeOre: true }) %></td>
 						<td><%=priceFormat(products[i].momsAmount, { includeOre: true }) %></td>
+						<td><%=priceFormat(products[i].costPrice, { includeOre: true }) %></td>
 					</tr>
 					<% } %>
 				</tbody>
@@ -115,6 +127,7 @@
 					<div class="col-md-3">
 						<select class="form-control" id="rebate-type-<%=i %>" name="rebate-type-<%=i %>">
 							<option value="discount"<% if (code.type === 'discount') { %> selected<% } %>>Discount</option>
+							<option value="costprice" <% if (code.type === 'costprice') { %>selected<% } %>>Cost Price</option>
 							<option value="zone3delivery" <% if (code.type === 'zone3delivery') { %>selected<% } %>>Zone 3 Delivery</option>
 						</select>
 					</div>

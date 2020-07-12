@@ -42,6 +42,9 @@ function dateFormat(date, userOptions = {}) {
       preferredFormat = 'dddd Do MMMM YYYY'
       break;
   }
+  if (userOptions.includeWeek === true) {
+    preferredFormat += ' [(Week] w[)]';
+  }
   return moment(date)
     .tz('Europe/Stockholm')
     .format(preferredFormat);
@@ -70,9 +73,9 @@ function getGoogleMapsUrl(address) {
 
 function getWeek(offset = 0) {
   if (moment().isoWeekday() < 3) {
-    return moment().add(offset, 'weeks').week();
+    return moment().add(offset, 'weeks').isoWeek();
   }
-  return moment().add(1 + offset, 'weeks').week();
+  return moment().add(1 + offset, 'weeks').isoWeek();
 }
 
 // Convert year / date to formatted string

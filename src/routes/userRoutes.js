@@ -157,6 +157,7 @@ function routes() {
           const product = {
             name: req.body['add-product-name'],
             grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
+            costPrice: parseInt(req.body['add-product-cost-price'], 10) * 100,
             momsRate: parseInt(req.body['add-product-moms'], 10),
             deliverable: req.body['add-product-deliverable'] === 'true'
           };

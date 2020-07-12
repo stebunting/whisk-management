@@ -302,7 +302,7 @@ function treatBoxController() {
   }
 
   // Function to generate a statement of costs from products and delivery
-  async function lookupPrice(basket, delivery) {
+  async function lookupPrice(basket, delivery, codes = []) {
     const statement = {
       products: [],
       bottomLine: {
@@ -383,9 +383,10 @@ function treatBoxController() {
   async function apiLookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
     const delivery = JSON.parse(req.body.delivery);
+    const codes = JSON.parse(req.body.codes);
 
     try {
-      const statement = await lookupPrice(basket, delivery);
+      const statement = await lookupPrice(basket, delivery, codes);
       statement.status = 'OK';
       return res.json(statement);
     } catch (error) {
