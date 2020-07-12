@@ -95,8 +95,6 @@ function routes() {
         totals = data[1].value;
       }
 
-      debug(totals);
-
       return res.render('treatboxOrders', {
         user: req.user,
         orders,
