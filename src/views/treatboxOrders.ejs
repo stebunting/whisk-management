@@ -83,8 +83,8 @@
 					unmoveable = true;
 				} %>
 				<tr class="<%=trClass %>" id="row-<%=order._id %>-<%=recipient.index %>" data-toggle="collapse" data-target="<%=`#ID-${order._id}-${recipient.index}` %>">
-					<td><%=timestamp.toLocaleDateString() %></td>
-					<td><%=timestamp.toLocaleTimeString() %></td>
+					<td><%=dateFormat(timestamp, { format: 'date' }) %></td>
+					<td><%=dateFormat(timestamp, { format: 'time' }) %></td>
 					<td><%=recipient.details.name %></td>
 					<td>
 						<% if (collection) { %>Collection<% } else { %><%=recipient.delivery.address %>&nbsp;

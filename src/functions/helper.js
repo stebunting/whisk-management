@@ -23,9 +23,24 @@ function priceFormat(num, userOptions = {}) {
 }
 
 function dateFormat(date, userOptions = {}) {
-  let preferredFormat = 'dddd Do MMMM YYYY';
-  if (userOptions.format === 'short') {
-    preferredFormat = 'YYYY/M/D h:mm:ssa';
+  let preferredFormat;
+  switch (userOptions.format) {
+    case 'short':
+      preferredFormat = 'YYYY/M/D h:mm:ssa';
+      break;
+
+    case 'date':
+      preferredFormat = 'D/M/YYYY';
+      break;
+
+    case 'time':
+      preferredFormat = 'h:mm A';
+      break;
+
+    case 'long':
+    default:
+      preferredFormat = 'dddd Do MMMM YYYY'
+      break;
   }
   return moment(date)
     .tz('Europe/Stockholm')
