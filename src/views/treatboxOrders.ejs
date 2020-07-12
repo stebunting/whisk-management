@@ -10,7 +10,7 @@
 				recipient.items = order.statement.products;
 			}
 
-			let top = false;
+			let unmoveable = false;
 			const timestamp = order._id.getTimestamp();
 			if (lastWeek != order.delivery.date) {
 				if (lastWeek !== '9999-99-9') {
@@ -19,7 +19,7 @@
 		</table><%
 				}
 				lastWeek = order.delivery.date;
-				top = true;
+				unmoveable = true;
 				const total = totals.find((x) => x._id === lastWeek);
 				%>
 		<table class="table table-bordered">
@@ -80,6 +80,7 @@
 					trClass = 'table-warning';
 				} else if (order.payment.status === 'Cancelled') {
 					trClass = 'table-danger';
+					unmoveable = true;
 				} %>
 				<tr class="<%=trClass %>" id="row-<%=order._id %>-<%=recipient.index %>" data-toggle="collapse" data-target="<%=`#ID-${order._id}-${recipient.index}` %>">
 					<td><%=timestamp.toLocaleDateString() %></td>
@@ -103,7 +104,7 @@
 						} %>
 					</td>
 					<td class="info-status">
-						<a href="#" class="<%=top || collection ? 'top' : '' %>" id="moveup-<%=lastWeek %>-<%=order._id %>-<%=recipient.index %>"><img class="icon" src="/icons/up.svg" alt="Up" />
+						<a href="#" class="<%=unmoveable || collection ? 'unmoveable' : '' %>" id="moveup-<%=lastWeek %>-<%=order._id %>-<%=recipient.index %>"><img class="icon" src="/icons/up.svg" alt="Up" />
 						</span>
 					</td>
 				</tr>
@@ -172,7 +173,8 @@
 										</li><%
 											} %>
 										<li>
-											<button class="btn btn-danger" type="button" name="cancel" value="<%=order._id %>">Cancel Order</button>
+											<span class="user-info-detail">CANCEL:</span>&nbsp;
+											<button class="btn btn-danger btn-sm" type="button" name="cancel" value="<%=order._id %>">Cancel Order</button>
 										</li>
 									</ul><%
 
@@ -236,7 +238,8 @@
 										<li>
 											<span class="user-info-detail">ORDER:</span>
 											<%=getReadableOrder(recipient.items) %>
-										</li>
+										</li><%
+										if (!collection) { %>
 										<li>
 											<a href="#smsedit-<%=`${order._id}-${recipient.index}`%>" data-toggle="modal">Edit Text Message</a>
 											<div class="modal" id="smsedit-<%=`${order._id}-${recipient.index}`%>" tabindex="-1" role="dialog">
@@ -258,7 +261,7 @@
 											    </div>
 											  </div>
 											</div>
-										</li>
+										</li><% } %>
 									</ul>
 								</div>
 							</div>
