@@ -65,7 +65,7 @@ function treatBoxController() {
     const data = {
       delivery: moment()
         .tz('Europe/Stockholm')
-        .week(week)
+        .isoWeek(week)
         .startOf('isoWeek')
         .add(deliveryDay - 1, 'days')
     };
