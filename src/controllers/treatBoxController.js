@@ -383,10 +383,10 @@ function treatBoxController() {
   async function apiLookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
     const delivery = JSON.parse(req.body.delivery);
-    const codes = JSON.parse(req.body.codes);
+    // const codes = JSON.parse(req.body.codes);
 
     try {
-      const statement = await lookupPrice(basket, delivery, codes);
+      const statement = await lookupPrice(basket, delivery);
       statement.status = 'OK';
       return res.json(statement);
     } catch (error) {
