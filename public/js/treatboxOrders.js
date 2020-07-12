@@ -167,7 +167,7 @@ function moveUp(e) {
   const htmlId = $(this).attr('id');
   const [, year, week,, id, recipientNumber] = htmlId.split('-');
 
-  if ($(this).hasClass('top')) {
+  if ($(this).hasClass('unmoveable')) {
     return false;
   }
 
@@ -192,9 +192,9 @@ function moveUp(e) {
   }).done((data) => {
     $(`#row-${id}-${recipientNumber}`).hide().insertBefore(`#row-${previousId}-${previousRecipientNumber}`).show();
     $(`#inforow-${id}-${recipientNumber}`).hide().insertBefore(`#row-${previousId}-${previousRecipientNumber}`).show();
-    if ($(`#${prevId}`).hasClass('top')) {
-      $(`#${htmlId}`).addClass('top');
-      $(`#${prevId}`).removeClass('top');
+    if ($(`#${prevId}`).hasClass('unmoveable')) {
+      $(`#${htmlId}`).addClass('unmoveable');
+      $(`#${prevId}`).removeClass('unmoveable');
     }
   }).catch((error) => {
     console.log(error);
