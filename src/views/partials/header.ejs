@@ -16,18 +16,25 @@
     </button>
 
     <div class="collapse navbar-collapse" id="whiskManagementNavbar">
-      <ul class="navbar-nav mr-auto">
+      <ul class="navbar-nav mr-auto"><%
+        if (typeof user != 'undefined') { %>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="treatboxDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Treatbox Orders</a>
           <div class="dropdown-menu" aria-labelledby="treatboxDropdown">
             <a class="dropdown-item" href="/treatbox/orders?date=thisweek">This Week</a>
             <a class="dropdown-item" href="/treatbox/orders?date=nextweek">Next Week</a>
+            <div class="dropdown-divider"></div><%
+              let year = '';
+              for (let i = 0; i < treatboxDates.length; i += 1) {
+                if (treatboxDates[i].year !== year) {} %>
+            <a class="dropdown-item" href="/treatbox/orders?date=<%=treatboxDates[i].link %>"><%=treatboxDates[i].week %></a><% } %>
+            %>
+            <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="/treatbox/orders">All Time</a>
           </div>
         </li>
-
-        <%if (typeof user != 'undefined') {
-        %><li class="nav-item dropdown">
+        
+        <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=user.username%></a>
             <div class="dropdown-menu" aria-labelledby="userDropdown">
               <a class="dropdown-item" href="/user/dashboard">Dashboard</a>

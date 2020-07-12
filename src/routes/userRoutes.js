@@ -19,7 +19,8 @@ const {
   getSettings,
   updateSettings,
   addProduct,
-  getProducts
+  getProducts,
+  getTreatBoxDates
 } = require('../../lib/db-control/db-control')();
 
 // Facebook Constants
@@ -34,7 +35,7 @@ function routes() {
 
   userRoutes.route('/dashboard')
     .all(loginCheck)
-    .get((req, res) => {
+    .get(async (req, res) => {
       // Generate State Cookie
       const state = generateRandomString(16);
       res.cookie('facebook_auth_state', state);
@@ -50,9 +51,12 @@ function routes() {
       });
       const facebookLoginUrl = `${url}?${query}`;
 
+      const treatboxDates = await getTreatBoxDates();
+
       return res.render('dashboard.ejs', {
         user: req.user,
-        facebookLoginUrl
+        facebookLoginUrl,
+        treatboxDates
       });
     });
 
@@ -228,7 +232,7 @@ function routes() {
           settings = {
             type: 'sms',
             defaultDelivery: req.body['default-sms']
-          }
+          };
           updateSettings(settings);
           break;
 
@@ -243,14 +247,16 @@ function routes() {
         getProducts(),
         getSettings('treatbox'),
         getSettings('rebatecodes'),
-        getSettings('sms')
-      ]
+        getSettings('sms'),
+        getTreatBoxDates()
+      ];
       const data = await Promise.allSettled(promises);
       debug(data);
       const products = data[0].value;
       const treatboxSettings = data[1].value;
       const rebatecodeSettings = data[2].value;
       const smsSettings = data[3].value;
+      const treatboxDates = data[4].value;
 
       return res.render('settings.ejs', {
         user: req.user,
@@ -259,7 +265,7 @@ function routes() {
         treatboxSettings,
         rebatecodeSettings,
         smsSettings,
-        priceFormat
+        treatboxDates
       });
     });
 

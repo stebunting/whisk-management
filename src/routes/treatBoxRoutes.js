@@ -13,7 +13,8 @@ const {
   getTreatBoxOrderById,
   getRecipients,
   updateTreatBoxOrders,
-  getTreatBoxTotals
+  getTreatBoxTotals,
+  getTreatBoxDates
 } = require('../../lib/db-control/db-control')(tag);
 const {
   priceFormat,
@@ -58,9 +59,7 @@ function routes() {
     .post(orderConfirmed);
 
   treatBoxRoutes.route('/swishcallback')
-    .post((req, res) => {
-      return res.send('ok');
-    });
+    .post((req, res) => res.send('ok'));
 
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
@@ -85,14 +84,17 @@ function routes() {
 
       const promises = [
         getRecipients(query),
-        getTreatBoxTotals(query)
+        getTreatBoxTotals(query),
+        getTreatBoxDates()
       ];
       let orders;
       let totals;
+      let treatboxDates;
       const data = await Promise.allSettled(promises);
       if (data[0].status === 'fulfilled' && data[1].status === 'fulfilled') {
         orders = data[0].value;
         totals = data[1].value;
+        treatboxDates = data[2].value;
       }
 
       return res.render('treatboxOrders', {
@@ -104,7 +106,8 @@ function routes() {
         priceFormat,
         dateFormat,
         parseDateCode,
-        getGoogleMapsUrl
+        getGoogleMapsUrl,
+        treatboxDates
       });
     });
 
