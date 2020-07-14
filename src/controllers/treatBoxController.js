@@ -196,7 +196,9 @@ function treatBoxController() {
       }
     });
 
-    if (order.delivery.type === 'delivery') {
+    if (order.delivery.type === 'collection') {
+      order.delivery.notes = postData['collection-notes'];
+    } else if (order.delivery.type === 'delivery') {
       const recipient = {
         items: order.items,
         details: {
