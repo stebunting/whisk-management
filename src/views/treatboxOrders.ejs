@@ -131,12 +131,18 @@
 										<li>
 											<span class="user-info-detail">E-MAIL ADDRESS:</span>
 											<a href="mailto:<%=order.details.email %>"><%=order.details.email %></a>
+										</li><%
+										if (collection) { %>
+										<li>
+											<span class="user-info-detail">NOTES:</span>
+											<%=order.delivery.notes %>
 										</li>
 									</ul>
-									<% if (collection) { %>
 								</div>
 
-								<div class="col-md-6"><% } %>
+								<div class="col-md-6"><% } else { %>
+									</ul>
+									<% } %>
 									<ul class="user-info-list">
 										<li>
 											<span class="user-info-subtitle">Payment</span>
