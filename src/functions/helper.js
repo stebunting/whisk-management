@@ -72,7 +72,7 @@ function getGoogleMapsUrl(address) {
 }
 
 function getWeek(offset = 0) {
-  if (moment().isoWeekday() < 3) {
+  if (moment().isoWeekday() <= 3) {
     return moment().add(offset, 'weeks').isoWeek();
   }
   return moment().add(1 + offset, 'weeks').isoWeek();
