@@ -28,7 +28,7 @@ const { loginCheck } = require('../controllers/authController')();
 const {
   getDetails,
   apiLookupPrice,
-  lookupRebateCode,
+  apiLookupRebateCode,
   orderStarted,
   orderConfirmed,
   swishRefund
@@ -45,7 +45,7 @@ function routes() {
     .post(apiLookupPrice);
 
   treatBoxRoutes.route('/lookuprebate')
-    .get(lookupRebateCode);
+    .get(apiLookupRebateCode);
 
   // Data Validation
   treatBoxRoutes.route('/confirmation')

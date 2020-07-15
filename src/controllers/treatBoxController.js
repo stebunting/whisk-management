@@ -12,6 +12,7 @@ const debug = require('debug')(tag);
 const {
   priceFormat,
   dateFormat,
+  calculateMoms,
   parseMarkers,
   getWeek
 } = require('../functions/helper');
@@ -305,6 +306,23 @@ function treatBoxController() {
 
   // Function to generate a statement of costs from products and delivery
   async function lookupPrice(basket, delivery, codes = []) {
+    let zone3delivery = false;
+    let costPrice = false;
+
+    for (let i = 0; i < codes.length; i += 1) {
+      const response = await lookupRebateCode(codes[i]);
+      if (response.valid) {
+        switch (response.code.type) {
+          case 'zone3delivery':
+            zone3delivery = true;
+            break;
+
+          case 'costprice':
+            costPrice = true;
+            break;
+        }
+      }
+    }
     const statement = {
       products: [],
       bottomLine: {
@@ -327,16 +345,25 @@ function treatBoxController() {
       // eslint-disable-next-line no-underscore-dangle
       if (data[i].status === 'fulfilled' && data[i].value._id.equals(basket[i].id)) {
         const product = data[i].value;
+
+        let price = product.grossPrice;
+        if (costPrice) {
+          price = product.costPrice;
+        }
+        price = parseInt(price, 10);
+        const moms = calculateMoms(price, product.momsRate);
+        const quantity = parseInt(basket[i].quantity, 10);
+
         const newProduct = {
           // eslint-disable-next-line no-underscore-dangle
           id: product._id,
           name: product.name,
-          quantity: parseInt(basket[i].quantity, 10),
-          price: parseInt(product.grossPrice, 10),
-          momsAmount: parseInt(product.momsAmount, 10),
+          quantity,
+          price,
+          momsAmount: moms,
           momsRate: product.momsRate,
-          subTotal: parseInt(basket[i].quantity, 10) * parseInt(product.grossPrice, 10),
-          momsSubTotal: parseInt(basket[i].quantity, 10) * parseInt(product.momsAmount, 10)
+          subTotal: quantity * price,
+          momsSubTotal: quantity * moms
         };
         statement.bottomLine.foodCost += newProduct.subTotal;
         statement.bottomLine.foodMoms += newProduct.momsSubTotal;
@@ -385,10 +412,10 @@ function treatBoxController() {
   async function apiLookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
     const delivery = JSON.parse(req.body.delivery);
-    // const codes = JSON.parse(req.body.codes);
+    const codes = JSON.parse(req.body.codes);
 
     try {
-      const statement = await lookupPrice(basket, delivery);
+      const statement = await lookupPrice(basket, delivery, codes);
       statement.status = 'OK';
       return res.json(statement);
     } catch (error) {
@@ -396,19 +423,22 @@ function treatBoxController() {
     }
   }
 
-  // Function to look up a rebate code
-  async function lookupRebateCode(req, res) {
-    const { code } = req.query;
-
+  async function lookupRebateCode(code) {
     const response = await getSettings('rebatecodes');
     const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
     if (result.length === 0) {
-      return res.json({ valid: false });
+      return { valid: false };
     }
-    return res.json({
+    return {
       valid: true,
       code: result[0]
-    });
+    };
+  }
+  // Function to look up a rebate code
+  async function apiLookupRebateCode(req, res) {
+    const { code } = req.query;
+    const response = await lookupRebateCode(code);
+    return res.json(response);
   }
 
   // Function to validate order server-side
@@ -457,7 +487,7 @@ function treatBoxController() {
 
     let response;
     try {
-      response = await axios(apiConfig);  
+      response = await axios(apiConfig);
       return response.data;
     } catch (error) {
       logError('Error while calling Swish API to call get refund result', error);
@@ -478,10 +508,14 @@ function treatBoxController() {
         }
       });
     }
-    const statement = await lookupPrice(order.items, {
-      zone2: zone2Deliveries,
-      zone3: zone3Deliveries
-    });
+    const statement = await lookupPrice(
+      order.items,
+      {
+        zone2: zone2Deliveries,
+        zone3: zone3Deliveries
+      },
+      order.payment.rebateCodes
+    );
     return statement;
   }
 
@@ -490,17 +524,18 @@ function treatBoxController() {
     const { 'callback-url': callbackUrl } = req.body;
 
     const order = await parsePostData(req.body);
-    const statement = await calculatePrice(order);
-    order.statement = statement;
-    delete order.items;
 
     order.payment = {
       method: req.body['payment-method'],
       status: 'Ordered'
     };
-    if (req.body['rebate-codes'] != null) {
-      order.rebateCodes = req.body['rebate-codes'].split(',')
+    if (req.body['rebate-codes'] !== '') {
+      order.payment.rebateCodes = JSON.parse(req.body['rebate-codes']);
     }
+
+    const statement = await calculatePrice(order);
+    order.statement = statement;
+    delete order.items;
 
     if (order.delivery.type !== 'collection') {
       let nextOrder = 0;
@@ -687,7 +722,7 @@ function treatBoxController() {
     getWeekData,
     getDetails,
     apiLookupPrice,
-    lookupRebateCode,
+    apiLookupRebateCode,
     orderStarted,
     orderConfirmed,
     swishRefund
