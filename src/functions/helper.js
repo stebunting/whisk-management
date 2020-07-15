@@ -71,6 +71,17 @@ function getGoogleMapsUrl(address) {
   return `https://www.google.com/maps/search/?${q}`;
 }
 
+// Function to return a Google Maps URL from an address
+function getGoogleMapsDirections(address) {
+  const q = querystring.stringify({
+    api: 1,
+    destination: address,
+    travelmode: 'driving',
+    dir_action: 'navigate'
+  });
+  return `https://www.google.com/maps/dir/?${q}`;
+}
+
 function getWeek(offset = 0) {
   if (moment().isoWeekday() <= 3) {
     return moment().add(offset, 'weeks').isoWeek();
@@ -147,6 +158,7 @@ module.exports = {
   calculateMoms,
   calculateNetCost,
   getGoogleMapsUrl,
+  getGoogleMapsDirections,
   getWeek,
   parseDateCode,
   getFormattedDeliveryDate,

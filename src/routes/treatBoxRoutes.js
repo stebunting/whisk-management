@@ -21,7 +21,8 @@ const {
   getReadableOrder,
   getWeek,
   parseDateCode,
-  getGoogleMapsUrl
+  getGoogleMapsUrl,
+  getGoogleMapsDirections
 } = require('../functions/helper');
 const { loginCheck } = require('../controllers/authController')();
 const {
@@ -112,6 +113,7 @@ function routes() {
         dateFormat,
         parseDateCode,
         getGoogleMapsUrl,
+        getGoogleMapsDirections,
         treatboxDates
       });
     });

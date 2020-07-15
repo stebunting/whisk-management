@@ -90,6 +90,9 @@
 						<% if (collection) { %>Collection<% } else { %><%=recipient.delivery.address %>&nbsp;
 						<a href="<%=getGoogleMapsUrl(recipient.delivery.address) %>" target="_blank" rel="external">
 							<img class="icon map-icon" src="/icons/location.svg" alt="View in Google Maps" />
+						</a>
+						<a href="<%=getGoogleMapsDirections(recipient.delivery.address) %>" target="_blank" rel="external">
+							<img class="icon map-icon" src="/icons/navigate.svg" alt="Get Directions in Google Maps" />
 						</a><% } %>
 					</td>
 					<td class="info-status"><%
@@ -229,6 +232,9 @@
 											<%=recipient.delivery.address %>
 											<a href="<%=getGoogleMapsUrl(recipient.delivery.address) %>" target="_blank" rel="external">
 												<img class="icon" src="/icons/location.svg" alt="View in Google Maps" />
+											</a>
+											<a href="<%=getGoogleMapsDirections(recipient.delivery.address) %>" target="_blank" rel="external">
+												<img class="icon map-icon" src="/icons/navigate.svg" alt="Get Directions in Google Maps" />
 											</a>
 										</li>
 										<li>
