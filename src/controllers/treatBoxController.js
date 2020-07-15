@@ -304,6 +304,24 @@ function treatBoxController() {
     return res.json(info);
   }
 
+  async function lookupRebateCode(code) {
+    const response = await getSettings('rebatecodes');
+    const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
+    if (result.length === 0) {
+      return { valid: false };
+    }
+    return {
+      valid: true,
+      code: result[0]
+    };
+  }
+  // Function to look up a rebate code
+  async function apiLookupRebateCode(req, res) {
+    const { code } = req.query;
+    const response = await lookupRebateCode(code);
+    return res.json(response);
+  }
+
   // Function to generate a statement of costs from products and delivery
   async function lookupPrice(basket, delivery, codes = []) {
     let zone3delivery = false;
@@ -319,6 +337,9 @@ function treatBoxController() {
 
           case 'costprice':
             costPrice = true;
+            break;
+
+          default:
             break;
         }
       }
@@ -412,7 +433,10 @@ function treatBoxController() {
   async function apiLookupPrice(req, res) {
     const basket = JSON.parse(req.body.basket);
     const delivery = JSON.parse(req.body.delivery);
-    const codes = JSON.parse(req.body.codes);
+    let codes = [];
+    if (req.body.codes !== '') {
+      codes = JSON.parse(req.body.codes);
+    }
 
     try {
       const statement = await lookupPrice(basket, delivery, codes);
@@ -421,24 +445,6 @@ function treatBoxController() {
     } catch (error) {
       return res.json({ status: 'Error' });
     }
-  }
-
-  async function lookupRebateCode(code) {
-    const response = await getSettings('rebatecodes');
-    const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
-    if (result.length === 0) {
-      return { valid: false };
-    }
-    return {
-      valid: true,
-      code: result[0]
-    };
-  }
-  // Function to look up a rebate code
-  async function apiLookupRebateCode(req, res) {
-    const { code } = req.query;
-    const response = await lookupRebateCode(code);
-    return res.json(response);
   }
 
   // Function to validate order server-side
@@ -684,7 +690,7 @@ function treatBoxController() {
       return res.json({
         status: 'Error',
         error: error.response.data.errors
-      })
+      });
     }
 
     (async function checkStatus() {
@@ -692,7 +698,7 @@ function treatBoxController() {
         getRefundResult(refundId).then((response) => {
           if (response.status === 'PAID') {
             const timestamp = new Date();
-            const intAmount = parseInt(amount, 10) * 100
+            const intAmount = parseInt(amount, 10) * 100;
             recordSwishRefund(id, {
               timestamp,
               id: refundId,
@@ -704,10 +710,11 @@ function treatBoxController() {
               timestamp: dateFormat(timestamp, { format: 'short' }),
               amount: priceFormat(intAmount)
             });
-          } else if (response.status === 'ERROR') {
+          }
+          if (response.status === 'ERROR') {
             return res.json({
               status: 'Error'
-            })
+            });
           }
 
           checkStatus();
