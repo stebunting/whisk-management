@@ -381,10 +381,10 @@ function treatBoxController() {
           name: product.name,
           quantity,
           price,
-          momsAmount: moms,
+          momsAmount: Math.round(moms),
           momsRate: product.momsRate,
           subTotal: quantity * price,
-          momsSubTotal: quantity * moms
+          momsSubTotal: Math.round(quantity * moms)
         };
         statement.bottomLine.foodCost += newProduct.subTotal;
         statement.bottomLine.foodMoms += newProduct.momsSubTotal;
