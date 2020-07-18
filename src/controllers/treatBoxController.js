@@ -273,10 +273,10 @@ function treatBoxController() {
 
     const week = getWeek();
     const week1 = getWeekData(week);
-    // const week2 = getWeekData(week + 1);
+    const week2 = getWeekData(week + 1);
     const timeframe = {
       [`${week1.year}-${week1.week}-${week1.day}`]: week1,
-      // [`${week2.year}-${week2.week}-${week2.day}`]: week2
+      [`${week2.year}-${week2.week}-${week2.day}`]: week2
     };
 
     const info = {
