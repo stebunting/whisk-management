@@ -170,20 +170,6 @@ function routes() {
         case 'treatboxUpdate':
           settings = {
             type: 'treatbox',
-            food: {
-              comboBox: {
-                price: parseInt(req.body['combobox-price'], 10) * 100,
-                momsRate: 12
-              },
-              treatBox: {
-                price: parseInt(req.body['treatbox-price'], 10) * 100,
-                momsRate: 12
-              },
-              vegetableBox: {
-                price: parseInt(req.body['vegetablebox-price'], 10) * 100,
-                momsRate: 12
-              }
-            },
             delivery: {
               zone2: {
                 price: parseInt(req.body['zone2-delivery-price'], 10) * 100,
@@ -191,18 +177,6 @@ function routes() {
               }
             }
           };
-          settings.food.comboBox.momsAmount = calculateMoms(
-            settings.food.comboBox.price,
-            settings.food.comboBox.momsRate
-          );
-          settings.food.treatBox.momsAmount = calculateMoms(
-            settings.food.treatBox.price,
-            settings.food.treatBox.momsRate
-          );
-          settings.food.vegetableBox.momsAmount = calculateMoms(
-            settings.food.vegetableBox.price,
-            settings.food.vegetableBox.momsRate
-          );
           settings.delivery.zone2.momsAmount = calculateMoms(
             settings.delivery.zone2.price,
             settings.delivery.zone2.momsRate
