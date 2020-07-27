@@ -6,7 +6,6 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
@@ -14,7 +13,8 @@ const {
   dateFormat,
   calculateMoms,
   parseMarkers,
-  getWeek
+  getWeek,
+  getSwishUUID
 } = require('../functions/helper');
 const { verify } = require('../../lib/verify/verify')();
 const { sendConfirmationEmail } = require('../../lib/email/email')();
@@ -583,10 +583,10 @@ function treatBoxController() {
         payerAlias: parseSwishAlias(order.details.telephone)
       };
 
-      // const uuid = uuidv4();
+      const uuid = getSwishUUID();
       const apiConfig = {
-        method: 'post',
-        url: `${swish.baseUrl}/api/v1/paymentrequests`, // ${uuid}`,
+        method: 'put',
+        url: `${swish.baseUrl}/api/v2/paymentrequests/${uuid}`,
         httpsAgent: swish.httpsAgent,
         header: {
           'Content-Type': 'application/json'
@@ -595,16 +595,19 @@ function treatBoxController() {
           callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
           payeeAlias: swish.alias,
           payerAlias: order.payment.swish.payerAlias,
-          amount: priceFormat(order.statement.bottomLine.total, { includeSymbol: false }),
+          amount: parseInt(priceFormat(
+            order.statement.bottomLine.total,
+            { includeSymbol: false }
+          ), 10),
           currency: 'SEK',
           message: 'WHISK.se Order'
         }
       };
 
       try {
-        const response = await axios(apiConfig);
-        order.payment.swish.id = response.headers.location.split('/');
-        order.payment.swish.id = order.payment.swish.id[order.payment.swish.id.length - 1];
+        await axios(apiConfig);
+        order.payment.swish.id = uuid;
+        order.payment.swish.amount = apiConfig.data.amount;
         order.payment.swish.refunds = [];
       } catch (error) {
         logError(`Error sending Swift payment request (${order.details.name} - ${order.details.telephone})`, error);
@@ -623,12 +626,12 @@ function treatBoxController() {
       (async function checkStatus() {
         setTimeout(() => {
           getPaymentResult(order.payment.swish.id).then((response) => {
-            // if (response.id !== uuid) {
-            //   const query = querystring.stringify({
-            //     status: 'INVALID_UUID'
-            //   });
-            //   return res.redirect(307, `${referer}?${query}`);
-            // }
+            if (response.id !== uuid) {
+              const query = querystring.stringify({
+                status: 'INVALID_UUID'
+              });
+              return res.redirect(307, `${referer}?${query}`);
+            }
 
             order.payment.swish.reference = response.paymentReference;
             if (response.status === 'PAID') {
@@ -664,9 +667,10 @@ function treatBoxController() {
     const { id, amount } = req.body;
 
     const order = await getTreatBoxOrderById(id);
+    const uuid = getSwishUUID();
     const apiConfig = {
-      method: 'post',
-      url: `${swish.baseUrl}/api/v1/refunds`,
+      method: 'put',
+      url: `${swish.baseUrl}/api/v2/refunds/${uuid}`,
       httpsAgent: swish.httpsAgent,
       header: {
         'Content-Type': 'application/json'
@@ -681,11 +685,8 @@ function treatBoxController() {
       }
     };
 
-    let refundId;
     try {
-      const response = await axios(apiConfig);
-      const location = response.headers.location.split('/');
-      refundId = location[location.length - 1];
+      await axios(apiConfig);
     } catch (error) {
       return res.json({
         status: 'Error',
@@ -695,13 +696,14 @@ function treatBoxController() {
 
     (async function checkStatus() {
       setTimeout(() => {
-        getRefundResult(refundId).then((response) => {
+        getRefundResult(uuid).then((response) => {
+          debug(response);
           if (response.status === 'PAID') {
             const timestamp = new Date();
             const intAmount = parseInt(amount, 10) * 100;
             recordSwishRefund(id, {
               timestamp,
-              id: refundId,
+              id: uuid,
               amount: intAmount,
             });
 
@@ -711,7 +713,8 @@ function treatBoxController() {
               amount: priceFormat(intAmount)
             });
           }
-          if (response.status === 'ERROR') {
+
+          if (response.status === 'ERROR' || response.id !== uuid) {
             return res.json({
               status: 'Error'
             });

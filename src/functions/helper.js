@@ -1,6 +1,7 @@
 // Requirements
 const querystring = require('querystring');
 const moment = require('moment-timezone');
+const { v4: uuidv4 } = require('uuid');
 const { getProductById } = require('../../lib/db-control/db-control');
 
 // Format price from stored öre to krona
@@ -152,6 +153,11 @@ function parseMarkers(str, recipient) {
   return parsedString;
 }
 
+// Function to return a UUID suitable for Swish (32 characters, no dashes, capitals)
+function getSwishUUID() {
+  return uuidv4().replace(/-/g, '').toUpperCase();
+}
+
 module.exports = {
   priceFormat,
   dateFormat,
@@ -164,5 +170,6 @@ module.exports = {
   getFormattedDeliveryDate,
   getReadableOrder,
   generateRandomString,
-  parseMarkers
+  parseMarkers,
+  getSwishUUID
 };
