@@ -48,11 +48,13 @@ const userRouter = require('./src/routes/userRoutes')();
 const authRouter = require('./src/routes/authRoutes')();
 const adminRouter = require('./src/routes/adminRoutes')();
 const treatBoxRouter = require('./src/routes/treatBoxRoutes')();
+const boxRouter = require('./src/routes/boxRoutes')();
 
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
 app.use('/admin', adminRouter);
 app.use('/treatbox', treatBoxRouter);
+app.use('/boxes', boxRouter);
 
 // Entry Point
 app.all('/', loginCheck);
