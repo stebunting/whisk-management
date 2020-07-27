@@ -43,3 +43,7 @@ nav {
 .new-refund {
 	font-weight: bold;
 }
+
+.alert {
+	text-align: center;
+}

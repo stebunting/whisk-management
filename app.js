@@ -9,6 +9,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('cookie-session');
+const flash = require('express-flash');
 const debug = require('debug')(tag);
 const { loginCheck } = require('./src/controllers/authController')();
 
@@ -20,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(session({ keys: [process.env.SESSION_SECRET] }));
+app.use(flash());
 app.set('view engine', 'ejs');
 
 // Paths

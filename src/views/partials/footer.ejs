@@ -2,6 +2,11 @@
 
   <script src="/js/jquery.min.js"></script>
   <script src="/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/treatboxOrders.js"></script>
+  <script src="/js/whisk-management.js"></script><%
+  	if (typeof page !== 'undefined') {
+  		if (page === 'settings') { %>
+  <script src="/js/settings.js"></script><%
+		} else if (page === 'treatboxOrders') { %>
+  <script src="/js/treatboxOrders.js"></script><% }} %>
 </body>
 </html>

@@ -1,158 +1,220 @@
 <%- include('partials/header', { title: 'Settings', user, treatboxDates }) %>	
 	<div class="card">
 		<div class="card-header">
-			<ul class="nav nav-tabs card-header-tabs">
+			<ul class="nav nav-tabs card-header-tabs" id="settingsTabs" role="tablist">
 				<li class="nav-item">
-					<a class="nav-link active">Treatboxes</a>
+					<a class="nav-link active" id="treatboxes-tab" data-toggle="tab" href="#treatboxes" role="tab" aria-controls="treatboxes" aria-selected="true">Treatboxes</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" id="user-tab" data-toggle="tab" href="#user" role="tab" aria-controls="user" aria-selected="false">User</a>
 				</li>
 			</ul>
 		</div>
 
 		<div class="card-body">
-			<h5 class="card-title">Add Product</h5>
-			<form action="/user/settings" method="post">
-				<div class="form-group row">
-					<label for="add-product-name" class="col-md-3 col-form-label">Name</label>
-					<div class="col-md-3">
-						<input type="text" class="form-control" id="add-product-name" name="add-product-name" placeholder="Product Name" />
-					</div>
-				</div>
-
-				<div class="form-group row">
-					<label for="add-product-price" class="col-md-3 col-form-label">Sale Price (including MOMs)</label>
-					<div class="input-group col-md-3">
-						<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price" />
-						<div class="input-group-append">
-							<span class="input-group-text">SEK</span>
+			<div class="tab-content" id="settingsTabContent">
+				<div class="tab-pane fade show active" id="treatboxes" role="tabpanel" aria-labelledby="treatboxes-tab">
+					<h5 class="card-title">Add Product</h5>
+					<form action="/user/settings" method="post">
+						<div class="form-group row">
+							<label for="add-product-name" class="col-md-3 col-form-label">Name</label>
+							<div class="col-md-6">
+								<input type="text" class="form-control" id="add-product-name" name="add-product-name" placeholder="Product Name" />
+							</div>
 						</div>
-					</div>
-				</div>
 
-				<div class="form-group row">
-					<label for="add-product-cost-price" class="col-md-3 col-form-label">Cost Price (including MOMs)</label>
-					<div class="input-group col-md-3">
-						<input type="text" class="form-control" id="add-product-cost-price" name="add-product-cost-price" placeholder="Cost Price" />
-						<div class="input-group-append">
-							<span class="input-group-text">SEK</span>
+						<div class="form-group row">
+							<label for="add-product-price" class="col-md-3 col-form-label">Sale Price (inc. MOMs)</label>
+							<div class="input-group col-md-6">
+								<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price" />
+								<div class="input-group-append">
+									<span class="input-group-text">SEK</span>
+								</div>
+							</div>
 						</div>
-					</div>
-				</div>
 
-				<div class="form-group row">
-					<label for="add-product-moms" class="col-md-3 col-form-label">MOMs Rate</label>
-					<div class="col-md-3">
-						<select class="form-control" id="add-product-moms" name="add-product-moms">
-							<option value="0">0%</option>
-							<option value="6">6%</option>
-							<option value="12" selected>12%</option>
-							<option value="25">25%</option>
-						</select>
-					</div>
-				</div>
-
-				<div class="form-group row">
-					<label for="add-product-deliverable" class="col-md-3 col-form-label">Do you Deliver?</label>
-					<div class="col-md-3">
-						<select class="form-control" id="add-product-deliverable" name="add-product-deliverable">
-							<option value="true">Yes</option>
-							<option value="false">No</option>
-						</select>
-					</div>
-				</div>
-
-				<div class="form-group row">
-					<div class="col-md-6 offset-md-3">
-						<button type="submit" class="btn btn-primary" name="submit" value="add-product">Add</button>
-					</div>
-				</div>
-			</form>
-
-			<table class="table">
-				<thead>
-					<tr>
-						<th>NAME</th>
-						<th>DELIVER?</th>
-						<th>GROSS PRICE</th>
-						<th>MOMS RATE</th>
-						<th>NET PRICE</th>
-						<th>MOMS AMOUNT</th>
-						<th>COST PRICE</th>
-					</tr>
-				</thead>
-				<tbody>
-			<% for (let i = 0; i < products.length; i += 1) { %>
-					<tr>
-						<td><%=products[i].name %></td>
-						<td><% if (products[i].deliverable) { %>Yes<% } else { %>No<% } %></td>
-						<td><%=priceFormat(products[i].grossPrice) %></td>
-						<td><%=products[i].momsRate %> %</td>
-						<td><%=priceFormat(products[i].netPrice, { includeOre: true }) %></td>
-						<td><%=priceFormat(products[i].momsAmount, { includeOre: true }) %></td>
-						<td><%=priceFormat(products[i].costPrice, { includeOre: true }) %></td>
-					</tr>
-					<% } %>
-				</tbody>
-			</table>
-
-			<h5 class="card-title">Treatbox Settings</h5>
-			<form action="/user/settings" method="post">
-				<div class="form-group row">
-					<label for="zone2-delivery-price" class="col-md-3 col-form-label">Zone 2 Delivery Price</label>
-					<div class="input-group col-md-3">
-						<input type="text" class="form-control" id="zone2-delivery-price" name="zone2-delivery-price" placeholder="Zone 2 Delivery Price" value="<%=priceFormat(treatboxSettings.delivery.zone2.price, { includeSymbol: false }) %>" />
-						<div class="input-group-append">
-							<span class="input-group-text">SEK</span>
+						<div class="form-group row">
+							<label for="add-product-cost-price" class="col-md-3 col-form-label">Cost Price (inc. MOMs)</label>
+							<div class="input-group col-md-6">
+								<input type="text" class="form-control" id="add-product-cost-price" name="add-product-cost-price" placeholder="Cost Price" />
+								<div class="input-group-append">
+									<span class="input-group-text">SEK</span>
+								</div>
+							</div>
 						</div>
-					</div>
-					<div class="col-md-3 form-control-plaintext">MOMs @ <%=treatboxSettings.delivery.zone2.momsRate %>%: <%=priceFormat(treatboxSettings.delivery.zone2.momsAmount, { includeOre: true }) %></div>
-				</div>
-				<div class="form-group row">
-					<div class="col-md-6 offset-md-3">
-						<button type="submit" class="btn btn-primary" name="submit" value="treatboxUpdate">Update</button>
-					</div>
-				</div>
-			</form>
 
-			<form action="/user/settings" method="post">
-				<% for (let i = 0; i <= rebatecodeSettings.codes.length; i += 1) {
-					let code = { value: '', type: '' };
-					if (i < rebatecodeSettings.codes.length) {
-						code = rebatecodeSettings.codes[i];
-					} %>
-				<div class="form-group row">
-					<label for="rebate-code-<%=i %>" class="col-md-3 col-form-label">Rebate Code</label>
-					<div class="col-md-3">
-						<input type="text" class="form-control" id="rebate-code-<%=i %>" name="rebate-code-<%=i %>" placeholder="Rebate Code" value="<%=code.value %>" />
-					</div>
-					<div class="col-md-3">
-						<select class="form-control" id="rebate-type-<%=i %>" name="rebate-type-<%=i %>">
-							<option value="discount"<% if (code.type === 'discount') { %> selected<% } %>>Discount</option>
-							<option value="costprice" <% if (code.type === 'costprice') { %>selected<% } %>>Cost Price</option>
-							<option value="zone3delivery" <% if (code.type === 'zone3delivery') { %>selected<% } %>>Zone 3 Delivery</option>
-						</select>
-					</div>
-				</div>
-				<% } %>
-				<div class="form-group row">
-					<div class="col-md-6 offset-md-3">
-						<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesUpdate">Update</button>
-					</div>
-				</div>
-			</form>
+						<div class="form-group row">
+							<label for="add-product-moms" class="col-md-3 col-form-label">MOMs Rate</label>
+							<div class="col-md-6">
+								<select class="form-control" id="add-product-moms" name="add-product-moms">
+									<option value="0">0%</option>
+									<option value="6">6%</option>
+									<option value="12" selected>12%</option>
+									<option value="25">25%</option>
+								</select>
+							</div>
+						</div>
 
-			<form action="/user/settings" method="post">
-				<div class="form-group row">
-					<label for="default-sms" class="col-md-3 col-form-label">Default Delivery SMS</label>
-					<div class="col-md-6">
-						<textarea class="form-control sms-textarea" rows="8" id="default-sms" name="default-sms" placeholder="Rebate Code"><% if (smsSettings.defaultDelivery) { %><%=smsSettings.defaultDelivery %><% } %></textarea>
-					</div>
+						<div class="form-group row">
+							<label for="add-product-deliverable" class="col-md-3 col-form-label">Do you Deliver?</label>
+							<div class="col-md-6">
+								<select class="form-control" id="add-product-deliverable" name="add-product-deliverable">
+									<option value="true">Yes</option>
+									<option value="false">No</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="add-product">Add</button>
+							</div>
+						</div>
+					</form>
+
+					<table class="table">
+						<thead>
+							<tr>
+								<th>NAME</th>
+								<th>DELIVER?</th>
+								<th>GROSS PRICE</th>
+								<th>MOMS RATE</th>
+								<th>NET PRICE</th>
+								<th>MOMS AMOUNT</th>
+								<th>COST PRICE</th>
+							</tr>
+						</thead>
+						<tbody>
+					<% for (let i = 0; i < products.length; i += 1) { %>
+							<tr>
+								<td><%=products[i].name %></td>
+								<td><% if (products[i].deliverable) { %>Yes<% } else { %>No<% } %></td>
+								<td><%=priceFormat(products[i].grossPrice) %></td>
+								<td><%=products[i].momsRate %> %</td>
+								<td><%=priceFormat(products[i].netPrice, { includeOre: true }) %></td>
+								<td><%=priceFormat(products[i].momsAmount, { includeOre: true }) %></td>
+								<td><%=priceFormat(products[i].costPrice, { includeOre: true }) %></td>
+							</tr>
+							<% } %>
+						</tbody>
+					</table>
+
+					<h5 class="card-title">Treatbox Settings</h5>
+					<form action="/user/settings" method="post">
+						<div class="form-group row">
+							<label for="zone2-delivery-price" class="col-md-3 col-form-label">Zone 2 Delivery Price</label>
+							<div class="input-group col-md-3">
+								<input type="text" class="form-control" id="zone2-delivery-price" name="zone2-delivery-price" placeholder="Zone 2 Delivery Price" value="<%=priceFormat(treatboxSettings.delivery.zone2.price, { includeSymbol: false }) %>" />
+								<div class="input-group-append">
+									<span class="input-group-text">SEK</span>
+								</div>
+							</div>
+							<div class="col-md-3 form-control-plaintext">MOMs @ <%=treatboxSettings.delivery.zone2.momsRate %>%: <%=priceFormat(treatboxSettings.delivery.zone2.momsAmount, { includeOre: true }) %></div>
+						</div>
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="treatboxUpdate">Update</button>
+							</div>
+						</div>
+					</form>
+
+					<form action="/user/settings" method="post">
+						<% for (let i = 0; i <= rebatecodeSettings.codes.length; i += 1) {
+							let code = { value: '', type: '' };
+							if (i < rebatecodeSettings.codes.length) {
+								code = rebatecodeSettings.codes[i];
+							} %>
+						<div class="form-group row">
+							<label for="rebate-code-<%=i %>" class="col-md-3 col-form-label">Rebate Code</label>
+							<div class="col-md-3">
+								<input type="text" class="form-control" id="rebate-code-<%=i %>" name="rebate-code-<%=i %>" placeholder="Rebate Code" value="<%=code.value %>" />
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" id="rebate-type-<%=i %>" name="rebate-type-<%=i %>">
+									<option value="discount"<% if (code.type === 'discount') { %> selected<% } %>>Discount</option>
+									<option value="costprice" <% if (code.type === 'costprice') { %>selected<% } %>>Cost Price</option>
+									<option value="zone3delivery" <% if (code.type === 'zone3delivery') { %>selected<% } %>>Zone 3 Delivery</option>
+								</select>
+							</div>
+						</div>
+						<% } %>
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesUpdate">Update</button>
+							</div>
+						</div>
+					</form>
+
+					<form action="/user/settings" method="post">
+						<div class="form-group row">
+							<label for="default-sms" class="col-md-3 col-form-label">Default Delivery SMS</label>
+							<div class="col-md-6">
+								<textarea class="form-control sms-textarea" rows="8" id="default-sms" name="default-sms" placeholder="Rebate Code"><% if (smsSettings.defaultDelivery) { %><%=smsSettings.defaultDelivery %><% } %></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="smsUpdate">Update</button>
+							</div>
+						</div>
+					</form>
 				</div>
-				<div class="form-group row">
-					<div class="col-md-6 offset-md-3">
-						<button type="submit" class="btn btn-primary" name="submit" value="smsUpdate">Update</button>
-					</div>
+				<div class="tab-pane fade show active" id="user" role="tabpanel" aria-labelledby="user-tab">
+					<h5 class="card-title">Details</h5>
+					<form action="/user/settings" method="post">
+						<div class="form-group row">
+							<label for="username" class="col-md-3 col-form-label">Username</label>
+							<div class="col-md-6">
+								<input type="text" class="form-control" id="username" name="username" placeholder="Username" value="<%=user.username %>" readonly />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="email" class="col-md-3 col-form-label">E-Mail</label>
+							<div class="col-md-6">
+								<input type="text" class="form-control" id="email" name="email" placeholder="E-Mail Address" value="<%=user.email %>" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="update-user-details">Update</button>
+							</div>
+						</div>
+					</form>
+
+
+					<h5 class="card-title">Change Password</h5>
+					<form action="/user/settings" method="post">
+						<div class="form-group row">
+							<label for="old-password" class="col-md-3 col-form-label">Old Password</label>
+							<div class="col-md-6">
+								<input type="password" class="form-control" id="old-password" name="old-password" placeholder="Old Password" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="new-password" class="col-md-3 col-form-label">New Password</label>
+							<div class="col-md-6">
+								<input type="password" class="form-control" id="new-password" name="new-password" placeholder="New Password" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="confirm-new-password" class="col-md-3 col-form-label">New Password (Confirm)</label>
+							<div class="col-md-6">
+								<input type="password" class="form-control" id="confirm-new-password" name="confirm-new-password" placeholder="Confirm New Password" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="update-password">Update</button>
+							</div>
+						</div>
+					</form>
 				</div>
-			</form>
+			</div>
 		</div>
 	</div>
-<%- include('partials/footer') %>
+<%- include('partials/footer', { page: 'settings' }) %>

@@ -21,6 +21,7 @@ function routes() {
   authRoutes.route('/logout')
     .get((req, res) => {
       req.logout();
+      req.flash('success', 'You were Logged Out!');
       res.redirect('/auth/signin');
     });
 

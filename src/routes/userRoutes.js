@@ -5,6 +5,7 @@ const tag = 'whisk-management:userRoutes';
 const express = require('express');
 const querystring = require('querystring');
 const axios = require('axios');
+const bcrypt = require('bcrypt');
 const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
 const {
@@ -148,7 +149,7 @@ function routes() {
     });
 
   userRoutes.route('/settings')
-    .post((req, res) => {
+    .post(async (req, res) => {
       const { submit } = req.body;
 
       let settings;
@@ -209,6 +210,40 @@ function routes() {
             defaultDelivery: req.body['default-sms']
           };
           updateSettings(settings);
+          break;
+
+        case 'update-user-details':
+          if (req.body.email === '') {
+            req.flash('danger', 'E-mail can not be empty');
+            break;
+          }
+          req.user.email = req.body.email;
+
+          try {
+            await updateUser(req.user);
+            req.flash('success', 'Details Updated!');
+          } catch (error) {
+            req.flash('danger', error);
+          }
+          break;
+
+        case 'update-password':
+          if (!await bcrypt.compare(req.body['old-password'], req.user.password)) {
+            req.flash('danger', 'Old Password Incorrect!');
+            break;
+          }
+          if (!(req.body['new-password'] === req.body['confirm-new-password'])) {
+            req.flash('danger', 'New Password must match Confirmed New Password');
+            break;
+          }
+
+          req.user.password = await bcrypt.hash(req.body['new-password'], 10);
+          try {
+            await updateUser(req.user);
+            req.flash('success', 'Password Updated!');
+          } catch (error) {
+            req.flash('danger', error);
+          }
           break;
 
         default:
