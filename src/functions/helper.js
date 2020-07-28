@@ -31,7 +31,11 @@ function dateFormat(date, userOptions = {}) {
       break;
 
     case 'date':
-      preferredFormat = 'YYYY-M-D';
+      preferredFormat = 'D/M/YYYY';
+      break;
+
+    case 'dateFormatter':
+      preferredFormat = 'YYYY-MM-DD';
       break;
 
     case 'time':

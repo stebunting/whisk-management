@@ -21,7 +21,10 @@ const {
   updateTreatBoxOrders,
   getHighestOrder,
   getTreatBoxTotals,
-  removeTreatBoxOrder
+  removeTreatBoxOrder,
+  addBoxLoan,
+  getBoxLoans,
+  updateBoxLoan
 } = require('../lib/db-control/db-control')(tag, 'whisk-management-test');
 
 describe('Database Control Connection Tests', () => {
@@ -357,6 +360,59 @@ describe('Database Control Connection Tests', () => {
       const response = await getSettings('treatbox');
       assert.deepEqual(response.price, settings.price);
     });
+
+    it('disconnects', () => {
+      disconnect();
+      assert.ok(!isConnected());
+    });
+  });
+
+  describe('Add and change loan boxes', () => {
+    let dateOut = new Date();
+    dateOut = `${dateOut.getFullYear()}-${dateOut.getMonth() + 1}-${dateOut.getDate()}`;
+    
+    let dateIn = new Date();
+    dateIn.setDate(dateIn.getDate() + 14);
+    dateIn = `${dateIn.getFullYear()}-${dateIn.getMonth() + 1}-${dateIn.getDate()}`;
+
+    const details = {
+      forename: "ste",
+      surname: "bunting",
+      email: "stebunting@gmail.com",
+      phoneNumber: "07813653351",
+      notes: "bnites",
+      dateOut,
+      dateIn,
+      returned: false,
+      remindersSent: 0
+    };
+
+    it('connects to client', async () => {
+      await connect();
+      assert.ok(isConnected());
+    });
+
+    it('adds new loan', async () => {
+      const response = await addBoxLoan(details);
+      assert.deepEqual(details, response.ops[0]);
+    });
+
+    it('gets loan', async () => {
+      const response = await getBoxLoans();
+      assert.equal(response.length, 1);
+      assert.deepEqual(details, response[0]);
+    })
+
+    it('updates loan', async () => {
+      const id = details._id;
+      delete details._id;
+      details.phoneNumber = '0733283460';
+      let response = await updateBoxLoan(id, details);
+      assert.equal(response.result.nModified, 1);
+      response = await getBoxLoans();
+      assert.equal(response.length, 1);
+      assert.equal(response[0].phoneNumber, '0733283460')
+    })
 
     it('disconnects', () => {
       disconnect();
