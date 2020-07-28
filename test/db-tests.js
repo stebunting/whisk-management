@@ -403,11 +403,19 @@ describe('Database Control Connection Tests', () => {
       assert.deepEqual(details, response[0]);
     })
 
+    it('increments remindersSent', async () => {
+      let response = await updateBoxLoan(details._id, { $inc: { remindersSent: 1 } });
+      assert.equal(response.result.nModified, 1);
+      response = await getBoxLoans();
+      assert.equal(response.length, 1);
+      assert.equal(response[0].remindersSent, 1);
+    })
+
     it('updates loan', async () => {
       const id = details._id;
       delete details._id;
       details.phoneNumber = '0733283460';
-      let response = await updateBoxLoan(id, details);
+      let response = await updateBoxLoan(id, { $set: details });
       assert.equal(response.result.nModified, 1);
       response = await getBoxLoans();
       assert.equal(response.length, 1);

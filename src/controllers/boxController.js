@@ -12,8 +12,10 @@ const {
   getTreatBoxDates,
   addBoxLoan,
   getBoxLoans,
+  getBoxLoanById,
   updateBoxLoan
 } = require('../../lib/db-control/db-control')();
+const { sendBoxLoanReminder } = require('../../lib/email/email')();
 
 function boxController() {
   async function showOverview(req, res) {
@@ -86,7 +88,7 @@ function boxController() {
     // TODO: Verify Input
 
     try {
-      await updateBoxLoan(id, loan);
+      await updateBoxLoan(id, { $set: loan });
       req.flash('success', `Details for ${loan.forename} ${loan.surname} updated!`);
     } catch (error) {
       req.flash('danger', 'An Error Happened!');
@@ -103,7 +105,7 @@ function boxController() {
     }
 
     try {
-      await updateBoxLoan(id, loan);
+      await updateBoxLoan(id, { $set: loan });
       req.flash('success', 'Box returned');
     } catch (error) {
       req.flash('danger', 'An Error Happened!');
@@ -112,11 +114,25 @@ function boxController() {
     return res.redirect('/boxes/overview');
   }
 
+  async function loanReminder(req, res) {
+    const { id } = req.params;
+
+    const customer = await getBoxLoanById(id);
+    await sendBoxLoanReminder(customer);
+
+    updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
+
+    req.flash('success', `Reminder sent to ${customer.email}`);
+
+    return res.redirect('/boxes/overview');
+  }
+
   return {
     showOverview,
     addLoan,
     editLoan,
-    loanReturned
+    loanReturned,
+    loanReminder
   };
 }
 

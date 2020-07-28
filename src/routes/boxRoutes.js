@@ -8,7 +8,8 @@ const {
   showOverview,
   addLoan,
   editLoan,
-  loanReturned
+  loanReturned,
+  loanReminder
 } = require('../controllers/boxController')();
 
 function routes() {
@@ -19,13 +20,16 @@ function routes() {
     .get(showOverview);
 
   boxRoutes.route('/add')
-    .post(addLoan)
+    .post(addLoan);
 
   boxRoutes.route('/edit/:id')
-    .post(editLoan)
+    .post(editLoan);
 
   boxRoutes.route('/return/:id')
-    .post(loanReturned)
+    .post(loanReturned);
+
+  boxRoutes.route('/remind/:id')
+    .post(loanReminder);
 
   return boxRoutes;
 }
