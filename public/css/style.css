@@ -1,5 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
+body {
+	font: 0.9em 'Open Sans', Helvetica, sans-serif;
+}
+
+/* NAV */
 nav {
 	margin-bottom: 10px;
+}
+.navbar-light {
+	background-color: #ACB8F5;
+}
+
+.navbar-brand img {
+	height: 32px;
 }
 
 .icon {

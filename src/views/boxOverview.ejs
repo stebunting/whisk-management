@@ -84,11 +84,13 @@
             		%>s<%
             	} %> overdue)</span></span><%
             } else {
-            	%><%=dateFormat(customer.dateIn, { format: 'dateFormatter' }) %> <span class="days_remaining">(<%=customer.daysLeft %> day<%
+            	%><%=dateFormat(customer.dateIn, { format: 'dateFormatter' }) %><%
+              if (!customer.returned) { %>
+               <span class="days_remaining">(<%=customer.daysLeft %> day<%
             	if (customer.daysLeft != 1) {
             		%>s<%
             	} %> remaining)</span><%
-        	} %></td>
+        	}} %></td>
             <td class="align-middle">
               <form method="post" id="editLoan_<%=customer._id %>" form-validation="true">
                 <input type="hidden" name="customer_id" value="<%=customer._id %>" />

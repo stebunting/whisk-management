@@ -15,7 +15,22 @@ const {
   getBoxLoanById,
   updateBoxLoan
 } = require('../../lib/db-control/db-control')();
-const { sendBoxLoanReminder } = require('../../lib/email/email')();
+const {
+  sendBoxLoanReminder,
+  sendBoxLoanFinalReminder
+} = require('../../lib/email/email')();
+
+// Calculate days left for each customer
+function getDaysLeft(customers) {
+  customers.forEach((customer, index) => {
+    if (!customer.returned) {
+      const dateOut = moment(customer.dateOut);
+      const dateIn = moment(customer.dateIn);
+      customers[index].daysLeft = dateIn.diff(dateOut, 'days');
+    }
+  });
+  return customers;
+}
 
 function boxController() {
   async function showOverview(req, res) {
@@ -29,11 +44,7 @@ function boxController() {
 
     // Get customers from database
     const customers = await getBoxLoans();
-    customers.forEach((customer, index) => {
-      const dateOut = moment(customer.dateOut);
-      const dateIn = moment(customer.dateIn);
-      customers[index].daysLeft = dateIn.diff(dateOut, 'days');
-    });
+    getDaysLeft(customers);
 
     return res.render('boxOverview', {
       user: req.user,
@@ -127,12 +138,37 @@ function boxController() {
     return res.redirect('/boxes/overview');
   }
 
+  async function schedule(req, res) {
+    const customers = await getBoxLoans({ returned: false });
+    getDaysLeft(customers);
+    const reminders = {
+      status: 'OK',
+      reminders: 0,
+      finalReminders: 0
+    }
+
+    customers.forEach((customer) => {
+      if (customer.daysLeft === 7) {
+        sendBoxLoanReminder(customer);
+        updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
+        reminders.reminders += 1;
+      } else if (customer.daysLeft === 0) {
+        sendBoxLoanFinalReminder(customer);
+        updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
+        reminders.finalReminders += 1;
+      }
+    })
+
+    return res.json(reminders);
+  }
+
   return {
     showOverview,
     addLoan,
     editLoan,
     loanReturned,
-    loanReminder
+    loanReminder,
+    schedule
   };
 }
 

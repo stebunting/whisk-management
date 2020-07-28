@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <title>WHISK Reminder</title>
+  <style>
+    body {
+      font: 1em Helvetica, Arial, sans-serif;
+    }
+    .reminder_text {
+      padding: 6px;
+      font-weight: bold;
+      text-align: center;
+    }
+    img {
+      width: 95%;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="/images/reminder.png" alt="WHISK.se Reminder" />
+
+  <div class="reminder_text">Your box is due back on <%=dateFormat(user.dateIn, { format: 'long' }) %>.</div>
+
+<%- include('partials/email-signature') %>
+</body>
+</html>

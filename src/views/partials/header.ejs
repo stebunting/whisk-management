@@ -17,15 +17,17 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-sm navbar-light bg-light">
-    <a class="navbar-brand" href="/">Whisk Management</a>
+  <nav class="navbar navbar-expand-sm navbar-light">
+    <a class="navbar-brand" href="/">
+      <img class="d-inline-block align-top" src="/logos/whisk.png" /> MGMT
+    </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#whiskManagementNavbar" aria-controls="whiskManagementNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="whiskManagementNavbar">
-      <ul class="navbar-nav mr-auto"><%
-        if (typeof user != 'undefined') { %>
+    <div class="collapse navbar-collapse" id="whiskManagementNavbar"><%
+      if (typeof user != 'undefined') { %>
+      <ul class="navbar-nav mr-auto">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="treatboxDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Treatbox Orders</a>
           <div class="dropdown-menu" aria-labelledby="treatboxDropdown">
@@ -46,21 +48,26 @@
         <li class="nav-item">
             <a class="nav-link" href="/boxes/overview">Boxes</a>
         </li>
+      </ul>
         
+      <ul class="nav navbar-nav justify-content-end">
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=user.username%></a>
-            <div class="dropdown-menu" aria-labelledby="userDropdown">
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
               <a class="dropdown-item" href="/user/dashboard">Dashboard</a>
               <a class="dropdown-item" href="/user/settings">Settings</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="/auth/logout">Logout</a>
             </div>
-          </li><%
+          </li>
+        </ul><%
         } else {
-        %><li class="nav-item">
+        %>
+        <ul class="nav navbar-nav justify-content-end">
+          <li class="nav-item">
             <a class="nav-link" href="/auth/signin">Sign-In</a>
-        </li><% } %>
-      </ul>
+        </li>
+      </ul><% } %>
     </div>
   </nav>
   
