@@ -7,7 +7,8 @@ const { loginCheck } = require('../controllers/authController')();
 const {
   showOverview,
   addLoan,
-  editLoan
+  editLoan,
+  loanReturned
 } = require('../controllers/boxController')();
 
 function routes() {
@@ -22,6 +23,9 @@ function routes() {
 
   boxRoutes.route('/edit/:id')
     .post(editLoan)
+
+  boxRoutes.route('/return/:id')
+    .post(loanReturned)
 
   return boxRoutes;
 }

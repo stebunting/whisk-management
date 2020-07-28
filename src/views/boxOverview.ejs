@@ -90,7 +90,7 @@
             	} %> remaining)</span><%
         	} %></td>
             <td class="align-middle">
-              <form method="post" action="/boxes/edit/<%=customer._id %>" id="editLoan_<%=customer._id %>" form-validation="true">
+              <form method="post" id="editLoan_<%=customer._id %>" form-validation="true">
                 <input type="hidden" name="customer_id" value="<%=customer._id %>" />
                 <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editLoanModal_<%=customer._id %>">View/Edit</button>
                 <div class="modal fade" id="editLoanModal_<%=customer._id %>" tabindex="-1" role="dialog" aria-labelledby="editLoanModal_<%=customer._id %>" aria-hidden="true">
@@ -147,11 +147,11 @@
                         } %> sent.</p>
                       </div>
                       <div class="modal-footer">
-                        <input type="hidden" name="customer_id" value="<%=customer._id %>" /><button class="btn btn-info form-validate" type="submit" id="box_submit_<%=customer._id %>" name="submit" value="update">Update</button>&nbsp;<%
-                        if (customer.returned == 1) {
-                        	%><button class="btn btn-success btn" type="submit" name="submit" value="return"><img src="{{ url_for('static', filename='icons/tick.png') }}" /> Returned</button><%
+                        <input type="hidden" name="customer_id" value="<%=customer._id %>" /><button class="btn btn-info form-validate" type="submit" id="box_submit_<%=customer._id %>" name="submit" value="update" action="/boxes/edit/<%=customer._id %>">Update</button>&nbsp;<%
+                        if (customer.returned) {
+                        	%><button class="btn btn-success btn" type="submit" name="submit" value="return" disabled="true">&check; Returned</button><%
                         } else {
-                        	%><button class="btn btn-success btn" type="submit" name="submit" value="return">Return</button><%
+                        	%><button class="btn btn-success btn" type="submit" name="submit" value="return" formaction="/boxes/return/<%=customer._id %>">Return</button><%
                         } %>&nbsp;<button class="btn btn-danger" type="button" data-toggle="modal" data-target="#reminderModal_<%=customer._id %>">Remind</button>
 
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -159,10 +159,10 @@
                     </div>
                   </div>
                 </div>
-                <% if (customer.returned == 1) {
-                	%><button class="btn btn-success btn-sm" type="submit" name="submit" value="return"><img src="{{ url_for('static', filename='icons/tick.png') }}" /> Returned</button><%
+                <% if (customer.returned) {
+                	%><button class="btn btn-success btn-sm" type="submit" name="submit" value="return" disabled="true">&check; Returned</button><%
                 } else {
-                	%><button class="btn btn-success btn-sm" type="submit" name="submit" value="return">Return</button><%
+                	%><button class="btn btn-success btn-sm" type="submit" name="submit" value="return" formaction="/boxes/return/<%=customer._id %>>Return</button><%
                 } %>
                 <button class="btn btn-danger btn-sm" type="button" data-toggle="modal" data-target="#reminderModal_<%=customer._id %>">Remind</button>
                 <div class="modal fade" id="reminderModal_<%=customer._id %>" tabindex="-1" role="dialog" aria-labelledby="reminderModalLabel_<%=customer._id %>" aria-hidden="true">

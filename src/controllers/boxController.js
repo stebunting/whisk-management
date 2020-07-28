@@ -95,10 +95,28 @@ function boxController() {
     return res.redirect('/boxes/overview');
   }
 
+  async function loanReturned(req, res) {
+    const { id } = req.params;
+
+    const loan = {
+      returned: true
+    }
+
+    try {
+      await updateBoxLoan(id, loan);
+      req.flash('success', 'Box returned');
+    } catch (error) {
+      req.flash('danger', 'An Error Happened!');
+    }
+
+    return res.redirect('/boxes/overview');
+  }
+
   return {
     showOverview,
     addLoan,
-    editLoan
+    editLoan,
+    loanReturned
   };
 }
 
