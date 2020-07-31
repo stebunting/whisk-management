@@ -7,6 +7,7 @@ const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
 const {
   showOverview,
+  newLoan,
   addLoan,
   editLoan,
   loanReturned,
@@ -20,6 +21,10 @@ function routes() {
   boxRoutes.route('/overview')
     .all(loginCheck)
     .get(showOverview);
+
+  boxRoutes.route('/newloan')
+    .all(loginCheck)
+    .get(newLoan);
 
   boxRoutes.route('/add')
     .all(loginCheck)
@@ -54,7 +59,7 @@ function routes() {
       });
       connection.connect();
 
-      connection.query('SELECT * FROM boxes ORDER BY customer_id ASC', function (error, results, fields) {
+      connection.query('SELECT * FROM boxes ORDER BY customer_id ASC', (error, results) => {
         results.forEach((entry) => {
           debug(entry);
           const doc = {
@@ -65,16 +70,16 @@ function routes() {
             notes: entry.notes,
             dateOut: moment(entry.date_out).add(2, 'hours').format('YYYY-MM-DD'),
             dateIn: moment(entry.date_in).add(2, 'hours').format('YYYY-MM-DD'),
-            returned: entry.returned ? true : false,
+            returned: entry.returned,
             remindersSent: entry.reminders_sent
           };
           addBoxLoan(doc);
         });
-        
+
         connection.end();
         return res.json({});
       });
-    })
+    });
 
   return boxRoutes;
 }

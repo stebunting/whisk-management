@@ -24,8 +24,10 @@ const {
 function getDaysLeft(customers) {
   customers.forEach((customer, index) => {
     if (!customer.returned) {
-      const daysLeft = moment(customer.dateIn).diff(moment(), 'days');
-      customers[index].daysLeft = daysLeft + 1;
+      const today = moment().startOf('day');
+      const dateIn = moment(customer.dateIn);
+      const daysLeft = dateIn.diff(today, 'days');
+      customers[index].daysLeft = daysLeft;
     }
   });
   return customers;
@@ -35,12 +37,6 @@ function boxController() {
   async function showOverview(req, res) {
     const treatboxDates = await getTreatBoxDates();
 
-    // Dates
-    const dates = {
-      today: dateFormat(moment(), { format: 'dateFormatter' })
-    };
-    dates.due = dateFormat(moment().add(14, 'days'), { format: 'dateFormatter' });
-
     // Get customers from database
     const customers = await getBoxLoans();
     getDaysLeft(customers);
@@ -49,8 +45,23 @@ function boxController() {
       user: req.user,
       treatboxDates,
       customers,
-      dates,
       dateFormat
+    });
+  }
+
+  async function newLoan(req, res) {
+    const treatboxDates = await getTreatBoxDates();
+
+    // Dates
+    const dates = {
+      today: dateFormat(moment(), { format: 'dateFormatter' })
+    };
+    dates.due = dateFormat(moment().add(14, 'days'), { format: 'dateFormatter' });
+
+    return res.render('newBoxLoan', {
+      user: req.user,
+      treatboxDates,
+      dates
     });
   }
 
@@ -79,7 +90,7 @@ function boxController() {
       }
     }
 
-    return res.redirect('/boxes/overview');
+    return res.redirect('/boxes/newloan');
   }
 
   async function editLoan(req, res) {
@@ -166,6 +177,7 @@ function boxController() {
 
   return {
     showOverview,
+    newLoan,
     addLoan,
     editLoan,
     loanReturned,
