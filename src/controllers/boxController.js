@@ -25,7 +25,7 @@ function getDaysLeft(customers) {
   customers.forEach((customer, index) => {
     if (!customer.returned) {
       const daysLeft = moment(customer.dateIn).diff(moment(), 'days');
-      customers[index].daysLeft = daysLeft;
+      customers[index].daysLeft = daysLeft + 1;
     }
   });
   return customers;
