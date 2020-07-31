@@ -24,9 +24,8 @@ const {
 function getDaysLeft(customers) {
   customers.forEach((customer, index) => {
     if (!customer.returned) {
-      const dateOut = moment(customer.dateOut);
-      const dateIn = moment(customer.dateIn);
-      customers[index].daysLeft = dateIn.diff(dateOut, 'days');
+      const daysLeft = moment(customer.dateIn).diff(moment(), 'days');
+      customers[index].daysLeft = daysLeft;
     }
   });
   return customers;
@@ -113,7 +112,7 @@ function boxController() {
 
     const loan = {
       returned: true
-    }
+    };
 
     try {
       await updateBoxLoan(id, { $set: loan });
@@ -131,6 +130,7 @@ function boxController() {
     const customer = await getBoxLoanById(id);
     await sendBoxLoanReminder(customer);
 
+    // eslint-disable-next-line no-underscore-dangle
     updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
 
     req.flash('success', `Reminder sent to ${customer.email}`);
@@ -145,19 +145,21 @@ function boxController() {
       status: 'OK',
       reminders: 0,
       finalReminders: 0
-    }
+    };
 
     customers.forEach((customer) => {
       if (customer.daysLeft === 7) {
         sendBoxLoanReminder(customer);
+        // eslint-disable-next-line no-underscore-dangle
         updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
         reminders.reminders += 1;
       } else if (customer.daysLeft === 0) {
         sendBoxLoanFinalReminder(customer);
+        // eslint-disable-next-line no-underscore-dangle
         updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
         reminders.finalReminders += 1;
       }
-    })
+    });
 
     return res.json(reminders);
   }
