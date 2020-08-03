@@ -6,7 +6,6 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
-const querystring = require('querystring');
 const debug = require('debug')(tag);
 const {
   priceFormat,
@@ -30,6 +29,9 @@ const {
   recordSwishRefund,
   logError
 } = require('../../lib/db-control/db-control')(tag);
+const {
+  createPaymentRequest
+} = require('../../lib/swish/swish')();
 
 // const callbackRoot = 'https://whisk-management.herokuapp.com';
 const callbackRoot = 'https://5463a9270d6b.ngrok.io';
@@ -60,7 +62,7 @@ const swishProduction = {
   })
 };
 
-const swish = swishProduction;
+const swish = swishTest;
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
@@ -574,15 +576,16 @@ function treatBoxController() {
     }
 
     if (order.payment.method === 'Invoice') {
+      // Insert Invoice Order to DB
       const dbResponse = await insertTreatBoxOrder(order);
       if (dbResponse.insertedCount !== 1) {
+        logError('Error inserting Invoice order to DB', dbResponse);
         return res.json({
           status: 'Error',
           errors: ['DB_ERROR']
         });
       }
       sendConfirmationEmail(order);
-
       return res.json({
         status: 'OK',
         method
@@ -590,54 +593,32 @@ function treatBoxController() {
     }
 
     if (order.payment.method === 'Swish') {
-      order.payment.swish = {
-        payerAlias: parseSwishAlias(order.details.telephone)
-      };
-
-      const uuid = getSwishUUID();
-      const apiConfig = {
-        method: 'put',
-        url: `${swish.baseUrl}/api/v2/paymentrequests/${uuid}`,
-        httpsAgent: swish.httpsAgent,
-        header: {
-          'Content-Type': 'application/json'
-        },
-        data: {
-          callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
-          payeeAlias: swish.alias,
-          payerAlias: order.payment.swish.payerAlias,
-          amount: parseInt(priceFormat(
-            order.statement.bottomLine.total,
-            { includeSymbol: false }
-          ), 10),
-          currency: 'SEK',
-          message: 'WHISK.se Order'
-        }
-      };
-
+      // Create Swish Payment Request
       try {
-        await axios(apiConfig);
-        order.payment.swish.id = uuid;
-        order.payment.swish.amount = apiConfig.data.amount;
-        order.payment.swish.refunds = [];
-      } catch (error) {
-        logError(`Error sending Swift payment request (${order.details.name} - ${order.details.telephone})`, error);
-        let errors = '';
-        if (error.response && error.response.data.length > 0) {
-          errors = error.response.data.map((x) => x.errorCode);
+        const request = await createPaymentRequest({
+          payerTelephone: order.details.telephone,
+          amount: order.statement.bottomLine.total
+        });
+        if (request.status === 'OK') {
+          order.payment.swish = request.data;
+          order.payment.swish.refunds = [];
         } else {
-          errors = ['ERROR'];
+          return res.json(request);
         }
-        debug(errors);
+      } catch (error) {
+        logError('Error calling createPaymentRequest', error);
         return res.json({
           status: 'Error',
-          errors
+          errors: ['SERVER_ERROR']
         });
       }
+      debug(order);
 
+      // Insert Swish Order to DB
       const dbResponse = await insertTreatBoxOrder(order);
       const id = dbResponse.insertedId;
       if (dbResponse.insertedCount !== 1) {
+        logError('Error inserting Swish order to DB', dbResponse);
         return {
           status: 'Error',
           errors: ['DB_ERROR']
