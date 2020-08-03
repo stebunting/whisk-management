@@ -53,10 +53,6 @@ function routes() {
   treatBoxRoutes.route('/confirmation')
     .post(orderStarted);
 
-  // Invoice payment route
-  // treatBoxRoutes.route('/payment')
-  //   .post(orderConfirmed);
-
   treatBoxRoutes.route('/takepayment')
     .post(takePayment);
 

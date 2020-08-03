@@ -1,6 +1,3 @@
-// Page Tag
-const tag = 'whisk-management:verify-tests';
-
 // Requirements
 const assert = require('assert');
 const { verify } = require('../lib/verify/verify')();
@@ -11,11 +8,11 @@ describe('Verification Tests', () => {
       assert.ok(verify(null, 'string') === false);
       assert.ok(verify(undefined, 'string') === false);
       assert.ok(verify(true, 'string') === false);
-      assert.ok(verify(() => { return 'Hello'; }, 'string') === false);
+      assert.ok(verify(() => 'Hello', 'string') === false);
       assert.ok(verify(546346, 'string'));
       assert.ok(verify(5654.6736, 'string'));
       assert.ok(verify(-764.839, 'string'));
-      assert.ok(verify('Heres a string \^to test"\'', 'string'));
+      assert.ok(verify('Heres a string ^to test"\'', 'string'));
     });
 
     it('returns false for non-string types', async () => {
