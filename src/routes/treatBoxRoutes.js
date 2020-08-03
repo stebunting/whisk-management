@@ -30,7 +30,9 @@ const {
   apiLookupPrice,
   apiLookupRebateCode,
   orderStarted,
-  orderConfirmed,
+  takePayment,
+  swishCallback,
+  checkSwishStatus,
   swishRefund
 } = require('../controllers/treatBoxController')();
 
@@ -52,15 +54,17 @@ function routes() {
     .post(orderStarted);
 
   // Invoice payment route
-  // treatBoxRoutes.route('/invoicepayment')
-  //   .post(legacyOrderConfirmed);
+  // treatBoxRoutes.route('/payment')
+  //   .post(orderConfirmed);
 
-  // Invoice payment route
-  treatBoxRoutes.route('/payment')
-    .post(orderConfirmed);
+  treatBoxRoutes.route('/takepayment')
+    .post(takePayment);
+
+  treatBoxRoutes.route('/checkswishstatus')
+    .get(checkSwishStatus);
 
   treatBoxRoutes.route('/swishcallback')
-    .post((req, res) => res.send('ok'));
+    .post(swishCallback);
 
   treatBoxRoutes.route('/orders')
     .all(loginCheck)

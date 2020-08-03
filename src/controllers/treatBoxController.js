@@ -20,6 +20,8 @@ const { verify } = require('../../lib/verify/verify')();
 const { sendConfirmationEmail } = require('../../lib/email/email')();
 const {
   insertTreatBoxOrder,
+  updateTreatBoxOrders,
+  getTreatBoxOrders,
   getTreatBoxOrderById,
   getHighestOrder,
   getSettings,
@@ -29,9 +31,11 @@ const {
   logError
 } = require('../../lib/db-control/db-control')(tag);
 
-const callbackRoot = 'https://whisk-management.herokuapp.com';
+// const callbackRoot = 'https://whisk-management.herokuapp.com';
+const callbackRoot = 'https://5463a9270d6b.ngrok.io';
 
 // Test Constants
+// eslint-disable-next-line no-unused-vars
 const swishTest = {
   alias: '1234679304',
   baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
@@ -45,6 +49,7 @@ const swishTest = {
 };
 
 // Production Constants
+// eslint-disable-next-line no-unused-vars
 const swishProduction = {
   alias: process.env.SWISH_ALIAS,
   baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
@@ -304,6 +309,7 @@ function treatBoxController() {
     return res.json(info);
   }
 
+  // Function to look up a rebate code
   async function lookupRebateCode(code) {
     const response = await getSettings('rebatecodes');
     const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
@@ -315,7 +321,7 @@ function treatBoxController() {
       code: result[0]
     };
   }
-  // Function to look up a rebate code
+  // Function to look up a rebate code from an API
   async function apiLookupRebateCode(req, res) {
     const { code } = req.query;
     const response = await lookupRebateCode(code);
@@ -525,14 +531,13 @@ function treatBoxController() {
     return statement;
   }
 
-  async function orderConfirmed(req, res) {
-    const referer = req.headers.referer.split('?')[0];
-    const { 'callback-url': callbackUrl } = req.body;
-
+  // Function to Take Payment
+  async function takePayment(req, res) {
+    const { method } = req.query;
     const order = await parsePostData(req.body);
 
     order.payment = {
-      method: req.body['payment-method'],
+      method,
       status: 'Ordered'
     };
     if (req.body['rebate-codes'] !== '') {
@@ -569,13 +574,19 @@ function treatBoxController() {
     }
 
     if (order.payment.method === 'Invoice') {
-      insertTreatBoxOrder(order);
+      const dbResponse = await insertTreatBoxOrder(order);
+      if (dbResponse.insertedCount !== 1) {
+        return res.json({
+          status: 'Error',
+          errors: ['DB_ERROR']
+        });
+      }
       sendConfirmationEmail(order);
 
-      const query = querystring.stringify({
-        name: order.details.name
+      return res.json({
+        status: 'OK',
+        method
       });
-      return res.redirect(`${callbackUrl}?${query}`);
     }
 
     if (order.payment.method === 'Swish') {
@@ -613,55 +624,222 @@ function treatBoxController() {
         logError(`Error sending Swift payment request (${order.details.name} - ${order.details.telephone})`, error);
         let errors = '';
         if (error.response && error.response.data.length > 0) {
-          errors = error.response.data.map((x) => x.errorCode).join(',');
+          errors = error.response.data.map((x) => x.errorCode);
         } else {
-          errors = 'ERROR';
+          errors = ['ERROR'];
         }
-        const query = querystring.stringify({
-          status: errors
+        debug(errors);
+        return res.json({
+          status: 'Error',
+          errors
         });
-        return res.redirect(307, `${referer}?${query}`);
       }
 
-      (async function checkStatus() {
-        setTimeout(() => {
-          getPaymentResult(order.payment.swish.id).then((response) => {
-            if (response.id !== uuid) {
-              const query = querystring.stringify({
-                status: 'INVALID_UUID'
-              });
-              return res.redirect(307, `${referer}?${query}`);
-            }
-
-            order.payment.swish.reference = response.paymentReference;
-            if (response.status === 'PAID') {
-              const query = querystring.stringify({
-                name: order.details.name
-              });
-
-              order.payment.status = 'Paid';
-              insertTreatBoxOrder(order);
-              sendConfirmationEmail(order);
-
-              return res.redirect(`${callbackUrl}?${query}`);
-            }
-
-            if (response.status === 'DECLINED' || response.status === 'ERROR') {
-              const query = querystring.stringify({
-                status: response.status
-              });
-              return res.redirect(307, `${referer}?${query}`);
-            }
-
-            checkStatus();
-            return true;
-          });
-        }, 1500);
-      }());
-    } else {
-      return res.redirect(307, referer);
+      const dbResponse = await insertTreatBoxOrder(order);
+      const id = dbResponse.insertedId;
+      if (dbResponse.insertedCount !== 1) {
+        return {
+          status: 'Error',
+          errors: ['DB_ERROR']
+        };
+      }
+      return res.json({
+        status: 'OK',
+        method,
+        id
+      });
     }
+
+    return res.json({
+      status: 'Error',
+      errors: ['SERVER_ERROR']
+    });
   }
+
+  function updateSwishOrder(order, response) {
+    const updatedOrder = order;
+    if (response.status === 'PAID') {
+      updatedOrder.payment.status = 'Paid';
+      updatedOrder.payment.swish.reference = response.paymentReference;
+    }
+    // eslint-disable-next-line no-underscore-dangle
+    updateTreatBoxOrders(order._id, updatedOrder);
+  }
+
+  // Function Swish callsback on payment request
+  async function swishCallback(req, res) {
+    const response = req.body;
+    const [order] = await getTreatBoxOrders({ 'payment.swish.id': response.id });
+    updateSwishOrder(order, response);
+    return res.json({ status: 'OK' });
+  }
+
+  // Function to get payment status
+  async function checkSwishStatus(req, res) {
+    // Check Database First
+    const order = await getTreatBoxOrderById(req.query.id);
+    if (order.payment.status === 'Paid') {
+      return res.json({
+        status: 'OK',
+        paymentStatus: 'Paid'
+      });
+    }
+
+    // Check Swish
+    const response = await getPaymentResult(order.payment.swish.id);
+    if (response.status === 'PAID') {
+      updateSwishOrder(order, response);
+      return res.json({ status: 'OK' });
+    }
+    if (response.status === 'DECLINED' || response.status === 'CANCELLED' || response.status === 'ERROR') {
+      return res.json({
+        status: 'Error',
+        errors: [response.status.errorCode]
+      });
+    }
+    return res.json({
+      status: 'OK',
+      paymentStatus: response.status
+    });
+  }
+
+  // async function orderConfirmed(req, res) {
+  //   const referer = req.headers.referer.split('?')[0];
+  //   const { 'callback-url': callbackUrl } = req.body;
+
+  //   const order = await parsePostData(req.body);
+
+  //   order.payment = {
+  //     method: req.body['payment-method'],
+  //     status: 'Ordered'
+  //   };
+  //   if (req.body['rebate-codes'] !== '') {
+  //     order.payment.rebateCodes = JSON.parse(req.body['rebate-codes']);
+  //   }
+
+  //   const statement = await calculatePrice(order);
+  //   order.statement = statement;
+  //   delete order.items;
+
+  //   if (order.delivery.type !== 'collection') {
+  //     let nextOrder = 0;
+  //     let smsSettings;
+  //     const promises = [
+  //       getHighestOrder(),
+  //       getSettings('sms')
+  //     ];
+  //     await Promise.allSettled(promises).then((data) => {
+  //       if (data[0].status === 'fulfilled') {
+  //         if (data[0].value) {
+  //           nextOrder = data[0].value.highestOrder + 1;
+  //         }
+  //       }
+  //       if (data[1].status === 'fulfilled') {
+  //         smsSettings = data[1].value;
+  //       }
+  //     });
+
+  //     order.recipients.forEach((recipient, index) => {
+  //       order.recipients[index].delivery.sms = parseMarkers(smsSettings.defaultDelivery, recipient);
+  //       order.recipients[index].delivery.order = nextOrder;
+  //       nextOrder += 1;
+  //     });
+  //   }
+
+  //   if (order.payment.method === 'Invoice') {
+  //     insertTreatBoxOrder(order);
+  //     sendConfirmationEmail(order);
+
+  //     const query = querystring.stringify({
+  //       name: order.details.name
+  //     });
+  //     return res.redirect(`${callbackUrl}?${query}`);
+  //   }
+
+  //   if (order.payment.method === 'Swish') {
+  //     order.payment.swish = {
+  //       payerAlias: parseSwishAlias(order.details.telephone)
+  //     };
+
+  //     const uuid = getSwishUUID();
+  //     const apiConfig = {
+  //       method: 'put',
+  //       url: `${swish.baseUrl}/api/v2/paymentrequests/${uuid}`,
+  //       httpsAgent: swish.httpsAgent,
+  //       header: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       data: {
+  //         callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
+  //         payeeAlias: swish.alias,
+  //         payerAlias: order.payment.swish.payerAlias,
+  //         amount: parseInt(priceFormat(
+  //           order.statement.bottomLine.total,
+  //           { includeSymbol: false }
+  //         ), 10),
+  //         currency: 'SEK',
+  //         message: 'WHISK.se Order'
+  //       }
+  //     };
+
+  //     try {
+  //       await axios(apiConfig);
+  //       order.payment.swish.id = uuid;
+  //       order.payment.swish.amount = apiConfig.data.amount;
+  //       order.payment.swish.refunds = [];
+  //     } catch (error) {
+  //       logError(`Error sending Swift payment request (${order.details.name} - ${order.details.telephone})`, error);
+  //       let errors = '';
+  //       if (error.response && error.response.data.length > 0) {
+  //         errors = error.response.data.map((x) => x.errorCode).join(',');
+  //       } else {
+  //         errors = 'ERROR';
+  //       }
+  //       const query = querystring.stringify({
+  //         status: errors
+  //       });
+  //       return res.redirect(307, `${referer}?${query}`);
+  //     }
+
+  //     (async function checkStatus() {
+  //       setTimeout(() => {
+  //         getPaymentResult(order.payment.swish.id).then((response) => {
+  //           if (response.id !== uuid) {
+  //             const query = querystring.stringify({
+  //               status: 'INVALID_UUID'
+  //             });
+  //             return res.redirect(307, `${referer}?${query}`);
+  //           }
+
+  //           order.payment.swish.reference = response.paymentReference;
+  //           if (response.status === 'PAID') {
+  //             const query = querystring.stringify({
+  //               name: order.details.name
+  //             });
+
+  //             order.payment.status = 'Paid';
+  //             insertTreatBoxOrder(order);
+  //             sendConfirmationEmail(order);
+
+  //             return res.redirect(`${callbackUrl}?${query}`);
+  //           }
+
+  //           if (response.status === 'DECLINED' || response.status === 'ERROR') {
+  //             const query = querystring.stringify({
+  //               status: response.status
+  //             });
+  //             return res.redirect(307, `${referer}?${query}`);
+  //           }
+
+  //           checkStatus();
+  //           return true;
+  //         });
+  //       }, 1500);
+  //     }());
+  //   } else {
+  //     return res.redirect(307, referer);
+  //   }
+  // }
 
   async function swishRefund(req, res) {
     const { id, amount } = req.body;
@@ -734,7 +912,9 @@ function treatBoxController() {
     apiLookupPrice,
     apiLookupRebateCode,
     orderStarted,
-    orderConfirmed,
+    takePayment,
+    swishCallback,
+    checkSwishStatus,
     swishRefund
   };
 }
