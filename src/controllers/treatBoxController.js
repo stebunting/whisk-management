@@ -585,10 +585,16 @@ function treatBoxController() {
     if (response.status === 'PAID') {
       return res.json({ status: 'OK' });
     }
-    if (response.status === 'DECLINED' || response.status === 'CANCELLED' || response.status === 'ERROR') {
+    if (response.status === 'ERROR') {
       return res.json({
         status: 'Error',
         errors: [response.status.errorCode]
+      });
+    }
+    if (response.status === 'DECLINED' || response.status === 'CANCELLED') {
+      return res.json({
+        status: 'Error',
+        errors: [response.status]
       });
     }
     return res.json({

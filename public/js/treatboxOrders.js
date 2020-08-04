@@ -189,7 +189,7 @@ function moveUp(e) {
   $.ajax({
     method: 'get',
     url
-  }).done((data) => {
+  }).done(() => {
     $(`#row-${id}-${recipientNumber}`).hide().insertBefore(`#row-${previousId}-${previousRecipientNumber}`).show();
     $(`#inforow-${id}-${recipientNumber}`).hide().insertBefore(`#row-${previousId}-${previousRecipientNumber}`).show();
     if ($(`#${prevId}`).hasClass('unmoveable')) {
