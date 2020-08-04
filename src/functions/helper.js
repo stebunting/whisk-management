@@ -26,7 +26,11 @@ function priceFormat(n, userOptions = {}) {
 function parseDateCode(code) {
   const [year, week, day] = code.split('-');
   return {
-    date: moment().tz('Europe/Stockholm').year(year).week(week).day(day).format(),
+    date: moment().tz('Europe/Stockholm')
+      .year(year)
+      .week(week)
+      .day(day)
+      .format(),
     year,
     week,
     day
@@ -70,13 +74,13 @@ function dateFormat(d, userOptions = {}) {
 // Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
 function calculateMoms(gross, momsRate) {
   const decimalRate = 1 + (momsRate / 100);
-  return gross - (gross / decimalRate);
+  return Math.round(gross - (gross / decimalRate));
 }
 
 // Function to calculate MOMs amount from a final sale price (rounded to nearest krona)
 function calculateNetCost(gross, momsRate) {
   const decimalRate = 1 + (momsRate / 100);
-  return gross / decimalRate;
+  return Math.round(gross / decimalRate);
 }
 
 // Function to return a Google Maps URL from an address

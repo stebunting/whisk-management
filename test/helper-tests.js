@@ -35,11 +35,11 @@ describe('Helper Tests', () => {
     });
 
     it('calculates MOMs', () => {
-      assert.equal(calculateMoms(112.26, 12).toFixed(2), '12.03');
-      assert.equal(calculateMoms(1300.83, 12).toFixed(2), '139.37');
-      assert.equal(calculateMoms(10.25, 25).toFixed(2), '2.05');
-      assert.equal(calculateMoms(1798.98, 0).toFixed(2), '0.00');
-      assert.equal(calculateMoms(1798.98, 25).toFixed(2), '359.80');
+      assert.equal(calculateMoms(112, 12), 12);
+      assert.equal(calculateMoms(1300, 12), 139);
+      assert.equal(calculateMoms(10, 25), 2);
+      assert.equal(calculateMoms(1798, 0), 0);
+      assert.equal(calculateMoms(1798, 25), 360);
     });
 
     it('calculates net cost', () => {

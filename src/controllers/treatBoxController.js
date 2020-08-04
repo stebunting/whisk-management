@@ -31,38 +31,9 @@ const {
 const {
   createPaymentRequest,
   retrievePaymentRequest,
-  getSwishID
+  createRefund,
+  retrieveRefund
 } = require('../../lib/swish/swish')();
-
-const callbackRoot = 'https://5463a9270d6b.ngrok.io';
-
-// Test Constants
-// eslint-disable-next-line no-unused-vars
-const swishTest = {
-  alias: '1234679304',
-  baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi',
-  callbackRoot,
-  httpsAgent: new https.Agent({
-    cert: fs.readFileSync('cert/test.pem'),
-    key: fs.readFileSync('cert/test.key'),
-    ca: fs.readFileSync('cert/test-ca.pem'),
-    passphrase: 'swish'
-  })
-};
-
-// Production Constants
-// eslint-disable-next-line no-unused-vars
-const swishProduction = {
-  alias: process.env.SWISH_ALIAS,
-  baseUrl: 'https://cpc.getswish.net/swish-cpcapi',
-  callbackRoot,
-  httpsAgent: new https.Agent({
-    cert: Buffer.from(JSON.parse(`"${process.env.SWISH_CERT}"`)),
-    key: Buffer.from(JSON.parse(`"${process.env.SWISH_KEY}"`))
-  })
-};
-
-const swish = swishTest;
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
@@ -365,7 +336,6 @@ function treatBoxController() {
           price = product.costPrice;
         }
         price = parseInt(price, 10);
-        const moms = calculateMoms(price, product.momsRate);
         const quantity = parseInt(basket[i].quantity, 10);
 
         const newProduct = {
@@ -374,10 +344,10 @@ function treatBoxController() {
           name: product.name,
           quantity,
           price,
-          momsAmount: Math.round(moms),
+          momsAmount: calculateMoms(price, product.momsRate),
           momsRate: product.momsRate,
           subTotal: quantity * price,
-          momsSubTotal: Math.round(quantity * moms)
+          momsSubTotal: calculateMoms(quantity * price, product.momsRate)
         };
         statement.bottomLine.foodCost += newProduct.subTotal;
         statement.bottomLine.foodMoms += newProduct.momsSubTotal;
@@ -453,27 +423,6 @@ function treatBoxController() {
       return res.redirect(307, callbackUrl);
     }
     return res.redirect(307, referer);
-  }
-
-  // Function to call Swish to check payment status
-  async function getRefundResult(refundId) {
-    const apiConfig = {
-      method: 'get',
-      url: `${swish.baseUrl}/api/v1/refunds/${refundId}`,
-      httpsAgent: swish.httpsAgent,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    };
-
-    let response;
-    try {
-      response = await axios(apiConfig);
-      return response.data;
-    } catch (error) {
-      logError('Error while calling Swish API to call get refund result', error);
-      return { status: 'GET_RESULT_ERROR' };
-    }
   }
 
   // Function to calculate order price
@@ -607,8 +556,8 @@ function treatBoxController() {
     const updatedOrder = order;
     if (response.status === 'PAID') {
       updatedOrder.payment.status = 'Paid';
-      updatedOrder.payment.swish.reference = response.paymentReference;
     }
+    updatedOrder.payment.swish.reference = response.paymentReference;
     // eslint-disable-next-line no-underscore-dangle
     updateTreatBoxOrders(order._id, updatedOrder);
   }
@@ -636,8 +585,8 @@ function treatBoxController() {
 
     // Check Swish
     const response = await retrievePaymentRequest(order.payment.swish.id);
+    updateSwishOrder(order, response);
     if (response.status === 'PAID') {
-      updateSwishOrder(order, response);
       return res.json({ status: 'OK' });
     }
     if (response.status === 'DECLINED' || response.status === 'CANCELLED' || response.status === 'ERROR') {
@@ -653,45 +602,26 @@ function treatBoxController() {
   }
 
   async function swishRefund(req, res) {
-    const { id, amount } = req.body;
+    const { orderId, amount } = req.body;
+    const order = await getTreatBoxOrderById(orderId);
 
-    const order = await getTreatBoxOrderById(id);
-    const uuid = getSwishID();
-    const apiConfig = {
-      method: 'put',
-      url: `${swish.baseUrl}/api/v2/refunds/${uuid}`,
-      httpsAgent: swish.httpsAgent,
-      header: {
-        'Content-Type': 'application/json'
-      },
-      data: {
-        originalPaymentReference: order.payment.swish.reference,
-        callbackUrl: `${swish.callbackRoot}/treatbox/swishcallback`,
-        payerAlias: swish.alias,
-        amount,
-        currency: 'SEK',
-        message: ''
-      }
+    const refundOptions = {
+      paymentReference: order.payment.swish.reference,
+      amount
     };
-
-    try {
-      await axios(apiConfig);
-    } catch (error) {
-      return res.json({
-        status: 'Error',
-        error: error.response.data.errors
-      });
-    }
+    const refundResponse = await createRefund(refundOptions);
+    const { id } = refundResponse.data;
 
     (async function checkStatus() {
       setTimeout(() => {
-        getRefundResult(uuid).then((response) => {
+        retrieveRefund(id).then((response) => {
+          debug(response);
           if (response.status === 'PAID') {
             const timestamp = new Date();
             const intAmount = parseInt(amount, 10) * 100;
             recordSwishRefund(id, {
               timestamp,
-              id: uuid,
+              id,
               amount: intAmount,
             });
 
@@ -702,7 +632,7 @@ function treatBoxController() {
             });
           }
 
-          if (response.status === 'ERROR' || response.id !== uuid) {
+          if (response.status === 'ERROR') {
             return res.json({
               status: 'Error'
             });

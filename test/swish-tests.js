@@ -7,7 +7,9 @@ const {
   parseSwishAlias,
   getSwishID,
   createPaymentRequest,
-  retrievePaymentRequest
+  retrievePaymentRequest,
+  createRefund,
+  retrieveRefund
 } = require('../lib/swish/swish')(true);
 const {
   connect,
@@ -87,7 +89,54 @@ describe('Swish Integration Tests', () => {
     it('returns error message on invalid payment request', async () => {
       const response = await retrievePaymentRequest(getSwishID());
       assert.equal(response.status, 'Error');
-      assert.equal(response.errors[0], 'GET_RESULT_ERROR');
+      assert.equal(response.errors[0], 'RP04');
+    });
+
+    it('creates refund request', async () => {
+      const refundOptions = {
+        paymentReference: 'GENERICREF',
+        amount: 20000
+      };
+      const response = await createRefund(refundOptions);
+      assert.equal(response.status, 'OK');
+      const re = /^[0-9A-F]{32}$/;
+      assert.ok(re.test(response.data.id));
+    });
+
+    it('returns error on refund amount less than 1 SEK', async () => {
+      const refundOptions = {
+        paymentReference: 'GENERICREF',
+        amount: 99
+      };
+      const response = await createRefund(refundOptions);
+      assert.equal(response.status, 'Error');
+      assert.equal(response.errors[0], 'AM06');
+    });
+
+    it('returns error on refund amount more than 999999999999.99 SEK', async () => {
+      const refundOptions = {
+        paymentReference: 'GENERICREF',
+        amount: 100000000000000
+      };
+      const response = await createRefund(refundOptions);
+      assert.equal(response.status, 'Error');
+      assert.equal(response.errors[0], 'AM02');
+    });
+
+    it('creates and retrieves refund request', async () => {
+      const refundOptions = {
+        paymentReference: 'GENERICREF',
+        amount: 20000
+      };
+      const refundResponse = await createRefund(refundOptions);
+      assert.equal(refundResponse.status, 'OK');
+      const { id: refundId } = refundResponse.data;
+
+      const response = await retrieveRefund(refundId);
+      assert.equal(response.id, refundId);
+      assert.equal(response.originalPaymentReference, refundOptions.paymentReference);
+      assert.equal(response.amount, 200);
+      assert.equal(response.status, 'CREATED');
     });
 
     it('disconnects from db', () => {
