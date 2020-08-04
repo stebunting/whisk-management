@@ -31,9 +31,11 @@ const {
   apiLookupRebateCode,
   orderStarted,
   takePayment,
-  swishCallback,
+  swishPaymentCallback,
+  swishRefundCallback,
   checkSwishStatus,
-  swishRefund
+  swishRefund,
+  checkRefundStatus
 } = require('../controllers/treatBoxController')();
 
 function routes() {
@@ -60,7 +62,10 @@ function routes() {
     .get(checkSwishStatus);
 
   treatBoxRoutes.route('/swishcallback')
-    .post(swishCallback);
+    .post(swishPaymentCallback);
+
+  treatBoxRoutes.route('/swishrefundcallback')
+    .post(swishRefundCallback);
 
   treatBoxRoutes.route('/orders')
     .all(loginCheck)
@@ -121,6 +126,10 @@ function routes() {
   treatBoxRoutes.route('/orders/swishrefund')
     .all(loginCheck)
     .post(swishRefund);
+
+  treatBoxRoutes.route('/orders/checkrefundstatus/:refundId')
+    .all(loginCheck)
+    .get(checkRefundStatus);
 
   treatBoxRoutes.route('/orders/markaspaid/:id')
     .all(loginCheck)

@@ -63,7 +63,7 @@ function lookupSwishErrorMessage(message) {
       return 'Payer alias is invalid.';
 
     default:
-      return '';
+      return 'Unknown Error.';
   }
 }
 
@@ -201,6 +201,11 @@ function moveUp(e) {
   });
 }
 
+function resetRefundAppearance(id) {
+  $(`#swishrefund-${id}`).prop('disabled', false).text('Send');
+  $(`#spinner-${id}`).remove();
+}
+
 function swishRefund() {
   const id = $(this).attr('id').split('-')[1];
   const amount = parseInt($(`#swishrefundamount-${id}`).val(), 10);
@@ -208,6 +213,7 @@ function swishRefund() {
   if (Number.isNaN(amount) || amount < 0) {
     return;
   }
+  $(`.refunderror-${id}`).empty();
   $(this).prop('disabled', true).text('Refunding...')
     .prepend(`<span id="spinner-${id}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;`);
   $.ajax({
@@ -218,20 +224,31 @@ function swishRefund() {
       amount
     }
   }).done((data) => {
-    $(this).prop('disabled', false).text('Send');
-    $(`#spinner-${id}`).remove();
+    const { refundId } = data;
+    const timerId = setInterval(async () => {
+      const response = await fetch(`${baseUrl}/checkrefundstatus/${refundId}`);
+      const refundData = await response.json();
 
-    if (data.status === 'Paid') {
-      $(`.refunderror-${id}`).empty();
-      const html = `<li class="new-refund">${data.timestamp} - ${data.amount}</li>`;
-      $(`#refunds-${id}`).append(html).show();
-    } else if (data.status === 'Error') {
-      for (let i = 0; i < data.error.length; i += 1) {
-        $(`.refunderror-${id}`).append(`<li>${lookupSwishErrorMessage(data.error[i].defaultMessage)}</li>`);
+      if (refundData.status === 'OK') {
+        if (refundData.refundStatus === 'DEBITED') {
+          $(this).get(0).lastChild.nodeValue = 'Debited...';
+        } else if (refundData.refundStatus === 'PAID') {
+          clearInterval(timerId);
+          resetRefundAppearance(id);
+          const html = `<li class="new-refund">${refundData.data.timestamp} - ${refundData.data.amount}</li>`;
+          $(`#refunds-${id}`).append(html).show();
+        }
       }
-    }
-  }).catch((error) => {
-    console.log(error);
+      if (refundData.status === 'Error') {
+        clearInterval(timerId);
+        resetRefundAppearance(id);
+        for (let i = 0; i < refundData.errors.length; i += 1) {
+          $(`.refunderror-${id}`).append(`<li>${lookupSwishErrorMessage(refundData.errors[i])}</li>`);
+        }
+      }
+    }, 1500);
+  }).catch(() => {
+    resetRefundAppearance(id);
   });
 }
 

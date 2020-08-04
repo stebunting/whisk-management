@@ -3,9 +3,6 @@ const tag = 'whisk-management:treatBoxController';
 
 // Requirements
 const moment = require('moment-timezone');
-const axios = require('axios');
-const https = require('https');
-const fs = require('fs');
 const debug = require('debug')(tag);
 const {
   priceFormat,
@@ -26,6 +23,7 @@ const {
   getProducts,
   getProductById,
   recordSwishRefund,
+  updateSwishRefundStatus,
   logError
 } = require('../../lib/db-control/db-control')(tag);
 const {
@@ -510,23 +508,15 @@ function treatBoxController() {
 
     if (order.payment.method === 'Swish') {
       // Create Swish Payment Request
-      try {
-        const request = await createPaymentRequest({
-          payerTelephone: order.details.telephone,
-          amount: order.statement.bottomLine.total
-        });
-        if (request.status === 'OK') {
-          order.payment.swish = request.data;
-          order.payment.swish.refunds = [];
-        } else {
-          return res.json(request);
-        }
-      } catch (error) {
-        logError('Error calling createPaymentRequest', error);
-        return res.json({
-          status: 'Error',
-          errors: ['SERVER_ERROR']
-        });
+      const request = await createPaymentRequest({
+        payerTelephone: order.details.telephone,
+        amount: order.statement.bottomLine.total
+      });
+      if (request.status === 'OK') {
+        order.payment.swish = request.data;
+        order.payment.swish.refunds = [];
+      } else {
+        return res.json(request);
       }
 
       // Insert Swish Order to DB
@@ -563,13 +553,19 @@ function treatBoxController() {
   }
 
   // Function Swish callsback on payment request
-  async function swishCallback(req, res) {
+  async function swishPaymentCallback(req, res) {
     const response = req.body;
     const [order] = await getTreatBoxOrders({ 'payment.swish.id': response.id });
     if (order != null) {
       updateSwishOrder(order, response);
     }
     return res.json({ status: 'OK' });
+  }
+
+  async function swishRefundCallback(req, res) {
+    const { id, status } = req.body;
+    updateSwishRefundStatus(id, status);
+    return res.send({ status: 'OK' });
   }
 
   // Function to get payment status
@@ -601,48 +597,57 @@ function treatBoxController() {
     });
   }
 
+  // Create Swish Refund
   async function swishRefund(req, res) {
-    const { orderId, amount } = req.body;
+    const { id: orderId, amount } = req.body;
     const order = await getTreatBoxOrderById(orderId);
 
     const refundOptions = {
       paymentReference: order.payment.swish.reference,
-      amount
+      amount: amount * 100
     };
-    const refundResponse = await createRefund(refundOptions);
-    const { id } = refundResponse.data;
+    const request = await createRefund(refundOptions);
+    const { id: refundId } = request.data;
+    if (request.status === 'OK') {
+      // Store to DB
+      recordSwishRefund(orderId, {
+        timestamp: new Date(),
+        id: refundId,
+        amount: parseInt(amount, 10) * 100,
+        status: 'CREATED'
+      });
+      return res.json({
+        status: 'OK',
+        refundId,
+        orderId
+      });
+    }
+    return res.json(request);
+  }
 
-    (async function checkStatus() {
-      setTimeout(() => {
-        retrieveRefund(id).then((response) => {
-          debug(response);
-          if (response.status === 'PAID') {
-            const timestamp = new Date();
-            const intAmount = parseInt(amount, 10) * 100;
-            recordSwishRefund(id, {
-              timestamp,
-              id,
-              amount: intAmount,
-            });
+  // Function to get payment status
+  async function checkRefundStatus(req, res) {
+    const { refundId } = req.params;
+    const [order] = await getTreatBoxOrders({ 'payment.swish.refunds.id': refundId });
+    const [refund] = order.payment.swish.refunds.filter((x) => x.id === refundId);
 
-            return res.json({
-              status: 'Paid',
-              timestamp: dateFormat(timestamp, { format: 'short' }),
-              amount: priceFormat(intAmount)
-            });
-          }
-
-          if (response.status === 'ERROR') {
-            return res.json({
-              status: 'Error'
-            });
-          }
-
-          checkStatus();
-          return true;
-        });
-      }, 1500);
-    }());
+    const response = await retrieveRefund(refundId);
+    updateSwishRefundStatus(response.id, response.status);
+    if (response.status === 'DECLINED' || response.status === 'CANCELLED' || response.status === 'ERROR') {
+      return res.json({
+        status: 'Error',
+        errors: [response.status.errorCode]
+      });
+    }
+    return res.json({
+      status: 'OK',
+      refundStatus: response.status,
+      data: {
+        hi: 'hi',
+        timestamp: dateFormat(refund.timestamp, { format: 'short' }),
+        amount: priceFormat(refund.amount)
+      }
+    });
   }
 
   return {
@@ -652,9 +657,11 @@ function treatBoxController() {
     apiLookupRebateCode,
     orderStarted,
     takePayment,
-    swishCallback,
+    swishPaymentCallback,
+    swishRefundCallback,
     checkSwishStatus,
-    swishRefund
+    swishRefund,
+    checkRefundStatus
   };
 }
 

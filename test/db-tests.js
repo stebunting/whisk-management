@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 // Page Tag
 const tag = 'whisk-management:db-tests';
 
@@ -19,6 +20,8 @@ const {
   getTreatBoxOrderById,
   getRecipients,
   updateTreatBoxOrders,
+  recordSwishRefund,
+  updateSwishRefundStatus,
   getHighestOrder,
   getTreatBoxTotals,
   removeTreatBoxOrder,
@@ -326,6 +329,40 @@ describe('Database Control Connection Tests', () => {
       assert.equal(newOrders.length, 2);
     });
 
+    it('adds refund', async () => {
+      const orders = await getTreatBoxOrders();
+      const orderId = orders[1]._id;
+
+      recordSwishRefund(orderId, {
+        timestamp: new Date(),
+        id: 'ABC123',
+        amount: 100,
+        status: 'CREATED'
+      });
+
+      const response = await getTreatBoxOrderById(orderId);
+      assert.equal(response.payment.swish.refunds.length, 1);
+      assert.equal(response.payment.swish.refunds[0].id, 'ABC123');
+      assert.equal(response.payment.swish.refunds[0].amount, 100);
+      assert.equal(response.payment.swish.refunds[0].status, 'CREATED');
+    });
+
+    it('updates refund status', async () => {
+      await updateSwishRefundStatus('ABC123', 'PAID');
+      const response = await getTreatBoxOrders({ 'payment.swish.refunds.id': 'ABC123' });
+      assert.equal(response.length, 1);
+      assert.equal(response[0].payment.swish.refunds.length, 1);
+      assert.equal(response[0].payment.swish.refunds[0].id, 'ABC123');
+      assert.equal(response[0].payment.swish.refunds[0].amount, 100);
+      assert.equal(response[0].payment.swish.refunds[0].status, 'PAID');
+    });
+
+    it('doesn\'t update refund status when refund doesn\'t exist', async () => {
+      await updateSwishRefundStatus('FAKEID', 'FAKESTATUS');
+      const response = await getTreatBoxOrders({ 'payment.swish.refunds.id': 'FAKEID' });
+      assert.equal(response.length, 0);
+    });
+
     it('disconnects', () => {
       disconnect();
       assert.ok(!isConnected());
@@ -370,17 +407,17 @@ describe('Database Control Connection Tests', () => {
   describe('Add and change loan boxes', () => {
     let dateOut = new Date();
     dateOut = `${dateOut.getFullYear()}-${dateOut.getMonth() + 1}-${dateOut.getDate()}`;
-    
+
     let dateIn = new Date();
     dateIn.setDate(dateIn.getDate() + 14);
     dateIn = `${dateIn.getFullYear()}-${dateIn.getMonth() + 1}-${dateIn.getDate()}`;
 
     const details = {
-      forename: "ste",
-      surname: "bunting",
-      email: "stebunting@gmail.com",
-      phoneNumber: "07813653351",
-      notes: "bnites",
+      forename: 'ste',
+      surname: 'bunting',
+      email: 'stebunting@gmail.com',
+      phoneNumber: '07813653351',
+      notes: 'bnites',
       dateOut,
       dateIn,
       returned: false,
@@ -401,7 +438,7 @@ describe('Database Control Connection Tests', () => {
       const response = await getBoxLoans();
       assert.equal(response.length, 1);
       assert.deepEqual(details, response[0]);
-    })
+    });
 
     it('increments remindersSent', async () => {
       let response = await updateBoxLoan(details._id, { $inc: { remindersSent: 1 } });
@@ -409,7 +446,7 @@ describe('Database Control Connection Tests', () => {
       response = await getBoxLoans();
       assert.equal(response.length, 1);
       assert.equal(response[0].remindersSent, 1);
-    })
+    });
 
     it('updates loan', async () => {
       const id = details._id;
@@ -419,8 +456,8 @@ describe('Database Control Connection Tests', () => {
       assert.equal(response.result.nModified, 1);
       response = await getBoxLoans();
       assert.equal(response.length, 1);
-      assert.equal(response[0].phoneNumber, '0733283460')
-    })
+      assert.equal(response[0].phoneNumber, '0733283460');
+    });
 
     it('disconnects', () => {
       disconnect();
