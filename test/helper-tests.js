@@ -11,7 +11,7 @@ const {
   getGoogleMapsDirections,
   getReadableOrder,
   generateRandomString
-} = require('../src/functions/helper');
+} = require('../src/helpers');
 
 describe('Helper Function Tests', () => {
   describe('The functions...', () => {

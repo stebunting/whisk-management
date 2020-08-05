@@ -20,12 +20,6 @@ $(() => {
     }
   }
 
-  function hideAllMessages() {
-    $('.form-validation-invalid').each(function callback() {
-      $(this).hide();
-    });
-  }
-
   // Function to validate input
   function validateInput(selector) {
     const value = selector.val();
@@ -35,72 +29,77 @@ $(() => {
     // Check that something has been entered
     if (value.length > 0) {
       // Check for valid number
-      if (validationType === 'number') {
-        const re = /[^0-9]/;
-        valid = !re.test(value);
-
+      switch (validationType) {
+        case 'number': {
+          const re = /[^0-9]/;
+          valid = !re.test(value);
+          break;
+        }
         // Check for valid name
-      } else if (validationType === 'name') {
-        const re = /[^a-zA-ZåäöÅÄÖ -]/;
-        valid = !re.test(value);
-
+        case 'name': {
+          const re = /[^a-zA-ZÀ-ƶ '-]/;
+          valid = !re.test(value);
+          break;
+        }
         // Check for valid e-mail address
-      } else if (validationType === 'email') {
-        // Ensure @ followed by .
-        const emailSplit = value.split('@');
-        if (emailSplit.length < 2) {
-          valid = false;
-        } else {
-          const domainSplit = emailSplit[emailSplit.length - 1].split('.');
-          if (domainSplit.length < 2) {
+        case 'email': {
+          // Ensure @ followed by .
+          const emailSplit = value.split('@');
+          if (emailSplit.length < 2) {
             valid = false;
           } else {
-            const re = /[^a-zA-Z0-9-]/;
-            valid = !re.test(domainSplit[0]);
+            const domainSplit = emailSplit[emailSplit.length - 1].split('.');
+            if (domainSplit.length < 2) {
+              valid = false;
+            } else {
+              const re = /[^a-zA-Z0-9-]/;
+              valid = !re.test(domainSplit[0]);
+            }
           }
+          break;
         }
-
         // Check for valid phone number
-      } else if (validationType === 'phone') {
-        const phoneNumber = value.replace(/-/g, '').replace(/ /g, '');
-        if (phoneNumber.charAt(0) !== '0' || phoneNumber.length < 10) {
-          valid = false;
-        } else {
-          const re = /[^0-9]/;
-          valid = !re.test(phoneNumber);
+        case 'phone': {
+          const phoneNumber = value.replace(/-/g, '').replace(/ /g, '');
+          if (phoneNumber.charAt(0) !== '0' || phoneNumber.length < 10) {
+            valid = false;
+          } else {
+            const re = /[^0-9]/;
+            valid = !re.test(phoneNumber);
+          }
+          break;
         }
-
-        // Check that notes is not empty
-      } else if (validationType === 'notes') {
-        valid = true;
-
-        // Check that password is not empty
-      } else if (validationType === 'password') {
-        valid = true;
 
         // Check that date is not empty
-      } else if (validationType === 'date') {
-        const date = value.split('-');
-        if (date.length !== 3) {
-          valid = false;
-        } else {
-          const year = parseInt(date[0], 10);
-          const month = parseInt(date[1], 10);
-          const day = parseInt(date[2], 10);
-          if (year < 2020 || month < 1 || month > 12 || day < 1 || day > 31) {
+        case 'date': {
+          const date = value.split('-');
+          if (date.length !== 3) {
             valid = false;
           } else {
-            const re = /[^0-9-]/;
-            valid = !re.test(value);
+            const year = parseInt(date[0], 10);
+            const month = parseInt(date[1], 10);
+            const day = parseInt(date[2], 10);
+            if (year < 2020 || month < 1 || month > 12 || day < 1 || day > 31) {
+              valid = false;
+            } else {
+              const re = /[^0-9-]/;
+              valid = !re.test(value);
+            }
           }
+          break;
         }
+        // Check that notes/password fields are not empty
+        case 'notes':
+        case 'password':
+          valid = true;
+          break;
 
         // If invalid form-validation-type
-      } else {
-        valid = false;
+        default:
+          valid = false;
       }
 
-      // If no input
+    // If no input
     } else {
       valid = false;
     }
@@ -110,7 +109,7 @@ $(() => {
   }
 
   // What to do when submit button is clicked
-  $('.form-validate').click(function callback() {
+  $('.form-validate').click(function formValidate() {
     const form = $(this).closest('form');
     if (form.attr('form-validation') === undefined || form.attr('form-validation') !== 'true') {
       // Do not validate

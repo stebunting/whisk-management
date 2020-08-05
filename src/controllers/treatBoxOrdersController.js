@@ -13,7 +13,7 @@ const {
   getTreatBoxTotals,
   getTreatBoxDates,
   updateTreatBoxOrders
-} = require('../../lib/db-control/db-control')(tag);
+} = require('../../lib/db-control')(tag);
 const {
   priceFormat,
   dateFormat,
@@ -22,7 +22,7 @@ const {
   parseDateCode,
   getGoogleMapsUrl,
   getGoogleMapsDirections
-} = require('../functions/helper');
+} = require('../helpers');
 
 function treatBoxOrdersController() {
   // Display Treatbox Orders Page

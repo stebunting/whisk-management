@@ -49,7 +49,7 @@ function routes() {
     .get(async (req, res) => {
       const mysql = require('mysql');
       const moment = require('moment-timezone');
-      const { addBoxLoan } = require('../../lib/db-control/db-control')();
+      const { addBoxLoan } = require('../../lib/db-control')();
 
       const connection = mysql.createConnection({
         host: process.env.MYSQL_HOST,

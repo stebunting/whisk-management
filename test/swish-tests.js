@@ -10,11 +10,11 @@ const {
   retrievePaymentRequest,
   createRefund,
   retrieveRefund
-} = require('../lib/swish/swish')(true);
+} = require('../lib/swish')(true);
 const {
   connect,
   disconnect
-} = require('../lib/db-control/db-control')(tag, 'whisk-management-test');
+} = require('../lib/db-control')(tag, 'whisk-management-test');
 
 describe('Swish Integration Tests', () => {
   describe('Test Helpers', () => {

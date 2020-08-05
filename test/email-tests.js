@@ -4,7 +4,7 @@ const {
   isConnected,
   connect,
   sendConfirmationEmail
-} = require('../lib/email/email')();
+} = require('../lib/email')();
 
 describe('E-Mail Tests', () => {
   describe('Send confirmation email to user', () => {

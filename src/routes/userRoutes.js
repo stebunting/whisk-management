@@ -13,7 +13,7 @@ const {
   calculateMoms,
   calculateNetCost,
   generateRandomString
-} = require('../functions/helper');
+} = require('../helpers');
 const {
   getUser,
   updateUser,
@@ -22,7 +22,7 @@ const {
   addProduct,
   getProducts,
   getTreatBoxDates
-} = require('../../lib/db-control/db-control')();
+} = require('../../lib/db-control')();
 
 // Facebook Constants
 const serverUri = 'https://whisk-management.herokuapp.com';

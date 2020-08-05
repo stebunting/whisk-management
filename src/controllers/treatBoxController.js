@@ -10,9 +10,9 @@ const {
   calculateMoms,
   parseMarkers,
   getWeek
-} = require('../functions/helper');
-const { verify } = require('../../lib/verify/verify')();
-const { sendConfirmationEmail } = require('../../lib/email/email')();
+} = require('../helpers');
+const { verify } = require('../../lib/verify')();
+const { sendConfirmationEmail } = require('../../lib/email')();
 const {
   insertTreatBoxOrder,
   updateTreatBoxOrders,
@@ -25,13 +25,13 @@ const {
   recordSwishRefund,
   updateSwishRefundStatus,
   logError
-} = require('../../lib/db-control/db-control')(tag);
+} = require('../../lib/db-control')(tag);
 const {
   createPaymentRequest,
   retrievePaymentRequest,
   createRefund,
   retrieveRefund
-} = require('../../lib/swish/swish')();
+} = require('../../lib/swish')();
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number

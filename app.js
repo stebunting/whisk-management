@@ -32,8 +32,8 @@ app.use('/js', express.static(path.join(__dirname, 'node_modules', 'jquery', 'di
 app.set('views', './src/views');
 
 // Connect to MongoDB and SMTP Server
-const dbController = require('./lib/db-control/db-control')(tag);
-const email = require('./lib/email/email')();
+const dbController = require('./lib/db-control')(tag);
+const email = require('./lib/email')();
 
 try {
   dbController.connect();

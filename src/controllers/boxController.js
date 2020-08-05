@@ -4,9 +4,7 @@ const tag = 'whisk-management:boxController';
 // Requirements
 const moment = require('moment-timezone');
 const debug = require('debug')(tag);
-const {
-  dateFormat
-} = require('../functions/helper');
+const { dateFormat } = require('../helpers');
 
 const {
   getTreatBoxDates,
@@ -14,11 +12,11 @@ const {
   getBoxLoans,
   getBoxLoanById,
   updateBoxLoan
-} = require('../../lib/db-control/db-control')();
+} = require('../../lib/db-control')();
 const {
   sendBoxLoanReminder,
   sendBoxLoanFinalReminder
-} = require('../../lib/email/email')();
+} = require('../../lib/email')();
 
 // Calculate days left for each customer
 function getDaysLeft(customers) {
