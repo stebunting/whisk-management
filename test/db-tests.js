@@ -3,7 +3,7 @@
 const tag = 'whisk-management:db-tests';
 
 // Requirements
-const assert = require('assert');
+const assert = require('assert').strict;
 const {
   connect,
   isConnected,

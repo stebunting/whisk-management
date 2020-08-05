@@ -1,5 +1,5 @@
 // Requirements
-const assert = require('assert');
+const assert = require('assert').strict;
 const { verify } = require('../lib/verify/verify')();
 
 describe('Verification Tests', () => {

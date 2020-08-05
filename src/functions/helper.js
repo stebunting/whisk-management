@@ -6,7 +6,7 @@ const moment = require('moment-timezone');
 function priceFormat(n, userOptions = {}) {
   const options = {
     includeOre: userOptions.includeOre || false
-  }
+  };
   if (userOptions.includeSymbol === false) {
     options.includeSymbol = false;
   } else {
@@ -25,15 +25,12 @@ function priceFormat(n, userOptions = {}) {
 // Parse Date Code
 function parseDateCode(code) {
   const [year, week, day] = code.split('-');
+  const date = moment.utc(`${year}-W${week.padStart(2, '0')}-${day}`).format();
   return {
-    date: moment().tz('Europe/Stockholm')
-      .year(year)
-      .week(week)
-      .day(day)
-      .format(),
-    year,
-    week,
-    day
+    date,
+    year: parseInt(year, 10),
+    week: parseInt(week, 10),
+    day: parseInt(day, 10)
   };
 }
 
@@ -103,6 +100,7 @@ function getGoogleMapsDirections(address) {
   return `https://www.google.com/maps/dir/?${q}`;
 }
 
+// Get current week number
 function getWeek(offset = 0) {
   if (moment().isoWeekday() <= 3) {
     return moment().add(offset, 'weeks').isoWeek();
@@ -112,38 +110,26 @@ function getWeek(offset = 0) {
 
 // Return readable order description
 function getReadableOrder(items) {
-  const list = [];
-  items.forEach((item) => {
-    list.push(`${item.quantity} x ${item.name}`);
-  });
-  return list.join(', ');
+  return items.map((item) => `${item.quantity} x ${item.name}`).join(', ');
 }
 
+// Generate a random string for cookie
 function generateRandomString(length) {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let text = '';
+  let str = '';
 
   for (let i = 0; i < length; i += 1) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+    str += possible.charAt(Math.floor(Math.random() * possible.length));
   }
-  return text;
+  return str;
 }
 
 function parseMarkers(str, recipient) {
   let parsedString = str;
-
-  let order = 'Treat Box';
-  if (recipient.items.comboBoxes > 0 || recipient.items.vegetableBoxes > 0) {
-    order = `Veggie & ${order}`;
-  }
-  if (recipient.items.comboBoxes + recipient.items.treatBoxes + recipient.items.vegetableBoxes > 1) {
-    order = `${order}es`;
-  }
-
   const markers = {
     '%name': recipient.details.name,
     '%message': (recipient.delivery.message !== '') ? `\n${recipient.delivery.message}\n` : '',
-    '%order': order
+    '%order': getReadableOrder(recipient.items)
   };
   Object.keys(markers).forEach((key) => {
     parsedString = parsedString.replace(key, markers[key]);

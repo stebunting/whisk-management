@@ -2,7 +2,7 @@
 const tag = 'whisk-management:swish-tests';
 
 // Requirements
-const assert = require('assert');
+const assert = require('assert').strict;
 const {
   parseSwishAlias,
   getSwishID,

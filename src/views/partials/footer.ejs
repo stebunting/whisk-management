@@ -4,13 +4,28 @@
   <script src="/js/bootstrap.bundle.min.js"></script>
   <script src="/js/whisk-management.js"></script><%
   	if (typeof page !== 'undefined') {
-  		if (page === 'boxOverview') { %>
+  		switch (page) {
+        case 'newBoxLoan': %>
+  <script src="/js/form-verification.js"></script><%
+          break;
+          
+        case 'boxOverview': %>
   <script src="/js/bootstrap-datepicker.min.js"></script>
   <script src="/js/form-verification.js"></script>
   <script src="/js/boxLoans.js"></script><%
-		} else if (page === 'settings') { %>
+          break;
+        
+        case 'settings': %>
   <script src="/js/settings.js"></script><%
-		} else if (page === 'treatboxOrders') { %>
-  <script src="/js/treatboxOrders.js"></script><% }} %>
+          break;
+        
+          case 'treatboxOrders': %>
+  <script src="/js/treatboxOrders.js"></script><%
+          break;
+        
+        default:
+          break;
+      }
+    } %>
 </body>
 </html>
