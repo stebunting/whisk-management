@@ -499,10 +499,12 @@ function treatBoxController() {
           errors: ['DB_ERROR']
         });
       }
+      const id = dbResponse.insertedId;
       sendConfirmationEmail(order);
       return res.json({
         status: 'OK',
-        method
+        method,
+        id
       });
     }
 
