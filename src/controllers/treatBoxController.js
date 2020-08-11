@@ -5,6 +5,7 @@ const tag = 'whisk-management:treatBoxController';
 const moment = require('moment-timezone');
 const debug = require('debug')(tag);
 const {
+  parseTime,
   priceFormat,
   dateFormat,
   calculateMoms,
@@ -35,29 +36,41 @@ const {
 
 function treatBoxController() {
   // Function to get all relevant dates from a week number
-  function getWeekData(week) {
-    // Set Delivery day to Wednesday
-    const deliveryDay = 3;
+  async function getWeekData(week) {
+    let timeframeInformation;
+    try {
+      timeframeInformation = await getSettings('timeframe');
+    } catch (error) {
+      return {};
+    }
 
     const data = {
       delivery: moment()
         .tz('Europe/Stockholm')
         .isoWeek(week)
-        .startOf('isoWeek')
-        .add(deliveryDay - 1, 'days')
+        .day(timeframeInformation.delivery.day)
+        .startOf('day')
+        .hours(parseTime(timeframeInformation.delivery.time).hour)
+        .minutes(parseTime(timeframeInformation.delivery.time).minute)
     };
+
     data.deadline = data.delivery.clone()
-      .subtract(1, 'day')
-      .hours(11)
-      .minutes(0)
-      .seconds(0)
-      .milliseconds(0);
-    // data.vegetableDeadline = moment(data.delivery)
-    //   .subtract(4, 'days')
-    //   .hours(9)
-    //   .minutes(0)
-    //   .seconds(0)
-    //   .milliseconds(0);
+      .day(timeframeInformation.deadline.day)
+      .startOf('day')
+      .hours(parseTime(timeframeInformation.deadline.time).hour)
+      .minutes(parseTime(timeframeInformation.deadline.time).minute);
+    if (data.deadline.isAfter(data.delivery)) {
+      data.deadline.subtract(1, 'week');
+    }
+
+    data.vegetableDeadline = data.delivery.clone()
+      .day(timeframeInformation.vegetableDeadline.day)
+      .startOf('day')
+      .hours(parseTime(timeframeInformation.vegetableDeadline.time).hour)
+      .minutes(parseTime(timeframeInformation.vegetableDeadline.time).minute);
+    if (data.vegetableDeadline.isAfter(data.delivery)) {
+      data.vegetableDeadline.subtract(1, 'week');
+    }
     data.orderable = data.deadline.isAfter();
     data.week = data.delivery.week();
     data.year = data.delivery.year();
@@ -220,11 +233,11 @@ function treatBoxController() {
 
   // Return products and timeframes to browser
   async function getDetails(req, res) {
-    const promises = [
+    let promises = [
       getSettings('treatbox'),
       getProducts()
     ];
-    const data = await Promise.allSettled(promises);
+    let data = await Promise.allSettled(promises);
     if (data[0].status !== 'fulfilled' || data[1].status !== 'fulfilled') {
       return res.json({ status: 'Error' });
     }
@@ -232,8 +245,11 @@ function treatBoxController() {
     const products = data[1].value;
 
     const week = getWeek();
-    const week1 = getWeekData(week);
-    const week2 = getWeekData(week + 1);
+    promises = [getWeekData(week), getWeekData(week + 1)];
+    data = await Promise.allSettled(promises);
+    const week1 = data[0].value;
+    const week2 = data[1].value;
+
     const timeframe = {
       [`${week1.year}-${week1.week}-${week1.day}`]: week1,
       [`${week2.year}-${week2.week}-${week2.day}`]: week2
