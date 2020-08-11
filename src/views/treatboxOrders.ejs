@@ -159,20 +159,22 @@
 											<%=order.payment.method%>
 										</li>
 										<li>
-											<span class="user-info-detail">STATUS:</span> <span class="status-<%=order._id %>">
-											<%if (order.payment.status === 'Paid') {
+											<span class="user-info-detail">STATUS:</span>
+											<span class="status-<%=order._id %>"><%
+											if (order.payment.status === 'Paid') {
 												%>Paid</span><%
 											} else if (order.payment.status === 'Invoiced') {
-												%>Invoiced</span> <a href="#" class="markaspaid-<%=order._id %>">(Mark as Paid)</a>
-											<%
+												%>Invoiced</span>
+											<a href="#" class="markaspaid-<%=order._id %>">(Mark as Paid)</a><%
 											} else if (order.payment.status === 'Ordered') {
-												%>Ordered</span> <a href="#" class="markasinvoiced-<%=order._id %>">(Mark as Invoiced)</a>
-											<%
+												%>Ordered</span>
+											<a href="#" class="markasinvoiced-<%=order._id %>">(Mark as Invoiced)</a><%
 											} else if (order.payment.status === 'Cancelled') {
-												%>Cancelled</span><% } %>
+												%>Cancelled</span><% }
+											if (order.payment.method === 'Swish') { %>
+											<a href="#" id="retrieveswish-<%=order.payment.swish.id %>">(Check Status Online)</a>
 										</li>
-										<% if (order.payment.method === 'Swish') {
-												%><li>
+										<li>
 											<div class="form-inline">
 												<span class="user-info-detail">REFUND:</span>&nbsp;
 												<input class="form-control form-control-sm" type="text" id="swishrefundamount-<%=order._id %>" placeholder="Amount" />&nbsp;
@@ -181,7 +183,8 @@
 												<ul class="refund-error refunderror-<%=order._id %>"></ul>
 											</div>
 										</li><%
-											} %>
+											} else { %>
+										</li> <% } %>
 										<li>
 											<span class="user-info-detail">CANCEL:</span>&nbsp;
 											<button class="btn btn-danger btn-sm" type="button" name="cancel" value="<%=order._id %>">Cancel Order</button>

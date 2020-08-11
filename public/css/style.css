@@ -61,3 +61,8 @@ nav {
 .alert {
 	text-align: center;
 }
+
+.swish-response-popover {
+	list-style-type: none;
+	padding-left: 0;
+}

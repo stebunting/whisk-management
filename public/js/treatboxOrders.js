@@ -252,6 +252,33 @@ function swishRefund() {
   });
 }
 
+async function swishRetrieve(event) {
+  event.preventDefault();
+  if ($(this).attr('aria-describedby') !== undefined) {
+    console.log('hiding');
+    $(this).popover('dispose')
+      .removeAttr('data-original-title')
+      .removeAttr('title')
+      .removeAttr('aria-describedby');
+    return;
+  }
+  const [, id] = $(this).attr('id').split('-');
+  const response = await fetch(`${baseUrl}/retrieveswish/${id}`);
+  const data = await response.json();
+  let content;
+  if (data.status === 'Error') {
+    content = `<ul class="swish-response-popover"><li><strong>STATUS:</strong> ERROR</li><li><strong>ERROR CODES:</strong> ${data.errors.join(', ')}</li></ul>`;
+  } else {
+    content = `<ul class="swish-response-popover"><li><strong>STATUS:</strong> ${data.status}</li><li><strong>AMOUNT:</strong> ${data.amount} ${data.currency}</li><li><strong>PAYER ALIAS:</strong> ${data.payerAlias}</li></ul>`;
+  }
+  $(this).popover({
+    title: 'Swish Response',
+    html: true,
+    content,
+    placement: 'top'
+  }).popover('show');
+}
+
 $(() => {
   $('a[class^=markasinvoiced-]').click(markAsInvoiced);
   $('a[class^=markaspaid-]').click(markAsPaid);
@@ -266,4 +293,5 @@ $(() => {
   $('button[name=update-sms]').click(updateSMS);
 
   $('button[id^=swishrefund-]').click(swishRefund);
+  $('a[id^=retrieveswish-').click(swishRetrieve);
 });

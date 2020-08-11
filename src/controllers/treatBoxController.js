@@ -666,6 +666,12 @@ function treatBoxController() {
     });
   }
 
+  async function retrieveSwishPayment(req, res) {
+    const { id } = req.params;
+    const response = await retrievePaymentRequest(id);
+    return res.json(response);
+  }
+
   return {
     getWeekData,
     getDetails,
@@ -677,7 +683,8 @@ function treatBoxController() {
     swishRefundCallback,
     checkSwishStatus,
     swishRefund,
-    checkRefundStatus
+    checkRefundStatus,
+    retrieveSwishPayment
   };
 }
 

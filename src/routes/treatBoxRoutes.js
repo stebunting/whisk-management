@@ -15,7 +15,8 @@ const {
   swishRefundCallback,
   checkSwishStatus,
   swishRefund,
-  checkRefundStatus
+  checkRefundStatus,
+  retrieveSwishPayment
 } = require('../controllers/treatBoxController')();
 const {
   ordersPage,
@@ -50,6 +51,9 @@ function routes() {
 
   treatBoxRoutes.route('/checkswishstatus')
     .get(checkSwishStatus);
+
+  treatBoxRoutes.route('/orders/retrieveswish/:id')
+    .get(retrieveSwishPayment);
 
   treatBoxRoutes.route('/swishcallback')
     .post(swishPaymentCallback);
