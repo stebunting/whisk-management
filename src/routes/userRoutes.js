@@ -5,22 +5,13 @@ const tag = 'whisk-management:userRoutes';
 const express = require('express');
 const querystring = require('querystring');
 const axios = require('axios');
-const bcrypt = require('bcrypt');
 const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
-const {
-  priceFormat,
-  calculateMoms,
-  calculateNetCost,
-  generateRandomString
-} = require('../helpers');
+const { updateSettings, displaySettings } = require('../controllers/settingsController')();
+const { generateRandomString } = require('../helpers');
 const {
   getUser,
   updateUser,
-  getSettings,
-  updateSettings,
-  addProduct,
-  getProducts,
   getTreatBoxDates
 } = require('../../lib/db-control')();
 
@@ -72,7 +63,7 @@ function routes() {
 
       // If state does not match cookie state, then request was not made by user
       if (state === null) {
-        // logError('No State Returned from Spotify');
+        // logError('No State Returned from Facebook');
         return res.redirect('/user/dashboard');
       }
       if (state !== storedState) {
@@ -148,135 +139,10 @@ function routes() {
       return res.json(instagramData);
     });
 
+  // Routes for settings
   userRoutes.route('/settings')
-    .post(async (req, res) => {
-      const { submit } = req.body;
-
-      let settings;
-      switch (submit) {
-        case 'add-product': {
-          const product = {
-            name: req.body['add-product-name'],
-            grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
-            costPrice: parseInt(req.body['add-product-cost-price'], 10) * 100,
-            momsRate: parseInt(req.body['add-product-moms'], 10),
-            deliverable: req.body['add-product-deliverable'] === 'true'
-          };
-          product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
-          product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
-          addProduct(product);
-          break;
-        }
-
-        case 'treatboxUpdate':
-          settings = {
-            type: 'treatbox',
-            delivery: {
-              zone2: {
-                price: parseInt(req.body['zone2-delivery-price'], 10) * 100,
-                momsRate: 25
-              }
-            }
-          };
-          settings.delivery.zone2.momsAmount = calculateMoms(
-            settings.delivery.zone2.price,
-            settings.delivery.zone2.momsRate
-          );
-          updateSettings(settings);
-          break;
-
-        case 'rebatecodesUpdate':
-          const codesToGet = (Object.keys(req.body).length - 1) / 2;
-          const codes = [];
-          for (let i = 0; i < codesToGet; i += 1) {
-            const code = {
-              value: req.body[`rebate-code-${i}`],
-              type: req.body[`rebate-type-${i}`]
-            };
-            if (code.value !== '') {
-              codes.push(code);
-            }
-          }
-          settings = {
-            type: 'rebatecodes',
-            codes
-          };
-          updateSettings(settings);
-          break;
-
-        case 'smsUpdate':
-          settings = {
-            type: 'sms',
-            defaultDelivery: req.body['default-sms']
-          };
-          updateSettings(settings);
-          break;
-
-        case 'update-user-details':
-          if (req.body.email === '') {
-            req.flash('danger', 'E-mail can not be empty');
-            break;
-          }
-          req.user.email = req.body.email;
-
-          try {
-            await updateUser(req.user);
-            req.flash('success', 'Details Updated!');
-          } catch (error) {
-            req.flash('danger', error);
-          }
-          break;
-
-        case 'update-password':
-          if (!await bcrypt.compare(req.body['old-password'], req.user.password)) {
-            req.flash('danger', 'Old Password Incorrect!');
-            break;
-          }
-          if (!(req.body['new-password'] === req.body['confirm-new-password'])) {
-            req.flash('danger', 'New Password must match Confirmed New Password');
-            break;
-          }
-
-          req.user.password = await bcrypt.hash(req.body['new-password'], 10);
-          try {
-            await updateUser(req.user);
-            req.flash('success', 'Password Updated!');
-          } catch (error) {
-            req.flash('danger', error);
-          }
-          break;
-
-        default:
-          break;
-      }
-
-      return res.redirect('/user/settings');
-    })
-    .get(async (req, res) => {
-      const promises = [
-        getProducts(),
-        getSettings('treatbox'),
-        getSettings('rebatecodes'),
-        getSettings('sms'),
-        getTreatBoxDates()
-      ];
-      const data = await Promise.allSettled(promises);
-      const products = data[0].value;
-      const treatboxSettings = data[1].value;
-      const rebatecodeSettings = data[2].value;
-      const smsSettings = data[3].value;
-      const treatboxDates = data[4].value;
-
-      return res.render('settings.ejs', {
-        user: req.user,
-        products,
-        priceFormat,
-        treatboxSettings,
-        rebatecodeSettings,
-        smsSettings,
-        treatboxDates
-      });
-    });
+    .post(updateSettings)
+    .get(displaySettings);
 
   return userRoutes;
 }

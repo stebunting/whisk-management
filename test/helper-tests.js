@@ -3,6 +3,7 @@ const assert = require('assert').strict;
 const {
   priceFormat,
   parseMarkers,
+  parseTime,
   calculateMoms,
   calculateNetCost,
   dateFormat,
@@ -51,6 +52,20 @@ describe('Helper Function Tests', () => {
       assert.equal(dateFormat('2020-08-03T19:22:40.192Z', { format: 'long' }), 'Monday 3rd August 2020');
       assert.equal(dateFormat('2020-08-03T19:22:40.192Z', { format: 'long', includeWeek: true }), 'Monday 3rd August 2020 (Week 32)');
       assert.equal(dateFormat('2020-08-03T19:22:40.192Z', { format: 'invalid' }), 'Monday 3rd August 2020');
+    });
+
+    it('parses time', () => {
+      assert.equal(parseTime('24:00'), false);
+      assert.equal(parseTime('000:00'), false);
+      assert.equal(parseTime('1:25'), false);
+      assert.equal(parseTime('19:60'), false);
+      assert.equal(parseTime('21:61'), false);
+      assert.deepEqual(parseTime('21:59'), { hour: 21, minute: 59 });
+      assert.deepEqual(parseTime('00:00'), { hour: 0, minute: 0 });
+      assert.equal(parseTime('09:00').hour, 9);
+      assert.equal(parseTime('13:24').hour, 13);
+      assert.equal(parseTime('05:29').minute, 29);
+      assert.equal(parseTime('00:01').minute, 1);
     });
 
     it('calculate MOMs (rounded) from gross price and MOMs rate (as percentage)', () => {

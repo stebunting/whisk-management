@@ -34,6 +34,21 @@ function parseDateCode(code) {
   };
 }
 
+// Parse Time
+function parseTime(time) {
+  // Check Valid Time
+  const re = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+  if (!re.test(time)) {
+    return false;
+  }
+
+  const [hour, minute] = time.split(':');
+  return {
+    hour: parseInt(hour, 10),
+    minute: parseInt(minute, 10)
+  };
+}
+
 // Parse ISO Date String into date/time format, option to parse dateCode
 function dateFormat(d, userOptions = {}) {
   let preferredFormat;
@@ -140,6 +155,7 @@ function parseMarkers(str, recipient) {
 module.exports = {
   priceFormat,
   dateFormat,
+  parseTime,
   calculateMoms,
   calculateNetCost,
   getGoogleMapsUrl,

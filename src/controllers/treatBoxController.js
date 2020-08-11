@@ -52,14 +52,13 @@ function treatBoxController() {
       .minutes(0)
       .seconds(0)
       .milliseconds(0);
-    data.vegetableDeadline = moment(data.delivery)
-      .subtract(4, 'days')
-      .hours(9)
-      .minutes(0)
-      .seconds(0)
-      .milliseconds(0);
+    // data.vegetableDeadline = moment(data.delivery)
+    //   .subtract(4, 'days')
+    //   .hours(9)
+    //   .minutes(0)
+    //   .seconds(0)
+    //   .milliseconds(0);
     data.orderable = data.deadline.isAfter();
-    data.vegetablesOrderable = data.vegetableDeadline.isAfter();
     data.week = data.delivery.week();
     data.year = data.delivery.year();
     data.day = data.delivery.day();
@@ -244,20 +243,11 @@ function treatBoxController() {
       status: 'OK',
       products,
       cost: {
-        food: {
-          comboBox: 490,
-          treatBox: 250,
-          vegetableBox: 250
-        },
         delivery: {
           local: 0,
           zone1: 0,
           zone2: settings.delivery.zone2.price
         }
-      },
-      momsRate: {
-        food: 12,
-        delivery: 25
       },
       timeframe
     };

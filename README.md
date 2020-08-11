@@ -1,4 +1,6 @@
 # Whisk-Management
-Web application for Whisk management. First function is creating a user database.
+Web application for administration and management of Whisk.se.
 
-Re-written in Node.js
+- Instagram Integration
+- Treatbox Orders
+- Cake Box Loan Tracking

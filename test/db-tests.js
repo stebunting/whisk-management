@@ -372,9 +372,14 @@ describe('Database Control Connection Tests', () => {
   describe('Add and update settings', () => {
     const settings = {
       type: 'treatbox',
-      price: {
-        comboBox: 49000
+      delivery: {
+        zone2: {
+          price: 5000,
+          momsRate: 25,
+          momsAmount: 1000
+        }
       }
+
     };
 
     it('connects to client', async () => {
@@ -389,13 +394,13 @@ describe('Database Control Connection Tests', () => {
     });
 
     it('update settings', async () => {
-      settings.price.comboBox = 50000;
+      settings.delivery.zone2.price = 10000;
       await updateSettings(settings);
     });
 
     it('retrieves settings', async () => {
       const response = await getSettings('treatbox');
-      assert.deepEqual(response.price, settings.price);
+      assert.deepEqual(response.delivery, settings.delivery);
     });
 
     it('disconnects', () => {

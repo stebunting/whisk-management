@@ -1,4 +1,5 @@
-<%- include('partials/header', { title: 'Settings', user, treatboxDates }) %>	
+<%- include('partials/header', { page: 'settings', title: 'Settings', user, treatboxDates }) %>
+<% const daysOfTheWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']; %>
 	<div class="card">
 		<div class="card-header">
 			<ul class="nav nav-tabs card-header-tabs" id="settingsTabs" role="tablist">
@@ -98,6 +99,67 @@
 							<% } %>
 						</tbody>
 					</table>
+
+					<h5 class="card-title">Timeframe</h5>
+					<form action="/user/settings" method="post">
+						<div class="form-group row">
+							<label for="timeframe-delivery-date" class="col-md-3 col-form-label">Delivery</label>
+							<div class="input-group col-md-3">
+								<select class="form-control" id="timeframe-delivery-date" name="timeframe-delivery-date"><%
+									daysOfTheWeek.forEach((day, index) => { %>
+									<option value="<%=index + 1 %>"<%
+										if (index + 1 === timeframeSettings.delivery.day) {
+											%> selected<%
+										} %>><%=day %></option><%
+									}); %>
+								</select>
+							</div>
+							<div class="input-group col-md-3">
+								<input type="text" class="form-control datetimepicker-input" id="timeframe-delivery-time" name="timeframe-delivery-time" data-toggle="datetimepicker" data-target="timeframe-delivery-time" value="<%=timeframeSettings.delivery.time %>" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="timeframe-deadline-date" class="col-md-3 col-form-label">Order Deadline</label>
+							<div class="input-group col-md-3">
+								<select class="form-control" id="timeframe-deadline-date" name="timeframe-deadline-date"><%
+									daysOfTheWeek.forEach((day, index) => { %>
+									<option value="<%=index + 1 %>"<%
+										if (index + 1 === timeframeSettings.deadline.day) {
+											%> selected<%
+										} %>><%=day %></option><%
+									}); %>
+								</select>
+							</div>
+							<div class="input-group col-md-3">
+								<input type="text" class="form-control datetimepicker-input" id="timeframe-deadline-time" name="timeframe-deadline-time" data-toggle="datetimepicker" data-target="timeframe-deadline-time" value="<%=timeframeSettings.deadline.time %>" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="timeframe-vegetable-deadline-date" class="col-md-3 col-form-label">Vegetable Order Deadline</label>
+							<div class="input-group col-md-3">
+								<select class="form-control" id="timeframe-vegetable-deadline-date" name="timeframe-vegetable-deadline-date"><%
+									daysOfTheWeek.forEach((day, index) => { %>
+									<option value="<%=index + 1 %>"<%
+										if (index + 1 === timeframeSettings.vegetableDeadline.day) {
+											%> selected<%
+										} %>><%=day %></option><%
+									}); %>
+								</select>
+							</div>
+							<div class="input-group col-md-3">
+								<input type="text" class="form-control datetimepicker-input" id="timeframe-vegetable-deadline-time" name="timeframe-vegetable-deadline-time" data-toggle="datetimepicker" data-target="timeframe-vegetable-deadline-time" value="<%=timeframeSettings.vegetableDeadline.time %>" />
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<div class="col-md-6 offset-md-3">
+								<button type="submit" class="btn btn-primary" name="submit" value="timeframe-update">Update</button>
+							</div>
+						</div>
+					</form>
+
 
 					<h5 class="card-title">Treatbox Settings</h5>
 					<form action="/user/settings" method="post">
