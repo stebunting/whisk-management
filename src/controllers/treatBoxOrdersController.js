@@ -12,13 +12,14 @@ const {
   getRecipients,
   getTreatBoxTotals,
   getTreatBoxDates,
-  updateTreatBoxOrders
+  updateTreatBoxOrders,
+  getSettings
 } = require('../../lib/db-control')(tag);
 const {
   priceFormat,
   dateFormat,
   getReadableOrder,
-  getWeek,
+  getLatestWeek,
   parseDateCode,
   getGoogleMapsUrl,
   getGoogleMapsDirections
@@ -27,22 +28,25 @@ const {
 function treatBoxOrdersController() {
   // Display Treatbox Orders Page
   async function ordersPage(req, res) {
+    const timeframeSettings = await getSettings('timeframe');
+    const deliveryDay = timeframeSettings.delivery.day;
     const { date } = req.query;
+
     let query;
     if (date === undefined) {
       query = {};
     } else if (date === 'thisweek') {
-      const week = getWeek();
+      const week = getLatestWeek(deliveryDay);
       const year = moment().week(week).year();
       const dateCode = `${year}-${week}-3`;
       query = { 'delivery.date': { $regex: `^${dateCode}` } };
     } else if (date === 'nextweek') {
-      const week = getWeek(1);
+      const week = getLatestWeek(deliveryDay, 1);
       const year = moment().week(week).year();
       const dateCode = `${year}-${week}-3`;
       query = { 'delivery.date': { $regex: `^${dateCode}` } };
     } else if (date === 'lastweek') {
-      const week = getWeek(-1);
+      const week = getLatestWeek(deliveryDay, -1);
       const year = moment().week(week).year();
       const dateCode = `${year}-${week}-3`;
       query = { 'delivery.date': { $regex: `^${dateCode}` } };

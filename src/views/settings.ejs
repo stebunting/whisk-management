@@ -25,6 +25,13 @@
 						</div>
 
 						<div class="form-group row">
+							<label for="add-product-description" class="col-md-3 col-form-label">Description</label>
+							<div class="col-md-6">
+								<textarea class="form-control settings-textarea" rows="3" id="add-product-description" name="add-product-description" placeholder="Description"></textarea>
+							</div>
+						</div>
+
+						<div class="form-group row">
 							<label for="add-product-price" class="col-md-3 col-form-label">Sale Price (inc. MOMs)</label>
 							<div class="input-group col-md-6">
 								<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price" />
@@ -62,6 +69,16 @@
 								<select class="form-control" id="add-product-deliverable" name="add-product-deliverable">
 									<option value="true">Yes</option>
 									<option value="false">No</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="add-product-deadline" class="col-md-3 col-form-label">Deadline</label>
+							<div class="col-md-6">
+								<select class="form-control" id="add-product-deadline" name="add-product-deadline">
+									<option value="normal">Normal</option>
+									<option value="vegetable">Vegetable</option>
 								</select>
 							</div>
 						</div>
@@ -211,7 +228,7 @@
 						<div class="form-group row">
 							<label for="default-sms" class="col-md-3 col-form-label">Default Delivery SMS</label>
 							<div class="col-md-6">
-								<textarea class="form-control sms-textarea" rows="8" id="default-sms" name="default-sms" placeholder="Rebate Code"><% if (smsSettings.defaultDelivery) { %><%=smsSettings.defaultDelivery %><% } %></textarea>
+								<textarea class="form-control settings-textarea" rows="8" id="default-sms" name="default-sms" placeholder="Rebate Code"><% if (smsSettings.defaultDelivery) { %><%=smsSettings.defaultDelivery %><% } %></textarea>
 							</div>
 						</div>
 						<div class="form-group row">

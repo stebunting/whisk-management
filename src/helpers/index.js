@@ -116,8 +116,8 @@ function getGoogleMapsDirections(address) {
 }
 
 // Get current week number
-function getWeek(offset = 0) {
-  if (moment().isoWeekday() <= 3) {
+function getLatestWeek(deliveryDay, offset = 0) {
+  if (moment().isoWeekday() <= deliveryDay) {
     return moment().add(offset, 'weeks').isoWeek();
   }
   return moment().add(1 + offset, 'weeks').isoWeek();
@@ -160,7 +160,7 @@ module.exports = {
   calculateNetCost,
   getGoogleMapsUrl,
   getGoogleMapsDirections,
-  getWeek,
+  getLatestWeek,
   parseDateCode,
   getReadableOrder,
   generateRandomString,

@@ -10,7 +10,7 @@ const {
   dateFormat,
   calculateMoms,
   parseMarkers,
-  getWeek
+  getLatestWeek
 } = require('../helpers');
 const { verify } = require('../../lib/verify')();
 const { sendConfirmationEmail } = require('../../lib/email')();
@@ -44,34 +44,34 @@ function treatBoxController() {
       return {};
     }
 
+    let { hour, minute } = parseTime(timeframeInformation.delivery.time);
     const data = {
       delivery: moment()
         .tz('Europe/Stockholm')
         .isoWeek(week)
         .day(timeframeInformation.delivery.day)
         .startOf('day')
-        .hours(parseTime(timeframeInformation.delivery.time).hour)
-        .minutes(parseTime(timeframeInformation.delivery.time).minute)
+        .hours(hour)
+        .minutes(minute),
+      deadline: {}
     };
 
-    data.deadline = data.delivery.clone()
-      .day(timeframeInformation.deadline.day)
-      .startOf('day')
-      .hours(parseTime(timeframeInformation.deadline.time).hour)
-      .minutes(parseTime(timeframeInformation.deadline.time).minute);
-    if (data.deadline.isAfter(data.delivery)) {
-      data.deadline.subtract(1, 'week');
-    }
+    timeframeInformation.deadline.forEach((details) => {
+      ({ hour, minute } = parseTime(details.time));
+      const date = data.delivery.clone()
+        .day(details.day)
+        .startOf('day')
+        .hours(hour)
+        .minutes(minute);
+      while (date.isAfter(data.delivery)) {
+        date.subtract(1, 'week');
+      }
+      data.deadline[details.type] = {
+        date,
+        notPassed: date.isAfter()
+      };
+    });
 
-    data.vegetableDeadline = data.delivery.clone()
-      .day(timeframeInformation.vegetableDeadline.day)
-      .startOf('day')
-      .hours(parseTime(timeframeInformation.vegetableDeadline.time).hour)
-      .minutes(parseTime(timeframeInformation.vegetableDeadline.time).minute);
-    if (data.vegetableDeadline.isAfter(data.delivery)) {
-      data.vegetableDeadline.subtract(1, 'week');
-    }
-    data.orderable = data.deadline.isAfter();
     data.week = data.delivery.week();
     data.year = data.delivery.year();
     data.day = data.delivery.day();
@@ -235,16 +235,18 @@ function treatBoxController() {
   async function getDetails(req, res) {
     let promises = [
       getSettings('treatbox'),
-      getProducts()
+      getProducts(),
+      getSettings('timeframe')
     ];
     let data = await Promise.allSettled(promises);
-    if (data[0].status !== 'fulfilled' || data[1].status !== 'fulfilled') {
+    if (data[0].status !== 'fulfilled' || data[1].status !== 'fulfilled' || data[2].status !== 'fulfilled') {
       return res.json({ status: 'Error' });
     }
     const settings = data[0].value;
     const products = data[1].value;
+    const deliveryDay = data[2].value.delivery.day;
 
-    const week = getWeek();
+    const week = getLatestWeek(deliveryDay);
     promises = [getWeekData(week), getWeekData(week + 1)];
     data = await Promise.allSettled(promises);
     const week1 = data[0].value;

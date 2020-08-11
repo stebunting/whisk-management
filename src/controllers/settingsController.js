@@ -27,10 +27,12 @@ function settingsController() {
       case 'add-product': {
         const product = {
           name: req.body['add-product-name'],
+          description: req.body['add-product-description'],
           grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
           costPrice: parseInt(req.body['add-product-cost-price'], 10) * 100,
           momsRate: parseInt(req.body['add-product-moms'], 10),
-          deliverable: req.body['add-product-deliverable'] === 'true'
+          deliverable: req.body['add-product-deliverable'] === 'true',
+          deadline: req.body['add-product-deadline']
         };
         product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
         product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
@@ -45,14 +47,15 @@ function settingsController() {
             day: parseInt(req.body['timeframe-delivery-date'], 10),
             time: req.body['timeframe-delivery-time']
           },
-          deadline: {
+          deadline: [{
+            type: 'normal',
             day: parseInt(req.body['timeframe-deadline-date'], 10),
             time: req.body['timeframe-deadline-time']
-          },
-          vegetableDeadline: {
+          }, {
+            type: 'vegetable',
             day: parseInt(req.body['timeframe-vegetable-deadline-date'], 10),
             time: req.body['timeframe-vegetable-deadline-time']
-          }
+          }]
         };
         dbUpdateSettings(settings);
         break;
