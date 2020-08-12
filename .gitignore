@@ -7,3 +7,4 @@ db-backup
 mongobackup
 stderr.log
 tmp/
+.nyc_output
