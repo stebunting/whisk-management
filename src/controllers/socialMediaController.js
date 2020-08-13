@@ -5,7 +5,7 @@ const tag = 'whisk-management:socialMediaController';
 const axios = require('axios');
 const querystring = require('querystring');
 const debug = require('debug')(tag);
-const { getUser, updateUser } = require('../../lib/db-control')();
+const { getUser, updateUser, logError } = require('../../lib/db-control')();
 
 // Facebook Constants
 const serverUri = 'https://whisk-management.herokuapp.com';
@@ -39,11 +39,19 @@ function socialMediaController() {
 
     // If state does not match cookie state, then request was not made by user
     if (state === null) {
-      // logError('No State Returned from Facebook');
+      logError({
+        message: 'No State Returned from Facebook',
+        details: JSON.stringify({ state, storedState }),
+        error: ''
+      });
       return res.redirect('/user/dashboard');
     }
     if (state !== storedState) {
-      // logError('Cookie State does not match state returned from Spotfy');
+      logError({
+        message: 'Cookie State does not match state returned from Spotfy',
+        details: JSON.stringify({ state, storedState }),
+        error: ''
+      });
       return res.redirect('/user/dashboard');
     }
     res.clearCookie('facebook_auth_state');

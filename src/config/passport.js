@@ -42,7 +42,11 @@ function passportConfig(app) {
         return done(null, user);
       }
     } catch (error) {
-      logError('Could not check for user in database', error);
+      logError({
+        message: 'Could not check for user in database',
+        details: JSON.stringify({ username }),
+        error: error.stack
+      });
     }
     return done(null, false);
   }));

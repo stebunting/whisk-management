@@ -485,7 +485,10 @@ function treatBoxController() {
       // Insert Invoice Order to DB
       const dbResponse = await insertTreatBoxOrder(order);
       if (dbResponse.insertedCount !== 1) {
-        logError('Error inserting Invoice order to DB', dbResponse);
+        logError({
+          message: 'Error inserting Invoice order to DB',
+          details: JSON.stringify(dbResponse)
+        });
         return res.json({
           status: 'Error',
           errors: ['DB_ERROR']
@@ -517,7 +520,10 @@ function treatBoxController() {
       const dbResponse = await insertTreatBoxOrder(order);
       const id = dbResponse.insertedId;
       if (dbResponse.insertedCount !== 1) {
-        logError('Error inserting Swish order to DB', dbResponse);
+        logError({
+          message: 'Error inserting Swish order to DB',
+          details: JSON.stringify(dbResponse)
+        });
         return {
           status: 'Error',
           errors: ['DB_ERROR']

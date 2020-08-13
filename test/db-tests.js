@@ -27,10 +27,12 @@ const {
   removeTreatBoxOrder,
   addBoxLoan,
   getBoxLoans,
-  updateBoxLoan
+  updateBoxLoan,
+  logError,
+  getErrorLog
 } = require('../lib/db-control')(tag, 'whisk-management-test');
 
-describe('Database Control Connection Tests', () => {
+describe.only('Database Control Connection Tests', () => {
   describe('Add and retrieve user from new db', () => {
     const newUser = {
       username: 'generic-user',
@@ -462,6 +464,43 @@ describe('Database Control Connection Tests', () => {
       response = await getBoxLoans();
       assert.equal(response.length, 1);
       assert.equal(response[0].phoneNumber, '0733283460');
+    });
+
+    it('disconnects', () => {
+      disconnect();
+      assert.ok(!isConnected());
+    });
+  });
+
+  describe('Log and Retrieve Errors', () => {
+    it('connects to client', async () => {
+      await connect();
+      assert.ok(isConnected());
+    });
+
+    it('logs an error', async () => {
+      const response = await logError({
+        message: 'Error Message',
+        details: JSON.stringify({ json: 1 }),
+        error: 'Error Stack'
+      });
+      assert.equal(response.message, 'Error Message');
+      assert.equal(response.details, '{"json":1}');
+      assert.equal(response.error, 'Error Stack');
+    });
+
+    it('retrieves errors from db', async () => {
+      const response = await getErrorLog();
+      assert.equal(response.length, 1);
+    });
+
+    it('logs an error with incorrect formatting', async () => {
+      const response = await logError({
+        incorrect: 'formatting'
+      });
+      assert.equal(response.message, undefined);
+      assert.equal(response.details, undefined);
+      assert.equal(response.error, undefined);
     });
 
     it('disconnects', () => {

@@ -5,8 +5,8 @@
       <thead>
         <tr>
           <th scope="col">TIMESTAMP</th>
-          <th scope="col">TAG</th>
           <th scope="col">MESSAGE</th>
+          <th scope="col" class="error-details">DETAILS</th>
           <th scope="col">STACK</th>
         </tr>
       </thead>
@@ -14,8 +14,8 @@
         errors.forEach((error) => { %>
         <tr>
           <td><%=dateFormat(error._id.getTimestamp(), { format: 'date' }) %><br /><%=dateFormat(error._id.getTimestamp(), { format: 'time' }) %></td>
-          <td><%=error.tag %></td>
           <td><%=error.message %></td>
+          <td class="error-details"><%=error.details %></td>
           <td><%=error.error %></td>
         </tr><%
       }); %>
