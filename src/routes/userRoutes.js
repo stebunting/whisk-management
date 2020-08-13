@@ -7,7 +7,7 @@ const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
 const { updateSettings, displaySettings } = require('../controllers/settingsController')();
 const { facebookCallback, instagram } = require('../controllers/socialMediaController')();
-const { dashboard } = require('../controllers/userController')();
+const { dashboard, showErrorLog } = require('../controllers/userController')();
 
 function routes() {
   const userRoutes = express.Router();
@@ -19,6 +19,9 @@ function routes() {
   userRoutes.route('/settings')
     .post(updateSettings)
     .get(displaySettings);
+
+  userRoutes.route('/errorlog')
+    .get(showErrorLog);
 
   userRoutes.route('/facebookcallback')
     .get(facebookCallback);
