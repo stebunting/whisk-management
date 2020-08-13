@@ -64,41 +64,17 @@ function settingsController() {
       case 'treatboxUpdate': {
         const settings = {
           type: 'treatbox',
-          delivery: {
-            zone0: {
-              price: parseInt(req.body['zone0-delivery-price'], 10) * 100,
-              momsRate: 25
-            },
-            zone1: {
-              price: parseInt(req.body['zone1-delivery-price'], 10) * 100,
-              momsRate: 25
-            },
-            zone2: {
-              price: parseInt(req.body['zone2-delivery-price'], 10) * 100,
-              momsRate: 25
-            },
-            zone3: {
-              price: parseInt(req.body['zone3-delivery-price'], 10) * 100,
-              momsRate: 25
-            }
-          }
+          delivery: []
         };
-        settings.delivery.zone0.momsAmount = calculateMoms(
-          settings.delivery.zone0.price,
-          settings.delivery.zone0.momsRate
-        );
-        settings.delivery.zone1.momsAmount = calculateMoms(
-          settings.delivery.zone1.price,
-          settings.delivery.zone1.momsRate
-        );
-        settings.delivery.zone2.momsAmount = calculateMoms(
-          settings.delivery.zone2.price,
-          settings.delivery.zone2.momsRate
-        );
-        settings.delivery.zone3.momsAmount = calculateMoms(
-          settings.delivery.zone3.price,
-          settings.delivery.zone3.momsRate
-        );
+        for (let i = 0; i <= 3; i += 1) {
+          const zone = {
+            zone: i,
+            price: parseInt(req.body[`zone${i}-delivery-price`], 10) * 100,
+            momsRate: 25
+          };
+          zone.momsAmount = calculateMoms(zone.price, zone.momsRate);
+          settings.delivery.push(zone);
+        }
         dbUpdateSettings(settings);
         break;
       }

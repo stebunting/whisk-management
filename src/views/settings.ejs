@@ -179,51 +179,19 @@
 
 
 					<h5 class="card-title">Treatbox Settings</h5>
-					<form action="/user/settings" method="post">
+					<form action="/user/settings" method="post"><%
+						treatboxSettings.delivery.forEach((zone) => { %>
 						<div class="form-group row">
-							<label for="zone0-delivery-price" class="col-md-3 col-form-label">Local Delivery Price</label>
+							<label for="zone<%=zone.zone %>-delivery-price" class="col-md-3 col-form-label">Zone <%=zone.zone %> Delivery Price</label>
 							<div class="input-group col-md-3">
-								<input type="text" class="form-control" id="zone0-delivery-price" name="zone0-delivery-price" placeholder="Local Delivery Price" value="<%=priceFormat(treatboxSettings.delivery.zone0.price, { includeSymbol: false }) %>" />
+								<input type="text" class="form-control" id="zone<%=zone.zone %>-delivery-price" name="zone<%=zone.zone %>-delivery-price" placeholder="Local Delivery Price" value="<%=priceFormat(zone.price, { includeSymbol: false }) %>" />
 								<div class="input-group-append">
 									<span class="input-group-text">SEK</span>
 								</div>
 							</div>
-							<div class="col-md-3 form-control-plaintext">MOMs @ <%=treatboxSettings.delivery.zone0.momsRate %>%: <%=priceFormat(treatboxSettings.delivery.zone0.momsAmount, { includeOre: true }) %></div>
+							<div class="col-md-3 form-control-plaintext">MOMs @ <%=zone.momsRate %>%: <%=priceFormat(zone.momsAmount, { includeOre: true }) %></div>
 						</div>
-
-						<div class="form-group row">
-							<label for="zone1-delivery-price" class="col-md-3 col-form-label">Zone 1 Delivery Price</label>
-							<div class="input-group col-md-3">
-								<input type="text" class="form-control" id="zone1-delivery-price" name="zone1-delivery-price" placeholder="Zone 1 Delivery Price" value="<%=priceFormat(treatboxSettings.delivery.zone1.price, { includeSymbol: false }) %>" />
-								<div class="input-group-append">
-									<span class="input-group-text">SEK</span>
-								</div>
-							</div>
-							<div class="col-md-3 form-control-plaintext">MOMs @ <%=treatboxSettings.delivery.zone1.momsRate %>%: <%=priceFormat(treatboxSettings.delivery.zone1.momsAmount, { includeOre: true }) %></div>
-						</div>
-
-						<div class="form-group row">
-							<label for="zone2-delivery-price" class="col-md-3 col-form-label">Zone 2 Delivery Price</label>
-							<div class="input-group col-md-3">
-								<input type="text" class="form-control" id="zone2-delivery-price" name="zone2-delivery-price" placeholder="Zone 2 Delivery Price" value="<%=priceFormat(treatboxSettings.delivery.zone2.price, { includeSymbol: false }) %>" />
-								<div class="input-group-append">
-									<span class="input-group-text">SEK</span>
-								</div>
-							</div>
-							<div class="col-md-3 form-control-plaintext">MOMs @ <%=treatboxSettings.delivery.zone2.momsRate %>%: <%=priceFormat(treatboxSettings.delivery.zone2.momsAmount, { includeOre: true }) %></div>
-						</div>
-
-						<div class="form-group row">
-							<label for="zone3-delivery-price" class="col-md-3 col-form-label">Zone 3 Delivery Price</label>
-							<div class="input-group col-md-3">
-								<input type="text" class="form-control" id="zone3-delivery-price" name="zone3-delivery-price" placeholder="Zone 3 Delivery Price" value="<%=priceFormat(treatboxSettings.delivery.zone3.price, { includeSymbol: false }) %>" />
-								<div class="input-group-append">
-									<span class="input-group-text">SEK</span>
-								</div>
-							</div>
-							<div class="col-md-3 form-control-plaintext">MOMs @ <%=treatboxSettings.delivery.zone3.momsRate %>%: <%=priceFormat(treatboxSettings.delivery.zone3.momsAmount, { includeOre: true }) %></div>
-						</div>
-
+						<% }); %>
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
 								<button type="submit" class="btn btn-primary" name="submit" value="treatboxUpdate">Update</button>

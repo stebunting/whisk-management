@@ -260,13 +260,6 @@ function treatBoxController() {
     const info = {
       status: 'OK',
       products,
-      cost: {
-        delivery: {
-          local: 0,
-          zone1: 0,
-          zone2: settings.delivery.zone2.price
-        }
-      },
       timeframe
     };
 
@@ -368,30 +361,21 @@ function treatBoxController() {
     // Get Delivery Cost
     const treatboxSettings = await getSettings('treatbox');
     statement.delivery = {};
-    if (delivery.zone2 > 0) {
-      statement.delivery.zone2 = {
-        price: treatboxSettings.delivery.zone2.price,
-        quantity: delivery.zone2,
-        momsAmount: treatboxSettings.delivery.zone2.momsAmount,
-        momsRate: treatboxSettings.delivery.zone2.momsRate,
-        momsSubTotal: treatboxSettings.delivery.zone2.momsAmount * delivery.zone2,
-        subTotal: treatboxSettings.delivery.zone2.price * delivery.zone2
-      };
-      statement.bottomLine.deliveryCost += statement.delivery.zone2.subTotal;
-      statement.bottomLine.deliveryMoms += statement.delivery.zone2.momsSubTotal;
-    }
-    if (delivery.zone3 > 0) {
-      statement.delivery.zone3 = {
-        price: treatboxSettings.delivery.zone2.price,
-        quantity: delivery.zone3,
-        momsAmount: treatboxSettings.delivery.zone2.momsAmount,
-        momsRate: treatboxSettings.delivery.zone2.momsRate,
-        momsSubTotal: treatboxSettings.delivery.zone2.momsAmount * delivery.zone3,
-        subTotal: treatboxSettings.delivery.zone2.price * delivery.zone3
-      };
-      statement.bottomLine.deliveryCost += statement.delivery.zone3.subTotal;
-      statement.bottomLine.deliveryMoms += statement.delivery.zone3.momsSubTotal;
-    }
+    Object.keys(delivery).forEach((zone) => {
+      const zoneNumber = parseInt(zone.substring(4), 10);
+      if (delivery[zone] > 0) {
+        statement.delivery[zone] = {
+          price: treatboxSettings.delivery[zoneNumber].price,
+          quantity: delivery[zone],
+          momsAmount: treatboxSettings.delivery[zoneNumber].momsAmount,
+          momsRate: treatboxSettings.delivery[zoneNumber].momsRate,
+          momsSubTotal: treatboxSettings.delivery[zoneNumber].momsAmount * delivery[zone],
+          subTotal: treatboxSettings.delivery[zoneNumber].price * delivery[zone],
+        };
+        statement.bottomLine.deliveryCost += statement.delivery[zone].subTotal;
+        statement.bottomLine.deliveryMoms += statement.delivery[zone].momsSubTotal;
+      }
+    });
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
 
@@ -433,23 +417,48 @@ function treatBoxController() {
 
   // Function to calculate order price
   async function calculatePrice(order) {
-    let zone2Deliveries = 0;
-    let zone3Deliveries = 0;
+    // let zone2Deliveries = 0;
+    // let zone3Deliveries = 0;
+    const delivery = {
+      zone0: 0,
+      zone1: 0,
+      zone2: 0,
+      zone3: 0
+    };
     if (order.delivery.type !== 'collection') {
       order.recipients.forEach((recipient) => {
-        if (recipient.delivery.zone === 2) {
-          zone2Deliveries += 1;
-        } else if (recipient.delivery.zone === 3) {
-          zone3Deliveries += 1;
+        debug(recipient);
+        switch (recipient.delivery.zone) {
+          case 0:
+            delivery.zone0 += 1;
+            break;
+
+          case 1:
+            delivery.zone1 += 1;
+            break;
+
+          case 2:
+            delivery.zone2 += 1;
+            break;
+
+          case 3:
+            delivery.zone3 += 1;
+            break;
+
+          default:
+            break;
         }
+        // if (recipient.delivery.zone === 2) {
+        //   zone2Deliveries += 1;
+        // } else if (recipient.delivery.zone === 3) {
+        //   zone3Deliveries += 1;
+        // }
       });
     }
+    debug(delivery);
     const statement = await lookupPrice(
       order.items,
-      {
-        zone2: zone2Deliveries,
-        zone3: zone3Deliveries
-      },
+      delivery,
       order.payment.rebateCodes
     );
     return statement;
@@ -471,6 +480,8 @@ function treatBoxController() {
     const statement = await calculatePrice(order);
     order.statement = statement;
     delete order.items;
+
+    debug(statement);
 
     if (order.delivery.type !== 'collection') {
       let nextOrder = 0;
