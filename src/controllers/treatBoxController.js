@@ -360,25 +360,25 @@ function treatBoxController() {
 
     // Get Delivery Cost
     const treatboxSettings = await getSettings('treatbox');
-    statement.delivery = {};
-    Object.keys(delivery).forEach((zone) => {
-      const zoneNumber = parseInt(zone.substring(4), 10);
-      if (delivery[zone] > 0) {
-        statement.delivery[zone] = {
-          price: treatboxSettings.delivery[zoneNumber].price,
-          quantity: delivery[zone],
-          momsAmount: treatboxSettings.delivery[zoneNumber].momsAmount,
-          momsRate: treatboxSettings.delivery[zoneNumber].momsRate,
-          momsSubTotal: treatboxSettings.delivery[zoneNumber].momsAmount * delivery[zone],
-          subTotal: treatboxSettings.delivery[zoneNumber].price * delivery[zone],
+    statement.delivery = [];
+    delivery.forEach((quantity, zone) => {
+      if (quantity > 0) {
+        const deliveryObject = {
+          zone,
+          price: treatboxSettings.delivery[zone].price,
+          quantity,
+          momsAmount: treatboxSettings.delivery[zone].momsAmount,
+          momsRate: treatboxSettings.delivery[zone].momsRate,
+          momsSubTotal: treatboxSettings.delivery[zone].momsAmount * quantity,
+          subTotal: treatboxSettings.delivery[zone].price * quantity,
         };
-        statement.bottomLine.deliveryCost += statement.delivery[zone].subTotal;
-        statement.bottomLine.deliveryMoms += statement.delivery[zone].momsSubTotal;
+        statement.delivery.push(deliveryObject);
+        statement.bottomLine.deliveryCost += deliveryObject.subTotal;
+        statement.bottomLine.deliveryMoms += deliveryObject.momsSubTotal;
       }
     });
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
-
     return statement;
   }
 
@@ -417,45 +417,14 @@ function treatBoxController() {
 
   // Function to calculate order price
   async function calculatePrice(order) {
-    // let zone2Deliveries = 0;
-    // let zone3Deliveries = 0;
-    const delivery = {
-      zone0: 0,
-      zone1: 0,
-      zone2: 0,
-      zone3: 0
-    };
+    const delivery = [0, 0, 0, 0];
     if (order.delivery.type !== 'collection') {
       order.recipients.forEach((recipient) => {
-        debug(recipient);
-        switch (recipient.delivery.zone) {
-          case 0:
-            delivery.zone0 += 1;
-            break;
-
-          case 1:
-            delivery.zone1 += 1;
-            break;
-
-          case 2:
-            delivery.zone2 += 1;
-            break;
-
-          case 3:
-            delivery.zone3 += 1;
-            break;
-
-          default:
-            break;
+        if (recipient.delivery.zone >= 0 && recipient.delivery.zone <= 3) {
+          delivery[recipient.delivery.zone] += 1;
         }
-        // if (recipient.delivery.zone === 2) {
-        //   zone2Deliveries += 1;
-        // } else if (recipient.delivery.zone === 3) {
-        //   zone3Deliveries += 1;
-        // }
       });
     }
-    debug(delivery);
     const statement = await lookupPrice(
       order.items,
       delivery,
@@ -478,10 +447,14 @@ function treatBoxController() {
     }
 
     const statement = await calculatePrice(order);
+    for (let i = statement.delivery.length - 1; i >= 0; i -= 1) {
+      if (statement.delivery[i].subTotal === 0) {
+        statement.delivery.splice(i, 1);
+      }
+    }
+
     order.statement = statement;
     delete order.items;
-
-    debug(statement);
 
     if (order.delivery.type !== 'collection') {
       let nextOrder = 0;
@@ -550,6 +523,7 @@ function treatBoxController() {
           errors: ['DB_ERROR']
         };
       }
+      sendConfirmationEmail(order);
       return res.json({
         status: 'OK',
         method,
