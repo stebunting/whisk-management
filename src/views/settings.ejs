@@ -64,11 +64,12 @@
 						</div>
 
 						<div class="form-group row">
-							<label for="add-product-deliverable" class="col-md-3 col-form-label">Do you Deliver?</label>
+							<label for="add-product-deliverable" class="col-md-3 col-form-label">Deliver to Zone</label>
 							<div class="col-md-6">
-								<select class="form-control" id="add-product-deliverable" name="add-product-deliverable">
-									<option value="true">Yes</option>
-									<option value="false">No</option>
+								<select class="form-control" id="add-product-deliverable" name="add-product-deliverable"><% 
+									for (let i = 0; i <= 3; i += 1) { %> 
+									<option value="<%= i %>"><%=i %></option><%
+									} %>
 								</select>
 							</div>
 						</div>
@@ -94,7 +95,8 @@
 						<thead>
 							<tr>
 								<th>NAME</th>
-								<th>DELIVER?</th>
+								<th>DELIVERY ZONE</th>
+								<th>DEADLINE</th>
 								<th>GROSS PRICE</th>
 								<th>MOMS RATE</th>
 								<th>NET PRICE</th>
@@ -106,7 +108,8 @@
 					<% for (let i = 0; i < products.length; i += 1) { %>
 							<tr>
 								<td><%=products[i].name %></td>
-								<td><% if (products[i].deliverable) { %>Yes<% } else { %>No<% } %></td>
+								<td><%=products[i].deliverableZone %></td>
+								<td><%=products[i].deadline %></td>
 								<td><%=priceFormat(products[i].grossPrice) %></td>
 								<td><%=products[i].momsRate %> %</td>
 								<td><%=priceFormat(products[i].netPrice, { includeOre: true }) %></td>
@@ -138,35 +141,37 @@
 
 						<div class="form-group row">
 							<label for="timeframe-deadline-date" class="col-md-3 col-form-label">Order Deadline</label>
+							<% const deadline = timeframeSettings.deadline.find((x) => x.type === 'normal'); %>
 							<div class="input-group col-md-3">
 								<select class="form-control" id="timeframe-deadline-date" name="timeframe-deadline-date"><%
 									daysOfTheWeek.forEach((day, index) => { %>
 									<option value="<%=index + 1 %>"<%
-										if (index + 1 === timeframeSettings.deadline.day) {
+										if (index + 1 === deadline.day) {
 											%> selected<%
 										} %>><%=day %></option><%
 									}); %>
 								</select>
 							</div>
 							<div class="input-group col-md-3">
-								<input type="text" class="form-control datetimepicker-input" id="timeframe-deadline-time" name="timeframe-deadline-time" data-toggle="datetimepicker" data-target="timeframe-deadline-time" value="<%=timeframeSettings.deadline.time %>" />
+								<input type="text" class="form-control datetimepicker-input" id="timeframe-deadline-time" name="timeframe-deadline-time" data-toggle="datetimepicker" data-target="timeframe-deadline-time" value="<%=deadline.time %>" />
 							</div>
 						</div>
 
 						<div class="form-group row">
 							<label for="timeframe-vegetable-deadline-date" class="col-md-3 col-form-label">Vegetable Order Deadline</label>
+							<% const vegetableDeadline = timeframeSettings.deadline.find((x) => x.type === 'vegetable'); %>
 							<div class="input-group col-md-3">
 								<select class="form-control" id="timeframe-vegetable-deadline-date" name="timeframe-vegetable-deadline-date"><%
 									daysOfTheWeek.forEach((day, index) => { %>
 									<option value="<%=index + 1 %>"<%
-										if (index + 1 === timeframeSettings.vegetableDeadline.day) {
+										if (index + 1 === vegetableDeadline.day) {
 											%> selected<%
 										} %>><%=day %></option><%
 									}); %>
 								</select>
 							</div>
 							<div class="input-group col-md-3">
-								<input type="text" class="form-control datetimepicker-input" id="timeframe-vegetable-deadline-time" name="timeframe-vegetable-deadline-time" data-toggle="datetimepicker" data-target="timeframe-vegetable-deadline-time" value="<%=timeframeSettings.vegetableDeadline.time %>" />
+								<input type="text" class="form-control datetimepicker-input" id="timeframe-vegetable-deadline-time" name="timeframe-vegetable-deadline-time" data-toggle="datetimepicker" data-target="timeframe-vegetable-deadline-time" value="<%=vegetableDeadline.time %>" />
 							</div>
 						</div>
 

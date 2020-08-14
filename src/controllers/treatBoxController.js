@@ -372,9 +372,11 @@ function treatBoxController() {
           momsSubTotal: treatboxSettings.delivery[zone].momsAmount * quantity,
           subTotal: treatboxSettings.delivery[zone].price * quantity,
         };
-        statement.delivery.push(deliveryObject);
-        statement.bottomLine.deliveryCost += deliveryObject.subTotal;
-        statement.bottomLine.deliveryMoms += deliveryObject.momsSubTotal;
+        if (deliveryObject.subTotal !== 0) {
+          statement.delivery.push(deliveryObject);
+          statement.bottomLine.deliveryCost += deliveryObject.subTotal;
+          statement.bottomLine.deliveryMoms += deliveryObject.momsSubTotal;
+        }
       }
     });
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
@@ -384,12 +386,8 @@ function treatBoxController() {
 
   // Take properties from req.body and call lookupPrice
   async function apiLookupPrice(req, res) {
-    const basket = JSON.parse(req.body.basket);
-    const delivery = JSON.parse(req.body.delivery);
-    let codes = [];
-    if (req.body.codes !== '') {
-      codes = JSON.parse(req.body.codes);
-    }
+    const { basket, delivery } = req.body;
+    const codes = req.body.codes.length === 0 ? [] : req.body.codes;
 
     try {
       const statement = await lookupPrice(basket, delivery, codes);

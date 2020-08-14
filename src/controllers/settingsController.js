@@ -31,7 +31,7 @@ function settingsController() {
           grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
           costPrice: parseInt(req.body['add-product-cost-price'], 10) * 100,
           momsRate: parseInt(req.body['add-product-moms'], 10),
-          deliverable: req.body['add-product-deliverable'] === 'true',
+          deliverableZone: parseInt(req.body['add-product-deliverable'], 10),
           deadline: req.body['add-product-deadline']
         };
         product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
@@ -57,6 +57,7 @@ function settingsController() {
             time: req.body['timeframe-vegetable-deadline-time']
           }]
         };
+        debug(settings);
         dbUpdateSettings(settings);
         break;
       }
