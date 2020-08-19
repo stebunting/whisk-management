@@ -280,7 +280,7 @@ function treatBoxController() {
   }
   // Function to look up a rebate code from an API
   async function apiLookupRebateCode(req, res) {
-    const { code } = req.query;
+    const { code } = req.body;
     const response = await lookupRebateCode(code);
     return res.json(response);
   }

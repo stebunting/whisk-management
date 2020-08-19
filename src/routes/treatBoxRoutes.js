@@ -40,7 +40,7 @@ function routes() {
     .post(apiLookupPrice);
 
   treatBoxRoutes.route('/lookuprebate')
-    .get(apiLookupRebateCode);
+    .post(apiLookupRebateCode);
 
   // Data Validation
   treatBoxRoutes.route('/confirmation')
