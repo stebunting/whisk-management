@@ -91,59 +91,29 @@
 							</div>
 						</div>
 
-						<div class="form-row">
+						<div class="form-row"><%
+							for (let zone = 0; zone <= 3; zone += 1) {
+								const deliveryInfo = editing != null ? editing.product.delivery.filter((x) => x.zone === zone)[0] : {}; %>
 							<div class="form-group col-md-3">
 								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="add-zone-0-delivery" name="add-zone-0-delivery" checked>
-									<label class="form-check-label" for="add-zone-0-delivery">Zone 0 Delivery</label>
+									<input class="form-check-input" type="checkbox" id="add-zone-<%=zone %>-delivery" name="add-zone-<%=zone %>-delivery"<%
+									if (deliveryInfo.deliverable) {
+										%> checked<%
+									} %> />
+									<label class="form-check-label" for="add-zone-<%=zone %>-delivery">Zone <%=zone %> Delivery</label>
 								</div>
 								<div class="input-group">
-									<input type="text" class="form-control" id="add-zone-0-cost" name="add-zone-0-cost" placeholder="Cost" />
+									<input type="text" class="form-control" id="add-zone-<%=zone %>-price" name="add-zone-<%=zone %>-price" placeholder="Cost" value="<%=deliveryInfo.price %>" />
 									<div class="input-group-append">
 										<span class="input-group-text">SEK</span>
 									</div>
 								</div>
-							</div>
-							<div class="form-group col-md-3">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="add-zone-1-delivery" name="add-zone-1-delivery" checked>
-									<label class="form-check-label" for="add-zone-1-delivery">Zone 1 Delivery</label>
-								</div>
-								<div class="input-group">
-									<input type="text" class="form-control" id="add-zone-1-cost" name="add-zone-1-cost" placeholder="Cost" />
-									<div class="input-group-append">
-										<span class="input-group-text">SEK</span>
-									</div>
-								</div>
-							</div>
-							<div class="form-group col-md-3">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="add-zone-2-delivery" name="add-zone-2-delivery" checked>
-									<label class="form-check-label" for="add-zone-2-delivery">Zone 2 Delivery</label>
-								</div>
-								<div class="input-group">
-									<input type="text" class="form-control" id="add-zone-2-cost" name="add-zone-2-cost" placeholder="Cost" />
-									<div class="input-group-append">
-										<span class="input-group-text">SEK</span>
-									</div>
-								</div>
-							</div>
-							<div class="form-group col-md-3">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="add-zone-3-delivery" name="add-zone-3-delivery">
-									<label class="form-check-label" for="add-zone-3-delivery">Zone 3 Delivery</label>
-								</div>
-								<div class="input-group">
-									<input type="text" class="form-control" id="add-zone-3-cost" name="add-zone-3-cost" placeholder="Cost" />
-									<div class="input-group-append">
-										<span class="input-group-text">SEK</span>
-									</div>
-								</div>
-							</div>
+							</div><%
+						} %>
 						</div>
 
 						<div class="form-group row">
-							<div class="col-md-6 offset-md-3">
+							<div class="col-md-6">
 								<button type="submit" class="btn btn-primary" name="submit" <% 
 						if (editing) {
 							%>value="updateproduct-<%=editing.product._id %>">Update<%
@@ -160,7 +130,6 @@
 								<thead>
 									<tr>
 										<th>NAME</th>
-										<th>DELIVERY ZONE</th>
 										<th>DEADLINE</th>
 										<th>GROSS PRICE</th>
 										<th>MOMS RATE</th>
@@ -173,7 +142,6 @@
 							<% for (let i = 0; i < settings.products.length; i += 1) { %>
 									<tr>
 										<td><%=settings.products[i].name %></td>
-										<td><%=settings.products[i].deliverableZone %></td>
 										<td><%=settings.products[i].deadline %></td>
 										<td><%=priceFormat(settings.products[i].grossPrice) %></td>
 										<td><%=settings.products[i].momsRate %> %</td>

@@ -55,6 +55,7 @@ function settingsController() {
     });
   }
 
+  // Function to create product object from body information
   function getProductDetailsFromBody(body) {
     const product = {
       name: body['add-product-name'],
@@ -62,9 +63,16 @@ function settingsController() {
       grossPrice: parseInt(body['add-product-price'], 10) * 100,
       costPrice: parseInt(body['add-product-cost-price'], 10) * 100,
       momsRate: parseInt(body['add-product-moms'], 10),
-      deliverableZone: parseInt(body['add-product-deliverable'], 10),
-      deadline: body['add-product-deadline']
+      deadline: body['add-product-deadline'],
+      delivery: []
     };
+    for (let zone = 0; zone <= 3; zone += 1) {
+      product.delivery.push({
+        zone,
+        deliverable: body[`add-zone-${zone}-delivery`] === 'on',
+        price: parseInt(body[`add-zone-${zone}-price`], 10)
+      });
+    }
     product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
     product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
     return product;
