@@ -5,7 +5,7 @@ const tag = 'whisk-management:userRoutes';
 const express = require('express');
 const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
-const { updateSettings, displaySettings } = require('../controllers/settingsController')();
+const { retrieveSettings, updateSettings, displaySettings } = require('../controllers/settingsController')();
 const { facebookCallback, instagram } = require('../controllers/socialMediaController')();
 const { dashboard, showErrorLog } = require('../controllers/userController')();
 

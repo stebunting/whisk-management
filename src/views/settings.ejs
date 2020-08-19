@@ -1,4 +1,4 @@
-<%- include('partials/header', { page: 'settings', title: 'Settings', user, treatboxDates }) %>
+<%- include('partials/header', { page: 'settings', title: 'Settings', user, treatboxDates: settings.treatboxDates }) %>
 <% const daysOfTheWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']; %>
 	<div class="card">
 		<div class="card-header">
@@ -15,26 +15,40 @@
 		<div class="card-body">
 			<div class="tab-content" id="settingsTabContent">
 				<div class="tab-pane fade show active" id="treatboxes" role="tabpanel" aria-labelledby="treatboxes-tab">
-					<h5 class="card-title">Add Product</h5>
+					<h5 class="card-title"><% 
+						if (editing) {
+							%>Edit<%
+						} else {
+							%>Add<%
+						} %> Product</h5>
 					<form action="/user/settings" method="post">
 						<div class="form-group row">
 							<label for="add-product-name" class="col-md-3 col-form-label">Name</label>
 							<div class="col-md-6">
-								<input type="text" class="form-control" id="add-product-name" name="add-product-name" placeholder="Product Name" />
+								<input type="text" class="form-control" id="add-product-name" name="add-product-name" placeholder="Product Name"<% 
+								if (editing) {
+									%>value="<%=editing.product.name %>"<%
+								} %> />
 							</div>
 						</div>
 
 						<div class="form-group row">
 							<label for="add-product-description" class="col-md-3 col-form-label">Description</label>
 							<div class="col-md-6">
-								<textarea class="form-control settings-textarea" rows="3" id="add-product-description" name="add-product-description" placeholder="Description"></textarea>
+								<textarea class="form-control settings-textarea" rows="3" id="add-product-description" name="add-product-description" placeholder="Description"><% 
+								if (editing) {
+									%><%=editing.product.description %><%
+								} %></textarea>
 							</div>
 						</div>
 
 						<div class="form-group row">
 							<label for="add-product-price" class="col-md-3 col-form-label">Sale Price (inc. MOMs)</label>
 							<div class="input-group col-md-6">
-								<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price" />
+								<input type="text" class="form-control" id="add-product-price" name="add-product-price" placeholder="Price"<% 
+								if (editing) {
+									%>value="<%=priceFormat(editing.product.grossPrice, { includeSymbol: false }) %>"<%
+								} %> />
 								<div class="input-group-append">
 									<span class="input-group-text">SEK</span>
 								</div>
@@ -44,7 +58,10 @@
 						<div class="form-group row">
 							<label for="add-product-cost-price" class="col-md-3 col-form-label">Cost Price (inc. MOMs)</label>
 							<div class="input-group col-md-6">
-								<input type="text" class="form-control" id="add-product-cost-price" name="add-product-cost-price" placeholder="Cost Price" />
+								<input type="text" class="form-control" id="add-product-cost-price" name="add-product-cost-price" placeholder="Cost Price"<% 
+								if (editing) {
+									%>value="<%=priceFormat(editing.product.costPrice, { includeSymbol: false }) %>"<%
+								} %> />
 								<div class="input-group-append">
 									<span class="input-group-text">SEK</span>
 								</div>
@@ -54,11 +71,14 @@
 						<div class="form-group row">
 							<label for="add-product-moms" class="col-md-3 col-form-label">MOMs Rate</label>
 							<div class="col-md-6">
-								<select class="form-control" id="add-product-moms" name="add-product-moms">
-									<option value="0">0%</option>
-									<option value="6">6%</option>
-									<option value="12" selected>12%</option>
-									<option value="25">25%</option>
+								<select class="form-control" id="add-product-moms" name="add-product-moms"><%
+									const selectedRate = editing ? editing.product.momsRate : 12;
+									[0, 6, 12, 25].forEach((rate) => { %>
+										<option value="<%=rate %>"<% 
+											if (rate === selectedRate) { 
+												%> selected<%
+											} %>><%=rate %>%</option><%
+									}); %>
 								</select>
 							</div>
 						</div>
@@ -66,10 +86,14 @@
 						<div class="form-group row">
 							<label for="add-product-deliverable" class="col-md-3 col-form-label">Deliver to Zone</label>
 							<div class="col-md-6">
-								<select class="form-control" id="add-product-deliverable" name="add-product-deliverable"><% 
-									for (let i = 0; i <= 3; i += 1) { %> 
-									<option value="<%= i %>"><%=i %></option><%
-									} %>
+								<select class="form-control" id="add-product-deliverable" name="add-product-deliverable"><%
+									const selectedZone = editing ? editing.product.deliverableZone : 2;
+									[0, 1, 2, 3].forEach((rate) => { %>
+										<option value="<%=rate %>"<% 
+											if (rate === selectedZone) { 
+												%> selected<%
+											} %>><%=rate %></option><%
+									}); %>
 								</select>
 							</div>
 						</div>
@@ -77,48 +101,61 @@
 						<div class="form-group row">
 							<label for="add-product-deadline" class="col-md-3 col-form-label">Deadline</label>
 							<div class="col-md-6">
-								<select class="form-control" id="add-product-deadline" name="add-product-deadline">
-									<option value="normal">Normal</option>
-									<option value="vegetable">Vegetable</option>
+								<select class="form-control" id="add-product-deadline" name="add-product-deadline"><%
+									const selectedDeadline = editing ? editing.product.deadline : 'normal';
+									['normal', 'vegetable'].forEach((rate) => { %>
+										<option value="<%=rate %>"<% 
+											if (rate === selectedDeadline) { 
+												%> selected<%
+											} %>><%=rate %></option><%
+									}); %>
 								</select>
 							</div>
 						</div>
 
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="add-product">Add</button>
+								<button type="submit" class="btn btn-primary" name="submit" <% 
+						if (editing) {
+							%>value="updateproduct-<%=editing.product._id %>">Update<%
+						} else {
+							%>value="addproduct">Add<%
+						} %></button>
 							</div>
 						</div>
 					</form>
 
-					<table class="table">
-						<thead>
-							<tr>
-								<th>NAME</th>
-								<th>DELIVERY ZONE</th>
-								<th>DEADLINE</th>
-								<th>GROSS PRICE</th>
-								<th>MOMS RATE</th>
-								<th>NET PRICE</th>
-								<th>MOMS AMOUNT</th>
-								<th>COST PRICE</th>
-							</tr>
-						</thead>
-						<tbody>
-					<% for (let i = 0; i < products.length; i += 1) { %>
-							<tr>
-								<td><%=products[i].name %></td>
-								<td><%=products[i].deliverableZone %></td>
-								<td><%=products[i].deadline %></td>
-								<td><%=priceFormat(products[i].grossPrice) %></td>
-								<td><%=products[i].momsRate %> %</td>
-								<td><%=priceFormat(products[i].netPrice, { includeOre: true }) %></td>
-								<td><%=priceFormat(products[i].momsAmount, { includeOre: true }) %></td>
-								<td><%=priceFormat(products[i].costPrice, { includeOre: true }) %></td>
-							</tr>
-							<% } %>
-						</tbody>
-					</table>
+					<form action="/user/settings" method="post">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>NAME</th>
+									<th>DELIVERY ZONE</th>
+									<th>DEADLINE</th>
+									<th>GROSS PRICE</th>
+									<th>MOMS RATE</th>
+									<th>NET PRICE</th>
+									<th>MOMS AMOUNT</th>
+									<th colspan="2">COST PRICE</th>
+								</tr>
+							</thead>
+							<tbody>
+						<% for (let i = 0; i < settings.products.length; i += 1) { %>
+								<tr>
+									<td><%=settings.products[i].name %></td>
+									<td><%=settings.products[i].deliverableZone %></td>
+									<td><%=settings.products[i].deadline %></td>
+									<td><%=priceFormat(settings.products[i].grossPrice) %></td>
+									<td><%=settings.products[i].momsRate %> %</td>
+									<td><%=priceFormat(settings.products[i].netPrice, { includeOre: true }) %></td>
+									<td><%=priceFormat(settings.products[i].momsAmount, { includeOre: true }) %></td>
+									<td><%=priceFormat(settings.products[i].costPrice, { includeOre: true }) %></td>
+									<td><button type="submit" class="btn btn-sm btn-primary" name="submit" value="editproduct-<%=settings.products[i]._id %>">Edit</button></td>
+								</tr>
+								<% } %>
+							</tbody>
+						</table>
+					</form>
 
 					<h5 class="card-title">Timeframe</h5>
 					<form action="/user/settings" method="post">
@@ -128,20 +165,20 @@
 								<select class="form-control" id="timeframe-delivery-date" name="timeframe-delivery-date"><%
 									daysOfTheWeek.forEach((day, index) => { %>
 									<option value="<%=index + 1 %>"<%
-										if (index + 1 === timeframeSettings.delivery.day) {
+										if (index + 1 === settings.timeframe.delivery.day) {
 											%> selected<%
 										} %>><%=day %></option><%
 									}); %>
 								</select>
 							</div>
 							<div class="input-group col-md-3">
-								<input type="text" class="form-control datetimepicker-input" id="timeframe-delivery-time" name="timeframe-delivery-time" data-toggle="datetimepicker" data-target="timeframe-delivery-time" value="<%=timeframeSettings.delivery.time %>" />
+								<input type="text" class="form-control datetimepicker-input" id="timeframe-delivery-time" name="timeframe-delivery-time" data-toggle="datetimepicker" data-target="timeframe-delivery-time" value="<%=settings.timeframe.delivery.time %>" />
 							</div>
 						</div>
 
 						<div class="form-group row">
 							<label for="timeframe-deadline-date" class="col-md-3 col-form-label">Order Deadline</label>
-							<% const deadline = timeframeSettings.deadline.find((x) => x.type === 'normal'); %>
+							<% const deadline = settings.timeframe.deadline.find((x) => x.type === 'normal'); %>
 							<div class="input-group col-md-3">
 								<select class="form-control" id="timeframe-deadline-date" name="timeframe-deadline-date"><%
 									daysOfTheWeek.forEach((day, index) => { %>
@@ -159,7 +196,7 @@
 
 						<div class="form-group row">
 							<label for="timeframe-vegetable-deadline-date" class="col-md-3 col-form-label">Vegetable Order Deadline</label>
-							<% const vegetableDeadline = timeframeSettings.deadline.find((x) => x.type === 'vegetable'); %>
+							<% const vegetableDeadline = settings.timeframe.deadline.find((x) => x.type === 'vegetable'); %>
 							<div class="input-group col-md-3">
 								<select class="form-control" id="timeframe-vegetable-deadline-date" name="timeframe-vegetable-deadline-date"><%
 									daysOfTheWeek.forEach((day, index) => { %>
@@ -177,7 +214,7 @@
 
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="timeframe-update">Update</button>
+								<button type="submit" class="btn btn-primary" name="submit" value="timeframeupdate">Update</button>
 							</div>
 						</div>
 					</form>
@@ -185,7 +222,7 @@
 
 					<h5 class="card-title">Treatbox Settings</h5>
 					<form action="/user/settings" method="post"><%
-						treatboxSettings.delivery.forEach((zone) => { %>
+						settings.treatbox.delivery.forEach((zone) => { %>
 						<div class="form-group row">
 							<label for="zone<%=zone.zone %>-delivery-price" class="col-md-3 col-form-label">Zone <%=zone.zone %> Delivery Price</label>
 							<div class="input-group col-md-3">
@@ -199,16 +236,16 @@
 						<% }); %>
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="treatboxUpdate">Update</button>
+								<button type="submit" class="btn btn-primary" name="submit" value="treatboxupdate">Update</button>
 							</div>
 						</div>
 					</form>
 
 					<form action="/user/settings" method="post">
-						<% for (let i = 0; i <= rebatecodeSettings.codes.length; i += 1) {
+						<% for (let i = 0; i <= settings.rebate.codes.length; i += 1) {
 							let code = { value: '', type: '' };
-							if (i < rebatecodeSettings.codes.length) {
-								code = rebatecodeSettings.codes[i];
+							if (i < settings.rebate.codes.length) {
+								code = settings.rebate.codes[i];
 							} %>
 						<div class="form-group row">
 							<label for="rebate-code-<%=i %>" class="col-md-3 col-form-label">Rebate Code</label>
@@ -226,7 +263,7 @@
 						<% } %>
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesUpdate">Update</button>
+								<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesupdate">Update</button>
 							</div>
 						</div>
 					</form>
@@ -235,12 +272,12 @@
 						<div class="form-group row">
 							<label for="default-sms" class="col-md-3 col-form-label">Default Delivery SMS</label>
 							<div class="col-md-6">
-								<textarea class="form-control settings-textarea" rows="8" id="default-sms" name="default-sms" placeholder="Rebate Code"><% if (smsSettings.defaultDelivery) { %><%=smsSettings.defaultDelivery %><% } %></textarea>
+								<textarea class="form-control settings-textarea" rows="8" id="default-sms" name="default-sms" placeholder="Rebate Code"><% if (settings.sms.defaultDelivery) { %><%=settings.sms.defaultDelivery %><% } %></textarea>
 							</div>
 						</div>
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="smsUpdate">Update</button>
+								<button type="submit" class="btn btn-primary" name="submit" value="smsupdate">Update</button>
 							</div>
 						</div>
 					</form>
@@ -264,7 +301,7 @@
 
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="update-user-details">Update</button>
+								<button type="submit" class="btn btn-primary" name="submit" value="updateuserdetails">Update</button>
 							</div>
 						</div>
 					</form>
@@ -295,7 +332,7 @@
 
 						<div class="form-group row">
 							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="update-password">Update</button>
+								<button type="submit" class="btn btn-primary" name="submit" value="updatepassword">Update</button>
 							</div>
 						</div>
 					</form>

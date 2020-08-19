@@ -13,34 +13,88 @@ const {
   getTreatBoxDates,
   updateUser,
   addProduct,
+  updateProduct,
+  getProductById,
   getSettings,
   updateSettings: dbUpdateSettings,
   getProducts
 } = require('../../lib/db-control')();
 
 function settingsController() {
+  // Function for retrieving all settings from db
+  async function retrieveSettings() {
+    const promises = [
+      getProducts(),
+      getSettings('treatbox'),
+      getSettings('rebatecodes'),
+      getSettings('sms'),
+      getTreatBoxDates(),
+      getSettings('timeframe')
+    ];
+
+    const data = await Promise.allSettled(promises);
+    return {
+      products: data[0].value,
+      treatbox: data[1].value,
+      rebate: data[2].value,
+      sms: data[3].value,
+      treatboxDates: data[4].value,
+      timeframe: data[5].value
+    };
+  }
+
+  // Function to Render Settings Page
+  async function displaySettings(req, res) {
+    const settings = await retrieveSettings();
+    return res.render('settings.ejs', {
+      user: req.user,
+      settings,
+      priceFormat,
+      editing: res.locals.editing
+    });
+  }
+
+  function getProductDetailsFromBody(body) {
+    const product = {
+      name: body['add-product-name'],
+      description: body['add-product-description'],
+      grossPrice: parseInt(body['add-product-price'], 10) * 100,
+      costPrice: parseInt(body['add-product-cost-price'], 10) * 100,
+      momsRate: parseInt(body['add-product-moms'], 10),
+      deliverableZone: parseInt(body['add-product-deliverable'], 10),
+      deadline: body['add-product-deadline']
+    };
+    product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
+    product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
+    return product;
+  }
+
   // Function to Update Settings in Database
   async function updateSettings(req, res) {
-    const { submit } = req.body;
+    const [submit, id] = req.body.submit.split('-');
 
     switch (submit) {
-      case 'add-product': {
-        const product = {
-          name: req.body['add-product-name'],
-          description: req.body['add-product-description'],
-          grossPrice: parseInt(req.body['add-product-price'], 10) * 100,
-          costPrice: parseInt(req.body['add-product-cost-price'], 10) * 100,
-          momsRate: parseInt(req.body['add-product-moms'], 10),
-          deliverableZone: parseInt(req.body['add-product-deliverable'], 10),
-          deadline: req.body['add-product-deadline']
+      case 'editproduct': {
+        const product = await getProductById(id);
+        res.locals.editing = {
+          status: true,
+          product
         };
-        product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
-        product.netPrice = calculateNetCost(product.grossPrice, product.momsRate);
-        addProduct(product);
         break;
       }
 
-      case 'timeframe-update': {
+      case 'addproduct': {
+        await addProduct(getProductDetailsFromBody(req.body));
+        break;
+      }
+
+      case 'updateproduct': {
+        debug(id);
+        await updateProduct(id, getProductDetailsFromBody(req.body));
+        break;
+      }
+
+      case 'timeframeupdate': {
         const settings = {
           type: 'timeframe',
           delivery: {
@@ -62,7 +116,7 @@ function settingsController() {
         break;
       }
 
-      case 'treatboxUpdate': {
+      case 'treatboxupdate': {
         const settings = {
           type: 'treatbox',
           delivery: []
@@ -80,7 +134,7 @@ function settingsController() {
         break;
       }
 
-      case 'rebatecodesUpdate': {
+      case 'rebatecodesupdate': {
         const codesToGet = (Object.keys(req.body).length - 1) / 2;
         const codes = [];
         for (let i = 0; i < codesToGet; i += 1) {
@@ -100,7 +154,7 @@ function settingsController() {
         break;
       }
 
-      case 'smsUpdate': {
+      case 'smsupdate': {
         const settings = {
           type: 'sms',
           defaultDelivery: req.body['default-sms']
@@ -109,7 +163,7 @@ function settingsController() {
         break;
       }
 
-      case 'update-user-details': {
+      case 'updateuserdetails': {
         if (req.body.email === '') {
           req.flash('danger', 'E-mail can not be empty');
           break;
@@ -125,7 +179,7 @@ function settingsController() {
         break;
       }
 
-      case 'update-password': {
+      case 'updatepassword': {
         if (!await bcrypt.compare(req.body['old-password'], req.user.password)) {
           req.flash('danger', 'Old Password Incorrect!');
           break;
@@ -149,40 +203,10 @@ function settingsController() {
         break;
     }
 
-    return res.redirect('/user/settings');
+    return displaySettings(req, res);
   }
 
-  // Function to Render Settings Page
-  async function displaySettings(req, res) {
-    const promises = [
-      getProducts(),
-      getSettings('treatbox'),
-      getSettings('rebatecodes'),
-      getSettings('sms'),
-      getTreatBoxDates(),
-      getSettings('timeframe')
-    ];
-    const data = await Promise.allSettled(promises);
-    const products = data[0].value;
-    const treatboxSettings = data[1].value;
-    const rebatecodeSettings = data[2].value;
-    const smsSettings = data[3].value;
-    const treatboxDates = data[4].value;
-    const timeframeSettings = data[5].value;
-
-    return res.render('settings.ejs', {
-      user: req.user,
-      products,
-      priceFormat,
-      treatboxSettings,
-      rebatecodeSettings,
-      smsSettings,
-      treatboxDates,
-      timeframeSettings
-    });
-  }
-
-  return { updateSettings, displaySettings };
+  return { retrieveSettings, updateSettings, displaySettings };
 }
 
 module.exports = settingsController;
