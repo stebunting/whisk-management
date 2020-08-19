@@ -93,7 +93,7 @@
 
 						<div class="form-row"><%
 							for (let zone = 0; zone <= 3; zone += 1) {
-								const deliveryInfo = editing != null ? editing.product.delivery.filter((x) => x.zone === zone)[0] : {}; %>
+								const deliveryInfo = editing != null && editing.product.delivery != null ? editing.product.delivery.filter((x) => x.zone === zone)[0] : {}; %>
 							<div class="form-group col-md-3">
 								<div class="form-check">
 									<input class="form-check-input" type="checkbox" id="add-zone-<%=zone %>-delivery" name="add-zone-<%=zone %>-delivery"<%

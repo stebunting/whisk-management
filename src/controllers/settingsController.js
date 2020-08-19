@@ -70,7 +70,7 @@ function settingsController() {
       product.delivery.push({
         zone,
         deliverable: body[`add-zone-${zone}-delivery`] === 'on',
-        price: parseInt(body[`add-zone-${zone}-price`], 10)
+        price: parseInt(body[`add-zone-${zone}-price`], 10) * 100
       });
     }
     product.momsAmount = calculateMoms(product.grossPrice, product.momsRate);
@@ -124,7 +124,6 @@ function settingsController() {
             time: req.body['timeframe-vegetable-deadline-time']
           }]
         };
-        debug(settings);
         dbUpdateSettings(settings);
         break;
       }
