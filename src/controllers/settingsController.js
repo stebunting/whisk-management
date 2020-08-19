@@ -14,6 +14,7 @@ const {
   updateUser,
   addProduct,
   updateProduct,
+  removeProduct,
   getProductById,
   getSettings,
   updateSettings: dbUpdateSettings,
@@ -89,8 +90,12 @@ function settingsController() {
       }
 
       case 'updateproduct': {
-        debug(id);
         await updateProduct(id, getProductDetailsFromBody(req.body));
+        break;
+      }
+
+      case 'deleteproduct': {
+        await removeProduct(id);
         break;
       }
 

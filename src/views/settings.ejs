@@ -126,35 +126,40 @@
 					</form>
 
 					<form action="/user/settings" method="post">
-						<table class="table">
-							<thead>
-								<tr>
-									<th>NAME</th>
-									<th>DELIVERY ZONE</th>
-									<th>DEADLINE</th>
-									<th>GROSS PRICE</th>
-									<th>MOMS RATE</th>
-									<th>NET PRICE</th>
-									<th>MOMS AMOUNT</th>
-									<th colspan="2">COST PRICE</th>
-								</tr>
-							</thead>
-							<tbody>
-						<% for (let i = 0; i < settings.products.length; i += 1) { %>
-								<tr>
-									<td><%=settings.products[i].name %></td>
-									<td><%=settings.products[i].deliverableZone %></td>
-									<td><%=settings.products[i].deadline %></td>
-									<td><%=priceFormat(settings.products[i].grossPrice) %></td>
-									<td><%=settings.products[i].momsRate %> %</td>
-									<td><%=priceFormat(settings.products[i].netPrice, { includeOre: true }) %></td>
-									<td><%=priceFormat(settings.products[i].momsAmount, { includeOre: true }) %></td>
-									<td><%=priceFormat(settings.products[i].costPrice, { includeOre: true }) %></td>
-									<td><button type="submit" class="btn btn-sm btn-primary" name="submit" value="editproduct-<%=settings.products[i]._id %>">Edit</button></td>
-								</tr>
-								<% } %>
-							</tbody>
-						</table>
+						<div class="table-responsive">
+							<table class="table table-striped table-sm table-hover">
+								<thead>
+									<tr>
+										<th>NAME</th>
+										<th>DELIVERY ZONE</th>
+										<th>DEADLINE</th>
+										<th>GROSS PRICE</th>
+										<th>MOMS RATE</th>
+										<th>NET PRICE</th>
+										<th>MOMS AMOUNT</th>
+										<th colspan="2">COST PRICE</th>
+									</tr>
+								</thead>
+								<tbody>
+							<% for (let i = 0; i < settings.products.length; i += 1) { %>
+									<tr>
+										<td><%=settings.products[i].name %></td>
+										<td><%=settings.products[i].deliverableZone %></td>
+										<td><%=settings.products[i].deadline %></td>
+										<td><%=priceFormat(settings.products[i].grossPrice) %></td>
+										<td><%=settings.products[i].momsRate %> %</td>
+										<td><%=priceFormat(settings.products[i].netPrice, { includeOre: true }) %></td>
+										<td><%=priceFormat(settings.products[i].momsAmount, { includeOre: true }) %></td>
+										<td><%=priceFormat(settings.products[i].costPrice, { includeOre: true }) %></td>
+										<td>
+											<button type="submit" class="btn btn-sm btn-primary" name="submit" value="editproduct-<%=settings.products[i]._id %>">Edit</button>
+											<button type="submit" class="btn btn-sm btn-danger" name="submit" value="deleteproduct-<%=settings.products[i]._id %>">Delete</button>
+										</td>
+									</tr>
+									<% } %>
+								</tbody>
+							</table>
+						</div>
 					</form>
 
 					<h5 class="card-title">Timeframe</h5>
