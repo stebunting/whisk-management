@@ -103,7 +103,7 @@
 									<label class="form-check-label" for="add-zone-<%=zone %>-delivery">Zone <%=zone %> Delivery</label>
 								</div>
 								<div class="input-group">
-									<input type="text" class="form-control" id="add-zone-<%=zone %>-price" name="add-zone-<%=zone %>-price" placeholder="Cost" value="<%=deliveryInfo.price %>" />
+									<input type="text" class="form-control" id="add-zone-<%=zone %>-price" name="add-zone-<%=zone %>-price" placeholder="Cost" value="<%=priceFormat(deliveryInfo.price, { includeSymbol: false }) %>" />
 									<div class="input-group-append">
 										<span class="input-group-text">SEK</span>
 									</div>
