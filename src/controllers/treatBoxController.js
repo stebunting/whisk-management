@@ -233,37 +233,30 @@ function treatBoxController() {
 
   // Return products and timeframes to browser
   async function getDetails(req, res) {
-    let promises = [
-      getSettings('treatbox'),
-      getProducts(),
-      getSettings('timeframe')
-    ];
-    let data = await Promise.allSettled(promises);
-    if (data[0].status !== 'fulfilled' || data[1].status !== 'fulfilled' || data[2].status !== 'fulfilled') {
+    const productPromise = getProducts();
+    let data;
+    try {
+      data = await getSettings('timeframe');
+    } catch {
       return res.json({ status: 'Error' });
     }
-    const settings = data[0].value;
-    const products = data[1].value;
-    const deliveryDay = data[2].value.delivery.day;
 
-    const week = getLatestWeek(deliveryDay);
-    promises = [getWeekData(week), getWeekData(week + 1)];
+    const week = getLatestWeek(data.delivery.day);
+    const promises = [getWeekData(week), getWeekData(week + 1)];
     data = await Promise.allSettled(promises);
     const week1 = data[0].value;
     const week2 = data[1].value;
-
     const timeframe = {
       [`${week1.year}-${week1.week}-${week1.day}`]: week1,
       [`${week2.year}-${week2.week}-${week2.day}`]: week2
     };
 
-    const info = {
+    const products = await productPromise;
+    return res.json({
       status: 'OK',
       products,
       timeframe
-    };
-
-    return res.json(info);
+    });
   }
 
   // Function to look up a rebate code
