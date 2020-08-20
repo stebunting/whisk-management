@@ -16,7 +16,7 @@ const {
 const { apiLookupPrice, calculatePrice } = require('../src/controllers/treatBoxController')();
 const { test } = require('./test-data');
 
-describe.only('Treatbox Tests', () => {
+describe('Treatbox Tests', () => {
   let req;
   let res;
   let products = [];
