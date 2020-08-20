@@ -288,7 +288,7 @@ function treatBoxController() {
       for (let i = 0; i < codes.length; i += 1) {
         promises.push(lookupRebateCode(codes[i]));
       }
-      const response = Promise.all();
+      const response = await Promise.all(promises);
       for (let i = 0; i < codes.length; i += 1) {
         if (response[i].valid) {
           switch (response[i].code.type) {
@@ -418,17 +418,23 @@ function treatBoxController() {
 
   // Function to calculate order price
   async function calculatePrice(order) {
-    const delivery = [0, 0, 0, 0];
+    let recipients = [];
     if (order.delivery.type !== 'collection') {
-      order.recipients.forEach((recipient) => {
-        if (recipient.delivery.zone >= 0 && recipient.delivery.zone <= 3) {
-          delivery[recipient.delivery.zone] += 1;
-        }
+      recipients = order.recipients.map((recipient, id) => {
+        const products = recipient.items.map((item) => ({
+          id: item.id,
+          quantity: item.quantity
+        }));
+        return {
+          id,
+          zone: recipient.delivery.zone,
+          products
+        };
       });
     }
     const statement = await lookupPrice(
       order.items,
-      delivery,
+      recipients,
       order.payment.rebateCodes
     );
     return statement;
@@ -676,7 +682,8 @@ function treatBoxController() {
     checkSwishStatus,
     swishRefund,
     checkRefundStatus,
-    retrieveSwishPayment
+    retrieveSwishPayment,
+    calculatePrice
   };
 }
 
