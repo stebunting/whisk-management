@@ -279,7 +279,7 @@ function treatBoxController() {
   }
 
   // Function to generate a statement of costs from products and delivery
-  async function lookupPrice(basket, delivery, codes = []) {
+  async function lookupPrice(basket, recipients, codes = []) {
     let zone3delivery = false;
     let costPrice = false;
 
@@ -308,6 +308,7 @@ function treatBoxController() {
     }
     const statement = {
       products: [],
+      delivery: [],
       bottomLine: {
         foodCost: 0,
         deliveryCost: 0,
@@ -324,59 +325,62 @@ function treatBoxController() {
       promises.push(getProductById(basket[i].id));
     }
     const data = await Promise.allSettled(promises);
-    for (let i = 0; i < data.length; i += 1) {
-      // eslint-disable-next-line no-underscore-dangle
-      if (data[i].status === 'fulfilled' && data[i].value._id.equals(basket[i].id)) {
-        const product = data[i].value;
-
-        let price = product.grossPrice;
-        if (costPrice) {
-          price = product.costPrice;
-        }
-        price = parseInt(price, 10);
-        const quantity = parseInt(basket[i].quantity, 10);
-
-        const newProduct = {
-          // eslint-disable-next-line no-underscore-dangle
-          id: product._id,
-          name: product.name,
-          quantity,
-          price,
-          momsAmount: calculateMoms(price, product.momsRate),
-          momsRate: product.momsRate,
-          subTotal: quantity * price,
-          momsSubTotal: calculateMoms(quantity * price, product.momsRate)
-        };
-        statement.bottomLine.foodCost += newProduct.subTotal;
-        statement.bottomLine.foodMoms += newProduct.momsSubTotal;
-        statement.bottomLine.totalMoms += newProduct.momsSubTotal;
-        statement.bottomLine.total += newProduct.subTotal;
-        statement.products.push(newProduct);
-      } else {
-        throw new Error('Promise unfulfilled');
+    const products = [];
+    data.forEach((product) => {
+      if (product.status === 'fulfilled') {
+        products.push(product.value);
       }
+    });
+
+    for (let i = 0; i < basket.length; i += 1) {
+      // eslint-disable-next-line no-underscore-dangle
+      const product = products.filter((x) => x._id.toString() === basket[i].id.toString())[0];
+
+      let price = costPrice ? product.costPrice : product.grossPrice;
+      price = parseInt(price, 10);
+      const quantity = parseInt(basket[i].quantity, 10);
+
+      const newProduct = {
+        // eslint-disable-next-line no-underscore-dangle
+        id: product._id,
+        name: product.name,
+        quantity,
+        price,
+        momsAmount: calculateMoms(price, product.momsRate),
+        momsRate: product.momsRate,
+        subTotal: quantity * price,
+        momsSubTotal: calculateMoms(quantity * price, product.momsRate)
+      };
+      statement.bottomLine.foodCost += newProduct.subTotal;
+      statement.bottomLine.foodMoms += newProduct.momsSubTotal;
+      statement.bottomLine.totalMoms += newProduct.momsSubTotal;
+      statement.bottomLine.total += newProduct.subTotal;
+      statement.products.push(newProduct);
     }
 
     // Get Delivery Cost
-    const treatboxSettings = await getSettings('treatbox');
-    statement.delivery = [];
-    delivery.forEach((quantity, zone) => {
-      if (quantity > 0) {
-        const deliveryObject = {
-          zone,
-          price: treatboxSettings.delivery[zone].price,
-          quantity,
-          momsAmount: treatboxSettings.delivery[zone].momsAmount,
-          momsRate: treatboxSettings.delivery[zone].momsRate,
-          momsSubTotal: treatboxSettings.delivery[zone].momsAmount * quantity,
-          subTotal: treatboxSettings.delivery[zone].price * quantity,
-        };
-        if (deliveryObject.subTotal !== 0) {
-          statement.delivery.push(deliveryObject);
-          statement.bottomLine.deliveryCost += deliveryObject.subTotal;
-          statement.bottomLine.deliveryMoms += deliveryObject.momsSubTotal;
+    recipients.forEach((recipient) => {
+      let deliveryPrice = null;
+      recipient.products.forEach((item) => {
+        // eslint-disable-next-line no-underscore-dangle
+        const product = products.filter((x) => x._id.toString() === item.id.toString())[0];
+        const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0].price;
+        if (deliveryPrice === null) {
+          deliveryPrice = itemDelivery;
+        } else {
+          deliveryPrice = itemDelivery < deliveryPrice ? itemDelivery : deliveryPrice;
         }
-      }
+      });
+      const deliveryObj = {
+        recipientId: recipient.id,
+        zone: recipient.zone,
+        price: deliveryPrice,
+        momsRate: 25
+      };
+      deliveryObj.momsAmount = calculateMoms(deliveryObj.price, deliveryObj.momsRate);
+      statement.bottomLine.deliveryCost += deliveryObj.price;
+      statement.bottomLine.deliveryMoms += deliveryObj.momsAmount;
+      statement.delivery.push(deliveryObj);
     });
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
@@ -385,11 +389,11 @@ function treatBoxController() {
 
   // Take properties from req.body and call lookupPrice
   async function apiLookupPrice(req, res) {
-    const { basket, delivery } = req.body;
+    const { basket, recipients } = req.body;
     const codes = req.body.codes.length === 0 ? [] : req.body.codes;
 
     try {
-      const statement = await lookupPrice(basket, delivery, codes);
+      const statement = await lookupPrice(basket, recipients, codes);
       statement.status = 'OK';
       return res.json(statement);
     } catch (error) {
