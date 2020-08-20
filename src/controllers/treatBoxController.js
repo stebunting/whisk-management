@@ -283,20 +283,26 @@ function treatBoxController() {
     let zone3delivery = false;
     let costPrice = false;
 
-    for (let i = 0; i < codes.length; i += 1) {
-      const response = await lookupRebateCode(codes[i]);
-      if (response.valid) {
-        switch (response.code.type) {
-          case 'zone3delivery':
-            zone3delivery = true;
-            break;
+    if (codes.length > 0) {
+      const promises = [];
+      for (let i = 0; i < codes.length; i += 1) {
+        promises.push(lookupRebateCode(codes[i]));
+      }
+      const response = Promise.all();
+      for (let i = 0; i < codes.length; i += 1) {
+        if (response[i].valid) {
+          switch (response[i].code.type) {
+            case 'zone3delivery':
+              zone3delivery = true;
+              break;
 
-          case 'costprice':
-            costPrice = true;
-            break;
+            case 'costprice':
+              costPrice = true;
+              break;
 
-          default:
-            break;
+            default:
+              break;
+          }
         }
       }
     }

@@ -32,7 +32,7 @@ const {
   getErrorLog
 } = require('../lib/db-control')(tag, 'whisk-management-test');
 
-describe.only('Database Control Connection Tests', () => {
+describe('Database Control Connection Tests', () => {
   describe('Add and retrieve user from new db', () => {
     const newUser = {
       username: 'generic-user',
