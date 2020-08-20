@@ -1,11 +1,15 @@
 <%- include('partials/header', { title: 'Dashboard', user, treatboxDates }) %>
 
-	<h3>TREATBOXES</h3>
+	<h3>TREATBOXES</h3><% 
+	if (treatboxTotals.length > 0) { %> 
 	<h5><%=dateFormat(treatboxTotals[0]._id, { parseCode: true }) %>.</h5>
-	<p>You have <%=treatboxTotals[0].deliveries %> deliveries and  <%=treatboxTotals[0].collections %> collections <a href="/treatbox/orders?date=thisweek">this week</a>.</p>
-
+	<p>You have <%=treatboxTotals[0].deliveries %> deliveries and  <%=treatboxTotals[0].collections %> collections <a href="/treatbox/orders?date=thisweek">this week</a>.</p><%
+	} %>
+	<% 
+	if (treatboxTotals.length > 1) { %> 
 	<h5><%=dateFormat(treatboxTotals[1]._id, { parseCode: true }) %>.</h5>
-	<p>You have <%=treatboxTotals[1].deliveries %> deliveries and  <%=treatboxTotals[1].collections %> collections <a href="/treatbox/orders?date=nextweek">next week</a>.</p>
+	<p>You have <%=treatboxTotals[1].deliveries %> deliveries and  <%=treatboxTotals[1].collections %> collections <a href="/treatbox/orders?date=nextweek">next week</a>.</p><%
+	} %>
 
 	<h3>BOX LOANS</h3>
 	<ul></ul>
