@@ -203,6 +203,48 @@ describe('Treatbox Tests', () => {
       assert.deepEqual(response, expectedResponse);
     });
 
+    it('looks up price with unassigned zone', async () => {
+      req.body = {
+        basket: [{
+          id: products[0]._id,
+          quantity: 1
+        }],
+        recipients: [{
+          id: null,
+          zone: -1,
+          products: [{
+            id: products[0]._id,
+            quantity: 1
+          }]
+        }],
+        codes: []
+      };
+      const expectedResponse = {
+        status: 'OK',
+        products: [{
+          id: products[0]._id,
+          name: test.products.treatBox.name,
+          quantity: req.body.basket[0].quantity,
+          price: test.products.treatBox.grossPrice,
+          momsAmount: test.products.treatBox.momsAmount,
+          momsRate: test.products.treatBox.momsRate,
+          subTotal: test.products.treatBox.grossPrice,
+          momsSubTotal: test.products.treatBox.momsAmount
+        }],
+        delivery: [],
+        bottomLine: {
+          foodCost: test.products.treatBox.grossPrice,
+          deliveryCost: 0,
+          foodMoms: test.products.treatBox.momsAmount,
+          deliveryMoms: 0,
+          totalMoms: test.products.treatBox.momsAmount,
+          total: test.products.treatBox.grossPrice
+        }
+      };
+      const response = await apiLookupPrice(req, res);
+      assert.deepEqual(response, expectedResponse);
+    });
+
     it('looks up price with one product and one delivery recipient', async () => {
       req.body = {
         basket: [{

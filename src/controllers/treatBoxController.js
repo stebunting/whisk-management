@@ -360,29 +360,33 @@ function treatBoxController() {
 
     // Get Delivery Cost
     recipients.forEach((recipient) => {
-      let deliveryPrice = null;
-      let deliverable = false;
-      recipient.products.forEach((item) => {
-        // eslint-disable-next-line no-underscore-dangle
-        const product = products.filter((x) => x._id.toString() === item.id.toString())[0];
-        const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0];
-        deliverable = itemDelivery.deliverable || deliverable || zone3delivery;
-        if (deliveryPrice === null) {
-          deliveryPrice = itemDelivery.price;
-        } else {
-          deliveryPrice = itemDelivery.price < deliveryPrice ? itemDelivery.price : deliveryPrice;
+      if (recipient.zone >= 0 && recipient.zone <= 3) {
+        let deliveryPrice = null;
+        let deliverable = false;
+        recipient.products.forEach((item) => {
+          // eslint-disable-next-line no-underscore-dangle
+          const product = products.filter((x) => x._id.toString() === item.id.toString())[0];
+          const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0];
+          deliverable = itemDelivery.deliverable || deliverable || zone3delivery;
+          if (deliveryPrice === null) {
+            deliveryPrice = itemDelivery.price;
+          } else {
+            deliveryPrice = itemDelivery.price < deliveryPrice ? itemDelivery.price : deliveryPrice;
+          }
+        });
+        if (deliverable) {
+          const deliveryObj = {
+            recipientId: recipient.id,
+            zone: recipient.zone,
+            price: deliveryPrice,
+            momsRate: 25
+          };
+          deliveryObj.momsAmount = calculateMoms(deliveryObj.price, deliveryObj.momsRate);
+          statement.bottomLine.deliveryCost += deliveryObj.price;
+          statement.bottomLine.deliveryMoms += deliveryObj.momsAmount;
+          statement.delivery.push(deliveryObj);
         }
-      });
-      const deliveryObj = {
-        recipientId: recipient.id,
-        zone: recipient.zone,
-        price: deliveryPrice,
-        momsRate: 25
-      };
-      deliveryObj.momsAmount = calculateMoms(deliveryObj.price, deliveryObj.momsRate);
-      statement.bottomLine.deliveryCost += deliveryObj.price;
-      statement.bottomLine.deliveryMoms += deliveryObj.momsAmount;
-      statement.delivery.push(deliveryObj);
+      }
     });
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
