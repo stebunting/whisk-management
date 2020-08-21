@@ -361,14 +361,16 @@ function treatBoxController() {
     // Get Delivery Cost
     recipients.forEach((recipient) => {
       let deliveryPrice = null;
+      let deliverable = false;
       recipient.products.forEach((item) => {
         // eslint-disable-next-line no-underscore-dangle
         const product = products.filter((x) => x._id.toString() === item.id.toString())[0];
-        const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0].price;
+        const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0];
+        deliverable = itemDelivery.deliverable || deliverable || zone3delivery;
         if (deliveryPrice === null) {
-          deliveryPrice = itemDelivery;
+          deliveryPrice = itemDelivery.price;
         } else {
-          deliveryPrice = itemDelivery < deliveryPrice ? itemDelivery : deliveryPrice;
+          deliveryPrice = itemDelivery.price < deliveryPrice ? itemDelivery.price : deliveryPrice;
         }
       });
       const deliveryObj = {
@@ -397,6 +399,11 @@ function treatBoxController() {
       statement.status = 'OK';
       return res.json(statement);
     } catch (error) {
+      logError({
+        message: 'Error calculating price',
+        details: JSON.stringify({ basket, recipients, codes }),
+        error: error.stack
+      });
       return res.json({ status: 'Error' });
     }
   }

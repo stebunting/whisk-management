@@ -21,7 +21,7 @@ describe('Treatbox Tests', () => {
   let res;
   let products = [];
 
-  describe('Treatbox', () => {
+  describe.only('Treatbox', () => {
     before('setup db', async () => {
       // Connect to DB
       await connect();
