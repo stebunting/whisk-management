@@ -21,7 +21,7 @@ describe('Treatbox Tests', () => {
   let res;
   let products = [];
 
-  describe.only('Treatbox', () => {
+  describe('Treatbox', () => {
     before('setup db', async () => {
       // Connect to DB
       await connect();
@@ -293,6 +293,96 @@ describe('Treatbox Tests', () => {
       assert.deepEqual(response, expectedResponse);
     });
 
+    it('looks up price with one product and one zone 3 delivery recipient without code', async () => {
+      req.body = {
+        basket: [{
+          id: products[0]._id,
+          quantity: 1
+        }],
+        recipients: [{
+          id: null,
+          zone: 3,
+          products: [{
+            id: products[0]._id,
+            quantity: 1
+          }]
+        }],
+        codes: []
+      };
+      const expectedResponse = {
+        status: 'OK',
+        products: [{
+          id: products[0]._id,
+          name: test.products.treatBox.name,
+          quantity: req.body.basket[0].quantity,
+          price: test.products.treatBox.grossPrice,
+          momsAmount: test.products.treatBox.momsAmount,
+          momsRate: test.products.treatBox.momsRate,
+          subTotal: test.products.treatBox.grossPrice,
+          momsSubTotal: test.products.treatBox.momsAmount
+        }],
+        delivery: [],
+        bottomLine: {
+          foodCost: test.products.treatBox.grossPrice,
+          deliveryCost: 0,
+          foodMoms: test.products.treatBox.momsAmount,
+          deliveryMoms: 0,
+          totalMoms: test.products.treatBox.momsAmount,
+          total: test.products.treatBox.grossPrice
+        }
+      };
+      const response = await apiLookupPrice(req, res);
+      assert.deepEqual(response, expectedResponse);
+    });
+
+    it('looks up price with one product and one zone 3 delivery recipient with code', async () => {
+      req.body = {
+        basket: [{
+          id: products[0]._id,
+          quantity: 1
+        }],
+        recipients: [{
+          id: null,
+          zone: 3,
+          products: [{
+            id: products[0]._id,
+            quantity: 1
+          }]
+        }],
+        codes: ['TESTINGCODE']
+      };
+      const expectedResponse = {
+        status: 'OK',
+        products: [{
+          id: products[0]._id,
+          name: test.products.treatBox.name,
+          quantity: req.body.basket[0].quantity,
+          price: test.products.treatBox.grossPrice,
+          momsAmount: test.products.treatBox.momsAmount,
+          momsRate: test.products.treatBox.momsRate,
+          subTotal: test.products.treatBox.grossPrice,
+          momsSubTotal: test.products.treatBox.momsAmount
+        }],
+        delivery: [{
+          recipientId: null,
+          zone: 3,
+          price: test.products.treatBox.delivery[3].price,
+          momsRate: 25,
+          momsAmount: 2000,
+        }],
+        bottomLine: {
+          foodCost: test.products.treatBox.grossPrice,
+          deliveryCost: test.products.treatBox.delivery[3].price,
+          foodMoms: test.products.treatBox.momsAmount,
+          deliveryMoms: 2000,
+          totalMoms: test.products.treatBox.momsAmount + 2000,
+          total: test.products.treatBox.grossPrice + test.products.treatBox.delivery[3].price
+        }
+      };
+      const response = await apiLookupPrice(req, res);
+      assert.deepEqual(response, expectedResponse);
+    });
+
     it('looks up price with one product and two delivery recipients', async () => {
       req.body = {
         basket: [{
@@ -411,21 +501,21 @@ describe('Treatbox Tests', () => {
         }, {
           recipientId: 1,
           zone: 3,
-          price: test.products.treatBox.delivery[2].price,
+          price: test.products.treatBox.delivery[3].price,
           momsRate: 25,
-          momsAmount: 1000,
+          momsAmount: 2000,
         }],
         bottomLine: {
           foodCost: test.products.treatBox.grossPrice * 3 + test.products.vegetableBox.grossPrice,
-          deliveryCost: test.products.treatBox.delivery[2].price,
+          deliveryCost: test.products.treatBox.delivery[3].price,
           foodMoms: test.products.treatBox.momsAmount * 3 + test.products.vegetableBox.momsAmount,
-          deliveryMoms: 1000,
+          deliveryMoms: 2000,
           totalMoms: test.products.treatBox.momsAmount * 3
                    + test.products.vegetableBox.momsAmount
-                   + 1000,
+                   + 2000,
           total: test.products.treatBox.grossPrice * 3
                + test.products.vegetableBox.grossPrice
-               + test.products.treatBox.delivery[2].price
+               + test.products.treatBox.delivery[3].price
         }
       };
       const response = await calculatePrice(order);

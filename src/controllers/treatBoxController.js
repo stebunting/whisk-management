@@ -367,7 +367,8 @@ function treatBoxController() {
           // eslint-disable-next-line no-underscore-dangle
           const product = products.filter((x) => x._id.toString() === item.id.toString())[0];
           const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0];
-          deliverable = itemDelivery.deliverable || deliverable || zone3delivery;
+          deliverable = itemDelivery.deliverable || deliverable
+            || (zone3delivery && product.delivery.filter((x) => x.zone === 2)[0].deliverable);
           if (deliveryPrice === null) {
             deliveryPrice = itemDelivery.price;
           } else {

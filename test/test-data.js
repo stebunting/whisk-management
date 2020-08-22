@@ -28,7 +28,7 @@ module.exports.test.products.treatBox = {
   }, {
     zone: 3,
     deliverable: false,
-    price: 5000
+    price: 10000
   }]
 };
 
