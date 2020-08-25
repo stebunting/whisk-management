@@ -1,4 +1,4 @@
-<%- include('partials/header', { title: 'Dashboard', user, treatboxDates }) %>
+<%- include('partials/header', { page: 'dashboard', title: 'Dashboard', user, treatboxDates }) %>
 
 	<h3>TREATBOXES</h3><% 
 	if (treatboxTotals.length > 0) { %> 
@@ -14,10 +14,50 @@
 	<h3>BOX LOANS</h3>
 	<ul></ul>
 
+	<h3>CAKE SIZE CALCULATOR</h3>
+	<form>
+		<div class="form-row">
+			<div class="col-md-3">
+				<label for="recipe-tin-size">Recipe Tin Size</label>
+				<div class="input-group">
+					<input type="text" class="form-control" id="recipe-tin-size" />
+					<div class="input-group-append">
+						<div class="input-group-text">"</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<label for="recipe-quantity">Recipe Quantity</label>
+				<input type="text" class="form-control" id="recipe-quantity" />
+			</div>
+		</div>
+		<div class="form-row">
+			<div class="col-md-3">
+				<label for="required-tin-size">Required Tin Size</label>
+				<div class="input-group">
+					<input type="text" class="form-control" id="required-tin-size" />
+					<div class="input-group-append">
+						<div class="input-group-text">"</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<label for="required-quantity">Required Quantity</label>
+				<input type="text" class="form-control" id="required-quantity" />
+			</div>
+		</div>
+		<div class="form-row">
+			<div class="col-md-6">
+				<label for="ratio">Ratio (multiple ingredients by this number)</label>
+				<input type="text" class="form-control" id="ratio" readonly />
+			</div>
+		</div>
+	</form>
+
 	<h3>FACEBOOK</h3>
 	<ul>
 		<li><a href="<%=facebookLoginUrl %>">Login To Facebook</a></li>
 		<li><strong>FACEBOOK ID:</strong> <%=user.facebook.facebookID %></li>
 		<li><strong>INSTAGRAM ID:</strong> <%=user.facebook.instagramID %></li>
 	</ul>
-<%- include('partials/footer') %>
+<%- include('partials/footer', { page: 'dashboard' }) %>

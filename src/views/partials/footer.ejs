@@ -5,6 +5,10 @@
   <script src="/js/whisk-management.js"></script><%
 if (typeof page !== 'undefined') {
   switch (page) {
+    case 'dashboard': %>
+  <script src="/js/dashboard.js"></script><%
+    break;
+      
     case 'newBoxLoan': %>
   <script src="/js/form-verification.js"></script><%
     break;
