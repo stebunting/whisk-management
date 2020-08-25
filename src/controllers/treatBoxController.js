@@ -344,6 +344,8 @@ function treatBoxController() {
         // eslint-disable-next-line no-underscore-dangle
         id: product._id,
         name: product.name,
+        brand: product.brand,
+        category: product.category,
         quantity,
         price,
         momsAmount: calculateMoms(price, product.momsRate),

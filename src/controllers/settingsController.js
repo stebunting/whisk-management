@@ -60,6 +60,8 @@ function settingsController() {
     const product = {
       name: body['add-product-name'],
       description: body['add-product-description'],
+      brand: body['add-product-brand'],
+      category: body['add-product-category'],
       grossPrice: parseInt(body['add-product-price'], 10) * 100,
       costPrice: parseInt(body['add-product-cost-price'], 10) * 100,
       momsRate: parseInt(body['add-product-moms'], 10),
