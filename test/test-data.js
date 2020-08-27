@@ -84,15 +84,15 @@ module.exports.test.orders.twoRecipients = {
 };
 
 module.exports.test.settings.rebateCodes = {
-  type: 'rebatecodes',
+  type: 'rebateCodes',
   codes: [
     {
       value: 'TESTINGCODE',
-      type: 'zone3delivery'
+      type: 'zone3Delivery'
     },
     {
       value: 'COSTPRICETEST',
-      type: 'costprice'
+      type: 'costPrice'
     }
   ]
 };

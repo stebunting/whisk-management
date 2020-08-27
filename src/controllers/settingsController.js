@@ -27,7 +27,7 @@ function settingsController() {
     const promises = [
       getProducts(),
       getSettings('treatbox'),
-      getSettings('rebatecodes'),
+      getSettings('rebateCodes'),
       getSettings('sms'),
       getTreatBoxDates(),
       getSettings('timeframe')
@@ -130,38 +130,24 @@ function settingsController() {
         break;
       }
 
-      case 'treatboxupdate': {
-        const settings = {
-          type: 'treatbox',
-          delivery: []
-        };
-        for (let i = 0; i <= 3; i += 1) {
-          const zone = {
-            zone: i,
-            price: parseInt(req.body[`zone${i}-delivery-price`], 10) * 100,
-            momsRate: 25
-          };
-          zone.momsAmount = calculateMoms(zone.price, zone.momsRate);
-          settings.delivery.push(zone);
-        }
-        dbUpdateSettings(settings);
-        break;
-      }
-
       case 'rebatecodesupdate': {
-        const codesToGet = (Object.keys(req.body).length - 1) / 2;
         const codes = [];
-        for (let i = 0; i < codesToGet; i += 1) {
+        let rebateId = 0;
+        while (req.body[`rebate-code-${rebateId}`] !== undefined) {
           const code = {
-            value: req.body[`rebate-code-${i}`],
-            type: req.body[`rebate-type-${i}`]
+            value: req.body[`rebate-code-${rebateId}`],
+            type: req.body[`rebate-type-${rebateId}`]
           };
+          if (req.body[`rebate-amount-${rebateId}`]) {
+            code.amount = parseInt(req.body[`rebate-amount-${rebateId}`], 10);
+          }
           if (code.value !== '') {
             codes.push(code);
           }
+          rebateId += 1;
         }
         const settings = {
-          type: 'rebatecodes',
+          type: 'rebateCodes',
           codes
         };
         dbUpdateSettings(settings);

@@ -261,7 +261,7 @@ function treatBoxController() {
 
   // Function to look up a rebate code
   async function lookupRebateCode(code) {
-    const response = await getSettings('rebatecodes');
+    const response = await getSettings('rebateCodes');
     const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
     if (result.length === 0) {
       return { valid: false };
@@ -271,6 +271,7 @@ function treatBoxController() {
       code: result[0]
     };
   }
+
   // Function to look up a rebate code from an API
   async function apiLookupRebateCode(req, res) {
     const { code } = req.body;
@@ -280,8 +281,11 @@ function treatBoxController() {
 
   // Function to generate a statement of costs from products and delivery
   async function lookupPrice(basket, recipients, codes = []) {
-    let zone3delivery = false;
-    let costPrice = false;
+    const rebateCodes = {
+      discountPercent: 0,
+      zone3Delivery: false,
+      costPrice: false
+    };
 
     if (codes.length > 0) {
       const promises = [];
@@ -292,12 +296,16 @@ function treatBoxController() {
       for (let i = 0; i < codes.length; i += 1) {
         if (response[i].valid) {
           switch (response[i].code.type) {
-            case 'zone3delivery':
-              zone3delivery = true;
+            case 'zone3Delivery':
+              rebateCodes.zone3Delivery = true;
               break;
 
-            case 'costprice':
-              costPrice = true;
+            case 'costPrice':
+              rebateCodes.costPrice = true;
+              break;
+
+            case 'discountPercent':
+              rebateCodes.discountPercent = response[i].code.amount;
               break;
 
             default:
@@ -316,7 +324,8 @@ function treatBoxController() {
         deliveryMoms: 0,
         totalMoms: 0,
         total: 0
-      }
+      },
+      rebateCodes: codes
     };
 
     // Get Food Cost
@@ -336,7 +345,7 @@ function treatBoxController() {
       // eslint-disable-next-line no-underscore-dangle
       const product = products.filter((x) => x._id.toString() === basket[i].id.toString())[0];
 
-      let price = costPrice ? product.costPrice : product.grossPrice;
+      let price = rebateCodes.costPrice ? product.costPrice : product.grossPrice;
       price = parseInt(price, 10);
       const quantity = parseInt(basket[i].quantity, 10);
 
@@ -370,7 +379,8 @@ function treatBoxController() {
           const product = products.filter((x) => x._id.toString() === item.id.toString())[0];
           const itemDelivery = product.delivery.filter((x) => x.zone === recipient.zone)[0];
           deliverable = itemDelivery.deliverable || deliverable
-            || (zone3delivery && product.delivery.filter((x) => x.zone === 2)[0].deliverable);
+            || (rebateCodes.zone3Delivery
+             && product.delivery.filter((x) => x.zone === 2)[0].deliverable);
           if (deliveryPrice === null) {
             deliveryPrice = itemDelivery.price;
           } else {
@@ -393,13 +403,22 @@ function treatBoxController() {
     });
     statement.bottomLine.totalMoms += statement.bottomLine.deliveryMoms;
     statement.bottomLine.total += statement.bottomLine.deliveryCost;
+
+    // Calculate Discount
+    if (rebateCodes.discountPercent > 0) {
+      const multiplier = rebateCodes.discountPercent / 100;
+      statement.bottomLine.discount = parseInt(statement.bottomLine.total * multiplier, 10);
+      statement.bottomLine.discountMoms = parseInt(statement.bottomLine.totalMoms * multiplier, 10);
+      statement.bottomLine.total -= statement.bottomLine.discount;
+      statement.bottomLine.totalMoms -= statement.bottomLine.discountMoms;
+    }
     return statement;
   }
 
   // Take properties from req.body and call lookupPrice
   async function apiLookupPrice(req, res) {
     const { basket, recipients } = req.body;
-    const codes = req.body.codes.length === 0 ? [] : req.body.codes;
+    const codes = req.body.codes.length === 0 ? [] : JSON.parse(req.body.codes);
 
     try {
       const statement = await lookupPrice(basket, recipients, codes);

@@ -243,28 +243,13 @@
 
 
 					<h5 class="card-title">Treatbox Settings</h5>
-					<form action="/user/settings" method="post"><%
-						settings.treatbox.delivery.forEach((zone) => { %>
-						<div class="form-group row">
-							<label for="zone<%=zone.zone %>-delivery-price" class="col-md-3 col-form-label">Zone <%=zone.zone %> Delivery Price</label>
-							<div class="input-group col-md-3">
-								<input type="text" class="form-control" id="zone<%=zone.zone %>-delivery-price" name="zone<%=zone.zone %>-delivery-price" placeholder="Local Delivery Price" value="<%=priceFormat(zone.price, { includeSymbol: false }) %>" />
-								<div class="input-group-append">
-									<span class="input-group-text">SEK</span>
-								</div>
-							</div>
-							<div class="col-md-3 form-control-plaintext">MOMs @ <%=zone.momsRate %>%: <%=priceFormat(zone.momsAmount, { includeOre: true }) %></div>
-						</div>
-						<% }); %>
-						<div class="form-group row">
-							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="treatboxupdate">Update</button>
-							</div>
-						</div>
-					</form>
-
 					<form action="/user/settings" method="post">
-						<% for (let i = 0; i <= settings.rebate.codes.length; i += 1) {
+						<% if (!settings.rebate) {
+								settings.rebate = {
+									codes: []
+								};
+						}
+							for (let i = 0; i <= settings.rebate.codes.length; i += 1) {
 							let code = { value: '', type: '' };
 							if (i < settings.rebate.codes.length) {
 								code = settings.rebate.codes[i];
@@ -276,10 +261,15 @@
 							</div>
 							<div class="col-md-3">
 								<select class="form-control" id="rebate-type-<%=i %>" name="rebate-type-<%=i %>">
-									<option value="discount"<% if (code.type === 'discount') { %> selected<% } %>>Discount</option>
-									<option value="costprice" <% if (code.type === 'costprice') { %>selected<% } %>>Cost Price</option>
-									<option value="zone3delivery" <% if (code.type === 'zone3delivery') { %>selected<% } %>>Zone 3 Delivery</option>
+									<option value="costPrice" <% if (code.type === 'costPrice') { %>selected<% } %>>Cost Price</option>
+									<option value="zone3Delivery" <% if (code.type === 'zone3Delivery') { %>selected<% } %>>Zone 3 Delivery</option>
+									<option value="discountPercent"<% if (code.type === 'discountPercent') { %> selected<% } %>>Discount (Percentage)</option>
 								</select>
+							</div>
+							<div class="col-md-3" id="rebate-amount-container-<%=i %>"><%
+								if (code.type === 'discountPercent') { %>
+									<input type="text" class="form-control" id="rebate-amount-$<%=i %>" name="rebate-amount-<%=i %>" placeholder="Percentage" value="<%=code.amount %>" />
+								<% } %>
 							</div>
 						</div>
 						<% } %>
