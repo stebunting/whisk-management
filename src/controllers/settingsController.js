@@ -150,7 +150,7 @@ function settingsController() {
           type: 'rebateCodes',
           codes
         };
-        dbUpdateSettings(settings);
+        await dbUpdateSettings(settings);
         break;
       }
 
@@ -159,7 +159,7 @@ function settingsController() {
           type: 'sms',
           defaultDelivery: req.body['default-sms']
         };
-        dbUpdateSettings(settings);
+        await dbUpdateSettings(settings);
         break;
       }
 
