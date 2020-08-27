@@ -126,7 +126,7 @@ function settingsController() {
             time: req.body['timeframe-vegetable-deadline-time']
           }]
         };
-        dbUpdateSettings(settings);
+        await dbUpdateSettings(settings);
         break;
       }
 
