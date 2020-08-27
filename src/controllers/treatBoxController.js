@@ -320,8 +320,10 @@ function treatBoxController() {
       bottomLine: {
         foodCost: 0,
         deliveryCost: 0,
+        discount: 0,
         foodMoms: 0,
         deliveryMoms: 0,
+        discountMoms: 0,
         totalMoms: 0,
         total: 0
       },
