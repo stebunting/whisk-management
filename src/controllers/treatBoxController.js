@@ -21,6 +21,7 @@ const {
   getTreatBoxOrderById,
   getHighestOrder,
   getSettings,
+  getRebateCodes,
   getProducts,
   getProductById,
   recordSwishRefund,
@@ -261,10 +262,19 @@ function treatBoxController() {
 
   // Function to look up a rebate code
   async function lookupRebateCode(code) {
-    const response = await getSettings('rebateCodes');
-    const result = response.codes.filter((x) => x.value.toLowerCase() === code.toLowerCase());
-    if (result.length === 0) {
-      return { valid: false };
+    const result = await getRebateCodes({ value: code.toUpperCase() });
+    if (result.length === 0 || result[0].active === false) {
+      return {
+        valid: false,
+        message: 'Invalid Code'
+      };
+    }
+    const expired = moment(result[0].expiry, 'YYYY-MM-DD').isBefore(moment());
+    if (expired) {
+      return {
+        valid: false,
+        message: 'Code Expired'
+      };
     }
     return {
       valid: true,

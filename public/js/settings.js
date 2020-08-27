@@ -6,21 +6,24 @@ $(`#settingsTabs a[href="${window.location.hash}"]`).tab('show');
 //     $(this).datetimepicker();
 //   });
 
-function showRebateInfo(id, show = true) {
-  const parent = document.getElementById(`rebate-amount-container-${id}`);
+$('input[id^=rebate-expiry').datepicker({
+  format: 'yyyy-mm-dd',
+  autoclose: true,
+  weekStart: 1
+});
+
+function showRebateInfo(show = true) {
+  const parent = document.getElementById('rebate-amount-container');
   const newNode = show === false
     ? ''
-    : `<input type="text" class="form-control" id="rebate-amount-${id}" name="rebate-amount-${id}" placeholder="Percentage" />`;
+    : '<input type="text" class="form-control" id="rebate-amount" name="rebate-amount" placeholder="Percentage" />';
   parent.innerHTML = newNode;
 }
-const rebateSelectors = document.querySelectorAll('select[id^="rebate-type"');
-for (let i = 0; i < rebateSelectors.length; i += 1) {
-  rebateSelectors[i].addEventListener('change', (event) => {
-    const id = event.target.id.split('-')[2];
-    if (event.target.value === 'discountPercent') {
-      showRebateInfo(id);
-    } else {
-      showRebateInfo(id, false);
-    }
-  });
-}
+const rebateSelector = document.getElementById('rebate-type');
+rebateSelector.addEventListener('change', (event) => {
+  if (event.target.value === 'discountPercent') {
+    showRebateInfo(true);
+  } else {
+    showRebateInfo(false);
+  }
+});

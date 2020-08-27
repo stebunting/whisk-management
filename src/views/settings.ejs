@@ -242,44 +242,66 @@
 					</form>
 
 
-					<h5 class="card-title">Treatbox Settings</h5>
+					<h5 class="card-title">Rebate Codes</h5>
 					<form action="/user/settings" method="post">
-						<% if (!settings.rebate) {
-								settings.rebate = {
-									codes: []
-								};
-						}
-							for (let i = 0; i <= settings.rebate.codes.length; i += 1) {
-							let code = { value: '', type: '' };
-							if (i < settings.rebate.codes.length) {
-								code = settings.rebate.codes[i];
-							} %>
 						<div class="form-group row">
-							<label for="rebate-code-<%=i %>" class="col-md-3 col-form-label">Rebate Code</label>
 							<div class="col-md-3">
-								<input type="text" class="form-control" id="rebate-code-<%=i %>" name="rebate-code-<%=i %>" placeholder="Rebate Code" value="<%=code.value %>" />
+								<input type="text" class="form-control" id="rebate-code" name="rebate-code" placeholder="Rebate Code" />
 							</div>
 							<div class="col-md-3">
-								<select class="form-control" id="rebate-type-<%=i %>" name="rebate-type-<%=i %>">
-									<option value="costPrice" <% if (code.type === 'costPrice') { %>selected<% } %>>Cost Price</option>
-									<option value="zone3Delivery" <% if (code.type === 'zone3Delivery') { %>selected<% } %>>Zone 3 Delivery</option>
-									<option value="discountPercent"<% if (code.type === 'discountPercent') { %> selected<% } %>>Discount (Percentage)</option>
+								<select class="form-control" id="rebate-type" name="rebate-type">
+									<option value="costPrice">Cost Price</option>
+									<option value="zone3Delivery">Zone 3 Delivery</option>
+									<option value="discountPercent">Discount (Percentage)</option>
 								</select>
 							</div>
-							<div class="col-md-3" id="rebate-amount-container-<%=i %>"><%
-								if (code.type === 'discountPercent') { %>
-									<input type="text" class="form-control" id="rebate-amount-$<%=i %>" name="rebate-amount-<%=i %>" placeholder="Percentage" value="<%=code.amount %>" />
-								<% } %>
+							<div class="col-md-3">
+								<input type="text" class="form-control" id="rebate-expiry" name="rebate-expiry" placeholder="Expiry" />
 							</div>
+							<div class="col-md-3" id="rebate-amount-container"></div>
 						</div>
-						<% } %>
 						<div class="form-group row">
-							<div class="col-md-6 offset-md-3">
-								<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesupdate">Update</button>
+							<div class="col-md-6">
+								<button type="submit" class="btn btn-primary" name="submit" value="rebatecodesadd">Add</button>
 							</div>
 						</div>
 					</form>
 
+					<form action="/user/settings" method="post">
+						<div class="table-responsive">
+							<table class="table table-striped table-sm table-hover">
+								<thead>
+									<tr>
+										<th>CODE</th>
+										<th>TYPE</th>
+										<th>AMOUNT</th>
+										<th>EXPIRY</th>
+										<th>EDIT</th>
+									</tr>
+								</thead>
+								<tbody>
+							<% for (let i = 0; i < settings.rebateCodes.length; i += 1) { %>
+									<tr>
+										<td><%=settings.rebateCodes[i].value %></td>
+										<td><%=settings.rebateCodes[i].type %></td>
+										<td><%=settings.rebateCodes[i].amount %></td>
+										<td><%=settings.rebateCodes[i].expiry %></td>
+										<td><%
+											if (settings.rebateCodes[i].active) { %>
+											<button type="submit" class="btn btn-sm btn-danger" name="submit" value="deactivatecode-<%=settings.rebateCodes[i]._id %>">De-Activate</button><%
+											} else { 
+											%><button type="submit" class="btn btn-sm btn-success" name="submit" value="activatecode-<%=settings.rebateCodes[i]._id %>">Activate</button><%
+											} %>
+											<button type="submit" class="btn btn-sm btn-danger" name="submit" value="deletecode-<%=settings.rebateCodes[i]._id %>">Delete</button>
+										</td>
+									</tr>
+									<% } %>
+								</tbody>
+							</table>
+						</div>
+					</form>
+
+					<h5 class="card-title">Treatbox Settings</h5>
 					<form action="/user/settings" method="post">
 						<div class="form-group row">
 							<label for="default-sms" class="col-md-3 col-form-label">Default Delivery SMS</label>

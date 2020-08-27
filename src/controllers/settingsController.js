@@ -3,6 +3,7 @@ const tag = 'whisk-management:settingsController';
 
 // Requirements
 const bcrypt = require('bcrypt');
+const moment = require('moment-timezone');
 const debug = require('debug')(tag);
 const {
   priceFormat,
@@ -18,6 +19,10 @@ const {
   getProductById,
   getSettings,
   updateSettings: dbUpdateSettings,
+  addRebateCode,
+  updateRebateCode,
+  removeRebateCode,
+  getRebateCodes,
   getProducts
 } = require('../../lib/db-control')();
 
@@ -27,7 +32,7 @@ function settingsController() {
     const promises = [
       getProducts(),
       getSettings('treatbox'),
-      getSettings('rebateCodes'),
+      getRebateCodes(),
       getSettings('sms'),
       getTreatBoxDates(),
       getSettings('timeframe')
@@ -37,7 +42,7 @@ function settingsController() {
     return {
       products: data[0].value,
       treatbox: data[1].value,
-      rebate: data[2].value,
+      rebateCodes: data[2].value,
       sms: data[3].value,
       treatboxDates: data[4].value,
       timeframe: data[5].value
@@ -130,27 +135,35 @@ function settingsController() {
         break;
       }
 
-      case 'rebatecodesupdate': {
-        const codes = [];
-        let rebateId = 0;
-        while (req.body[`rebate-code-${rebateId}`] !== undefined) {
-          const code = {
-            value: req.body[`rebate-code-${rebateId}`],
-            type: req.body[`rebate-type-${rebateId}`]
-          };
-          if (req.body[`rebate-amount-${rebateId}`]) {
-            code.amount = parseInt(req.body[`rebate-amount-${rebateId}`], 10);
-          }
-          if (code.value !== '') {
-            codes.push(code);
-          }
-          rebateId += 1;
-        }
-        const settings = {
-          type: 'rebateCodes',
-          codes
+      case 'rebatecodesadd': {
+        const code = {
+          value: req.body['rebate-code'].toUpperCase(),
+          type: req.body['rebate-type'],
+          created: moment().startOf('day').format('YYYY-MM-DD'),
+          expiry: req.body['rebate-expiry'],
+          active: true
         };
-        await dbUpdateSettings(settings);
+        if (req.body['rebate-amount']) {
+          code.amount = parseInt(req.body['rebate-amount'], 10);
+        }
+        if (code.value !== '') {
+          await addRebateCode(code);
+        }
+        break;
+      }
+
+      case 'deactivatecode': {
+        await updateRebateCode(id, { $set: { active: false } });
+        break;
+      }
+
+      case 'activatecode': {
+        await updateRebateCode(id, { $set: { active: true } });
+        break;
+      }
+
+      case 'deletecode': {
+        await removeRebateCode(id);
         break;
       }
 
