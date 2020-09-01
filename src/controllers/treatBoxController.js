@@ -410,15 +410,19 @@ function treatBoxController() {
         });
         if (deliverable) {
           const deliveryObj = {
-            recipientId: recipient.id,
             zone: recipient.zone,
             price: deliveryPrice,
             momsRate: 25
           };
+          if (options.takePayment !== true) {
+            deliveryObj.recipientId = recipient.id;
+          }
           deliveryObj.momsAmount = calculateMoms(deliveryObj.price, deliveryObj.momsRate);
           statement.bottomLine.deliveryCost += deliveryObj.price;
           statement.bottomLine.deliveryMoms += deliveryObj.momsAmount;
-          statement.delivery.push(deliveryObj);
+          if (!(deliveryObj.price === 0 && options.takePayment === true)) {
+            statement.delivery.push(deliveryObj);
+          }
         }
       }
     });
@@ -489,7 +493,8 @@ function treatBoxController() {
     const statement = await lookupPrice(
       order.items,
       recipients,
-      order.payment.rebateCodes
+      order.payment.rebateCodes,
+      { takePayment: true }
     );
     return statement;
   }
@@ -507,14 +512,7 @@ function treatBoxController() {
       order.payment.rebateCodes = JSON.parse(req.body['rebate-codes']);
     }
 
-    const statement = await calculatePrice(order);
-    for (let i = statement.delivery.length - 1; i >= 0; i -= 1) {
-      if (statement.delivery[i].subTotal === 0) {
-        statement.delivery.splice(i, 1);
-      }
-    }
-
-    order.statement = statement;
+    order.statement = await calculatePrice(order);
     delete order.items;
 
     if (order.delivery.type !== 'collection') {
