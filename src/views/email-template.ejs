@@ -84,13 +84,13 @@
   </table>
 
   <%if (order.delivery.type === 'collection') {
-  %><p>Please note, our pick up times are between 10:30-11:30 on <%=deliveryDate %>.</p>
+  %><p>Please note that your items must be picked up from our store at Vikingagatan 18 on <%=deliveryDate %>.</p>
 
   <%} else if (order.delivery.type === 'delivery') {
-  %><p>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm.</p>
+  %><p>Your items will be delivered on <%=deliveryDate %>.</p>
 
   <%} else if (order.delivery.type === 'split-delivery') {
-  %><p>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm to the following people:</p>
+  %><p>Your items will be delivered on <%=deliveryDate %> to the following people:</p>
 
   <%for (let i = 0; i < order.recipients.length; i += 1) {
   %><p>

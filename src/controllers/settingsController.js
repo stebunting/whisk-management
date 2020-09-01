@@ -71,6 +71,7 @@ function settingsController() {
       costPrice: parseInt(body['add-product-cost-price'], 10) * 100,
       momsRate: parseInt(body['add-product-moms'], 10),
       deadline: body['add-product-deadline'],
+      collectionDay: body['add-product-collection'],
       delivery: []
     };
     for (let zone = 0; zone <= 3; zone += 1) {
@@ -137,16 +138,16 @@ function settingsController() {
 
       case 'rebatecodesadd': {
         const code = {
-          value: req.body['rebate-code'].toUpperCase(),
+          code: req.body['rebate-code'].toUpperCase(),
           type: req.body['rebate-type'],
           created: moment().startOf('day').format('YYYY-MM-DD'),
-          expiry: req.body['rebate-expiry'],
+          expires: req.body['rebate-expires'],
           active: true
         };
         if (req.body['rebate-amount']) {
           code.amount = parseInt(req.body['rebate-amount'], 10);
         }
-        if (code.value !== '') {
+        if (code.code !== '') {
           await addRebateCode(code);
         }
         break;

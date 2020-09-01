@@ -12,9 +12,9 @@ Delivery: <%=priceFormat(order.statement.bottomLine.deliveryCost) %>
 MOMs: <%=priceFormat(order.statement.bottomLine.totalMoms, { includeOre: true }) %>
 Total: <%=priceFormat(order.statement.bottomLine.total) %>
 
-<%if (order.delivery.type === 'collection') { %>Please note, our pick up times are between 10:30-11:30 on <%=deliveryDate %>.
-<%} else if (order.delivery.type === 'delivery') { %>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm.
-<%} else if (order.delivery.type === 'split-delivery') { %>Your items will be delivered on <%=deliveryDate %> between 11:30am and 3pm to the following people:
+<%if (order.delivery.type === 'collection') { %>Please note that your items must be picked up from our store at Vikingagatan 18 on <%=deliveryDate %>.
+<%} else if (order.delivery.type === 'delivery') { %>Your items will be delivered on <%=deliveryDate %>.
+<%} else if (order.delivery.type === 'split-delivery') { %>Your items will be delivered on <%=deliveryDate %> to the following people:
 <%for (let i = 0; i < order.recipients.length; i += 1) { %>
 <%=order.recipients[i].details.name %>
 <%=order.recipients[i].delivery.address %>

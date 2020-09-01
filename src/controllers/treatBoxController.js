@@ -54,8 +54,15 @@ function treatBoxController() {
         .startOf('day')
         .hours(hour)
         .minutes(minute),
+      collection: '',
       deadline: {}
     };
+
+    data.collection = data.delivery.clone()
+      .day(timeframeInformation.delivery.day - 1)
+      .startOf('day')
+      .hours(hour)
+      .minutes(minute);
 
     timeframeInformation.deadline.forEach((details) => {
       ({ hour, minute } = parseTime(details.time));
@@ -262,14 +269,14 @@ function treatBoxController() {
 
   // Function to look up a rebate code
   async function lookupRebateCode(code) {
-    const result = await getRebateCodes({ value: code.toUpperCase() });
+    const result = await getRebateCodes({ code: code.toUpperCase() });
     if (result.length === 0 || result[0].active === false) {
       return {
         valid: false,
         message: 'Invalid Code'
       };
     }
-    const expired = moment(result[0].expiry, 'YYYY-MM-DD').isBefore(moment());
+    const expired = moment(result[0].expires, 'YYYY-MM-DD').isBefore(moment());
     if (expired) {
       return {
         valid: false,
@@ -290,7 +297,7 @@ function treatBoxController() {
   }
 
   // Function to generate a statement of costs from products and delivery
-  async function lookupPrice(basket, recipients, codes = []) {
+  async function lookupPrice(basket, recipients, codes = [], options = {}) {
     const rebateCodes = {
       discountPercent: 0,
       zone3Delivery: false,
@@ -365,8 +372,6 @@ function treatBoxController() {
         // eslint-disable-next-line no-underscore-dangle
         id: product._id,
         name: product.name,
-        brand: product.brand,
-        category: product.category,
         quantity,
         price,
         momsAmount: calculateMoms(price, product.momsRate),
@@ -374,6 +379,10 @@ function treatBoxController() {
         subTotal: quantity * price,
         momsSubTotal: calculateMoms(quantity * price, product.momsRate)
       };
+      if (options.analyticsRequired === true) {
+        newProduct.brand = product.brand;
+        newProduct.category = product.category;
+      }
       statement.bottomLine.foodCost += newProduct.subTotal;
       statement.bottomLine.foodMoms += newProduct.momsSubTotal;
       statement.bottomLine.totalMoms += newProduct.momsSubTotal;
@@ -433,7 +442,7 @@ function treatBoxController() {
     const codes = req.body.codes.length === 0 ? [] : JSON.parse(req.body.codes);
 
     try {
-      const statement = await lookupPrice(basket, recipients, codes);
+      const statement = await lookupPrice(basket, recipients, codes, { analyticsRequired: true });
       statement.status = 'OK';
       return res.json(statement);
     } catch (error) {
@@ -533,6 +542,8 @@ function treatBoxController() {
       });
     }
 
+    const date = req.body['date-display'];
+
     if (order.payment.method === 'Invoice') {
       // Insert Invoice Order to DB
       const dbResponse = await insertTreatBoxOrder(order);
@@ -547,7 +558,7 @@ function treatBoxController() {
         });
       }
       const id = dbResponse.insertedId;
-      sendConfirmationEmail(order);
+      sendConfirmationEmail(order, date);
       return res.json({
         status: 'OK',
         method,

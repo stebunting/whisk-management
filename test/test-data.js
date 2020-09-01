@@ -87,11 +87,11 @@ module.exports.test.settings.rebateCodes = {
   type: 'rebateCodes',
   codes: [
     {
-      value: 'TESTINGCODE',
+      code: 'TESTINGCODE',
       type: 'zone3Delivery'
     },
     {
-      value: 'COSTPRICETEST',
+      code: 'COSTPRICETEST',
       type: 'costPrice'
     }
   ]

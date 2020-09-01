@@ -6,7 +6,7 @@ $(`#settingsTabs a[href="${window.location.hash}"]`).tab('show');
 //     $(this).datetimepicker();
 //   });
 
-$('input[id^=rebate-expiry').datepicker({
+$('input[id^=rebate-expires').datepicker({
   format: 'yyyy-mm-dd',
   autoclose: true,
   weekStart: 1
