@@ -3,11 +3,12 @@ const tag = 'whisk-management:userRoutes';
 
 // Requirements
 const express = require('express');
+// eslint-disable-next-line no-unused-vars
 const debug = require('debug')(tag);
 const { loginCheck } = require('../controllers/authController')();
-const { retrieveSettings, updateSettings, displaySettings } = require('../controllers/settingsController')();
+const { updateSettings, displaySettings } = require('../controllers/settingsController')();
 const { facebookCallback, instagram } = require('../controllers/socialMediaController')();
-const { dashboard, showErrorLog } = require('../controllers/userController')();
+const { dashboard, clearErrors, showErrorLog } = require('../controllers/userController')();
 
 function routes() {
   const userRoutes = express.Router();
@@ -21,6 +22,7 @@ function routes() {
     .get(displaySettings);
 
   userRoutes.route('/errorlog')
+    .post(clearErrors)
     .get(showErrorLog);
 
   userRoutes.route('/facebookcallback')

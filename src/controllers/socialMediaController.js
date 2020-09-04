@@ -42,6 +42,7 @@ function socialMediaController() {
       logError({
         message: 'No State Returned from Facebook',
         details: JSON.stringify({ state, storedState }),
+        data: '',
         error: ''
       });
       return res.redirect('/user/dashboard');
@@ -50,6 +51,7 @@ function socialMediaController() {
       logError({
         message: 'Cookie State does not match state returned from Spotfy',
         details: JSON.stringify({ state, storedState }),
+        data: '',
         error: ''
       });
       return res.redirect('/user/dashboard');

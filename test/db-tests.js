@@ -482,6 +482,7 @@ describe('Database Control Connection Tests', () => {
       const response = await logError({
         message: 'Error Message',
         details: JSON.stringify({ json: 1 }),
+        data: 'Some Data',
         error: 'Error Stack'
       });
       assert.equal(response.message, 'Error Message');

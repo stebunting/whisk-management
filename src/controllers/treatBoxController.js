@@ -453,6 +453,7 @@ function treatBoxController() {
       logError({
         message: 'Error calculating price',
         details: JSON.stringify({ basket, recipients, codes }),
+        data: '',
         error: error.stack
       });
       return res.json({ status: 'Error' });
@@ -548,7 +549,9 @@ function treatBoxController() {
       if (dbResponse.insertedCount !== 1) {
         logError({
           message: 'Error inserting Invoice order to DB',
-          details: JSON.stringify(dbResponse)
+          details: JSON.stringify(dbResponse),
+          data: '',
+          error: ''
         });
         return res.json({
           status: 'Error',
@@ -583,14 +586,16 @@ function treatBoxController() {
       if (dbResponse.insertedCount !== 1) {
         logError({
           message: 'Error inserting Swish order to DB',
-          details: JSON.stringify(dbResponse)
+          details: JSON.stringify(dbResponse),
+          data: '',
+          error: ''
         });
         return {
           status: 'Error',
           errors: ['DB_ERROR']
         };
       }
-      sendConfirmationEmail(order);
+      sendConfirmationEmail(order, date);
       return res.json({
         status: 'OK',
         method,

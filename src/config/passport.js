@@ -45,6 +45,7 @@ function passportConfig(app) {
       logError({
         message: 'Could not check for user in database',
         details: JSON.stringify({ username }),
+        data: '',
         error: error.stack
       });
     }

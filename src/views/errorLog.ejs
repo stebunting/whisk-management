@@ -1,12 +1,17 @@
 <%-include('partials/header', { page: 'errorLog', title: 'Error Log', user }); %>
     <h3>Error Log</h3>
 
+    <form action="/user/errorlog" method="post">
+      <button class="btn btn-danger" type="submit">Clear Log</button>
+    </form>
+
     <table class="table table-striped table-bordered table-hover table-sm table-responsive">
       <thead>
         <tr>
           <th scope="col">TIMESTAMP</th>
           <th scope="col">MESSAGE</th>
           <th scope="col" class="error-details">DETAILS</th>
+          <th scope="col">DATA</th>
           <th scope="col">STACK</th>
         </tr>
       </thead>
@@ -16,6 +21,7 @@
           <td><%=dateFormat(error._id.getTimestamp(), { format: 'date' }) %><br /><%=dateFormat(error._id.getTimestamp(), { format: 'time' }) %></td>
           <td><%=error.message %></td>
           <td class="error-details"><%=error.details %></td>
+          <td><%=error.data %></td>
           <td><%=error.error %></td>
         </tr><%
       }); %>

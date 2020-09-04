@@ -11,10 +11,16 @@ const {
   getTreatBoxDates,
   getTreatBoxTotals,
   getErrorLog,
-  getSettings
+  getSettings,
+  clearErrorLog
 } = require('../../lib/db-control')();
 
 function userController() {
+  async function clearErrors(req, res) {
+    await clearErrorLog();
+    return res.redirect('/user/errorlog');
+  }
+
   async function dashboard(req, res) {
     // Generate Facebook State Cookie
     const state = generateRandomString(16);
@@ -64,6 +70,7 @@ function userController() {
 
   return {
     dashboard,
+    clearErrors,
     showErrorLog
   };
 }
