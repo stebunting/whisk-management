@@ -35,6 +35,9 @@ const {
   retrieveRefund
 } = require('../../lib/swish')();
 
+// Exceptions to deliveries
+const exceptionsList = require('./treatBoxExceptions.json');
+
 function treatBoxController() {
   // Function to get all relevant dates from a week number
   async function getWeekData(week) {
@@ -43,6 +46,22 @@ function treatBoxController() {
       timeframeInformation = await getSettings('timeframe');
     } catch (error) {
       return {};
+    }
+
+    // Define exceptions to week data
+    const exceptions = exceptionsList.filter((x) => x.week === week);
+    if (exceptions.length > 0) {
+      if (exceptions[0].day) {
+        timeframeInformation.delivery.day = exceptions[0].day;
+      }
+      if (exceptions[0].deadlineDay) {
+        const index = timeframeInformation.deadline.findIndex((x) => x.type === 'normal');
+        timeframeInformation.deadline[index].day = exceptions[0].deadlineDay;
+      }
+      if (exceptions[0].vegetableDeadlineDay) {
+        const index = timeframeInformation.deadline.findIndex((x) => x.type === 'vegetable');
+        timeframeInformation.deadline[index].day = exceptions[0].vegetableDeadlineDay;
+      }
     }
 
     let { hour, minute } = parseTime(timeframeInformation.delivery.time);
