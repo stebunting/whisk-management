@@ -49,18 +49,18 @@ function treatBoxController() {
     }
 
     // Define exceptions to week data
-    const exceptions = exceptionsList.filter((x) => x.week === week);
-    if (exceptions.length > 0) {
-      if (exceptions[0].day) {
-        timeframeInformation.delivery.day = exceptions[0].day;
+    const exceptions = exceptionsList[week];
+    if (exceptions) {
+      if (exceptions.day) {
+        timeframeInformation.delivery.day = exceptions.day;
       }
-      if (exceptions[0].deadlineDay) {
+      if (exceptions.deadlineDay) {
         const index = timeframeInformation.deadline.findIndex((x) => x.type === 'normal');
-        timeframeInformation.deadline[index].day = exceptions[0].deadlineDay;
+        timeframeInformation.deadline[index].day = exceptions.deadlineDay;
       }
-      if (exceptions[0].vegetableDeadlineDay) {
+      if (exceptions.vegetableDeadlineDay) {
         const index = timeframeInformation.deadline.findIndex((x) => x.type === 'vegetable');
-        timeframeInformation.deadline[index].day = exceptions[0].vegetableDeadlineDay;
+        timeframeInformation.deadline[index].day = exceptions.vegetableDeadlineDay;
       }
     }
 
@@ -260,6 +260,8 @@ function treatBoxController() {
 
   // Return products and timeframes to browser
   async function getDetails(req, res) {
+    const NUM_WEEKS_TO_DISPLAY = 2;
+
     const productPromise = getProducts();
     let data;
     try {
@@ -269,14 +271,22 @@ function treatBoxController() {
     }
 
     const week = getLatestWeek(data.delivery.day);
-    const promises = [getWeekData(week), getWeekData(week + 1)];
+    const promises = [];
+    for (let i = week; i < week + NUM_WEEKS_TO_DISPLAY; i += 1) {
+      const exceptions = exceptionsList[i];
+      if (!exceptions || exceptions.cancelled !== true) {
+        promises.push(getWeekData(i));
+      }
+    }
     data = await Promise.allSettled(promises);
-    const week1 = data[0].value;
-    const week2 = data[1].value;
-    const timeframe = {
-      [`${week1.year}-${week1.week}-${week1.day}`]: week1,
-      [`${week2.year}-${week2.week}-${week2.day}`]: week2
-    };
+    const timeframe = {};
+    for (let i = 0; i < data.length; i += 1) {
+      if (data[i].status === 'fulfilled') {
+        const weekData = data[i].value;
+        const dateCode = `${weekData.year}-${weekData.week}-${weekData.day}`;
+        timeframe[dateCode] = weekData;
+      }
+    }
 
     const products = await productPromise;
     return res.json({

@@ -1,8 +1,6 @@
-[
-  {
+{
+  "44": {
     "week": 44,
-    "day": 5,
-    "deadlineDay": 4,
-    "vegetableDeadlineDay": 2
+    "cancelled": true
   }
-]
+}
