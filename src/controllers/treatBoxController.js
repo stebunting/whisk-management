@@ -260,7 +260,7 @@ function treatBoxController() {
 
   // Return products and timeframes to browser
   async function getDetails(req, res) {
-    const NUM_WEEKS_TO_DISPLAY = 2;
+    const NUM_WEEKS_TO_DISPLAY = 3;
 
     const productPromise = getProducts();
     let data;
