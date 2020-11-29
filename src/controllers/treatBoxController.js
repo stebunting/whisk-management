@@ -68,7 +68,7 @@ function treatBoxController() {
     const data = {
       delivery: moment()
         .tz('Europe/Stockholm')
-        .isoWeek(week)
+        .week(week)
         .day(timeframeInformation.delivery.day)
         .startOf('day')
         .hours(hour)
@@ -274,7 +274,7 @@ function treatBoxController() {
     const promises = [];
     for (let i = week; i < week + NUM_WEEKS_TO_DISPLAY; i += 1) {
       const exceptions = exceptionsList[i];
-      if (!exceptions || exceptions.cancelled !== true) {
+      if (!exceptions || (exceptions && exceptions.cancelled !== true)) {
         promises.push(getWeekData(i));
       }
     }
