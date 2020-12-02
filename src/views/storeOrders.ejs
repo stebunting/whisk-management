@@ -1,0 +1,22 @@
+<%-include('partials/header', { title: 'Store Orders', user, treatboxDates }); %>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Date</th>
+      <th scope="col">Time</th>
+      <th scope="col">Name</th>
+      <th scope="col">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% orders.forEach((order) => { %>
+    <tr>
+      <td><%=dateFormat(order._id.getTimestamp(), { format: 'date' }) %></td>
+			<td><%=dateFormat(order._id.getTimestamp(), { format: 'time' }) %></td>
+      <td><%=order.details.name %></td>
+      <td><%=order.payment.status %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+<%- include('partials/footer', { page: 'storeOrders' }) %>

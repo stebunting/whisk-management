@@ -14,6 +14,9 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    'comma-dangle': 0
+    'comma-dangle': 'off',
+    'no-unused-vars': ['error', {
+      varsIgnorePattern: '^(debug|log|tag)$'
+    }]
   },
 };
