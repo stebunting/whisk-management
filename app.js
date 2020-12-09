@@ -35,10 +35,8 @@ app.set('views', './src/views');
 const dbController = require('./lib/db-control')(tag);
 const email = require('./lib/email')();
 
-try {
-  dbController.connect();
-  email.connect();
-} catch {}
+dbController.connect();
+email.connect();
 
 // Configure Passport
 require('./src/config/passport.js')(app);
