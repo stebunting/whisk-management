@@ -15,6 +15,10 @@
       font-weight: bold;
       text-align: center;
     }
+    .alert {
+      color: #f00;
+      font-size: 1.2em;
+    }
     img {
       width: 95%;
       text-align: center;
@@ -24,8 +28,9 @@
 
 <body>
   <div class="reminder_text">Hello <%=user.forename %>,</div>
-  <div class="reminder_text">Your box is now due back on <%=dateFormat(user.dateIn, { format: 'long' }) %>.</div>
+  <div class="reminder_text alert">Your box is now due back on <%=dateFormat(user.dateIn, { format: 'long' }) %>.</div>
   <div class="reminder_text">If it's not returned in the next two days you will be charged 750kr.</div>
+  <div class="reminder_text">As we aren’t always in the shop, you can always leave your box (and accessories) in the main building reception under WHISK's mail box. It’s the door to the left of WHISK and the door code is 5367. Please can you send us a message when you have dropped the box off.</div>
 
 <%- include('partials/email-signature') %>
 </body>
