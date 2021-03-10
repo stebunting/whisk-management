@@ -13,10 +13,7 @@ const {
   getBoxLoanById,
   updateBoxLoan
 } = require('../../lib/db-control')();
-const {
-  sendBoxLoanReminder,
-  sendBoxLoanFinalReminder
-} = require('../../lib/email')();
+const { sendBoxLoanReminder } = require('../../lib/email')();
 
 // Calculate days left for each customer
 function getDaysLeft(customers) {
@@ -157,16 +154,15 @@ function boxController() {
     };
 
     customers.forEach((customer) => {
-      if (customer.daysLeft === 7) {
+      if (customer.daysLeft === 7 || customer.daysLeft === 0) {
         sendBoxLoanReminder(customer);
         // eslint-disable-next-line no-underscore-dangle
         updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
-        reminders.reminders += 1;
-      } else if (customer.daysLeft === 0) {
-        sendBoxLoanFinalReminder(customer);
-        // eslint-disable-next-line no-underscore-dangle
-        updateBoxLoan(customer._id, { $inc: { remindersSent: 1 } });
-        reminders.finalReminders += 1;
+        if (customer.daysLeft === 7) {
+          reminders.reminders += 1;
+        } else {
+          reminders.finalReminders += 1;
+        }
       }
     });
 

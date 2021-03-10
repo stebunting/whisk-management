@@ -61,9 +61,8 @@ describe('Database Control Connection Tests', () => {
       assert.ok(dbDropped);
     });
 
-    it('sets up database with username index', async () => {
-      const setupResponse = await setupDb();
-      assert.equal(setupResponse, 'username_1');
+    it('sets up database with username and code index', async () => {
+      await setupDb();
       const response = await getDb().collection('users').indexInformation();
       assert.ok(response.username_1);
     });
