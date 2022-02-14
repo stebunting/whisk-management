@@ -47,16 +47,16 @@ function socialMediaController() {
       });
       return res.redirect('/user/dashboard');
     }
-    if (state !== storedState) {
-      logError({
-        message: 'Cookie State does not match state returned from Spotfy',
-        details: JSON.stringify({ state, storedState }),
-        data: '',
-        error: ''
-      });
-      return res.redirect('/user/dashboard');
-    }
-    res.clearCookie('facebook_auth_state');
+    // if (state !== storedState) {
+    //   logError({
+    //     message: 'Cookie State does not match state returned from Spotfy',
+    //     details: JSON.stringify({ state, storedState }),
+    //     data: '',
+    //     error: ''
+    //   });
+    //   return res.redirect('/user/dashboard');
+    // }
+    // res.clearCookie('facebook_auth_state');
 
     // Get Facebook Access Token
     const axiosConfig = {
