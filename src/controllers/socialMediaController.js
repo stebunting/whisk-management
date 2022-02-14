@@ -13,6 +13,7 @@ const appId = process.env.FACEBOOK_APP_ID;
 const appSecret = process.env.FACEBOOK_APP_SECRET;
 const redirectUri = `${serverUri}/user/facebookcallback`;
 const scope = 'instagram_basic,pages_show_list';
+const facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN;
 
 function socialMediaController() {
   // Generate Facebook URL
@@ -47,16 +48,16 @@ function socialMediaController() {
       });
       return res.redirect('/user/dashboard');
     }
-    // if (state !== storedState) {
-    //   logError({
-    //     message: 'Cookie State does not match state returned from Spotfy',
-    //     details: JSON.stringify({ state, storedState }),
-    //     data: '',
-    //     error: ''
-    //   });
-    //   return res.redirect('/user/dashboard');
-    // }
-    // res.clearCookie('facebook_auth_state');
+    if (state !== storedState) {
+      logError({
+        message: 'Cookie State does not match state returned from Spotfy',
+        details: JSON.stringify({ state, storedState }),
+        data: '',
+        error: ''
+      });
+      return res.redirect('/user/dashboard');
+    }
+    res.clearCookie('facebook_auth_state');
 
     // Get Facebook Access Token
     const axiosConfig = {
@@ -100,7 +101,7 @@ function socialMediaController() {
       method: 'get',
       url: `https://graph.facebook.com/v7.0/${user.facebook.instagramID}/media`,
       params: {
-        access_token: user.facebook.accessToken
+        access_token: facebookAccessToken, // TODO: Use token from db - user.facebook.accessToken
       }
     };
     const allMedia = await axios(axiosConfig);
