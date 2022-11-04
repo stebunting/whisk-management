@@ -13,20 +13,20 @@ const { dashboard, clearErrors, showErrorLog } = require('../controllers/userCon
 function routes() {
   const userRoutes = express.Router();
 
-  userRoutes.route('/dashboard')
-    .all(loginCheck)
-    .get(dashboard);
+  // userRoutes.route('/dashboard')
+  //   .all(loginCheck)
+  //   .get(dashboard);
 
-  userRoutes.route('/settings')
-    .post(updateSettings)
-    .get(displaySettings);
+  // userRoutes.route('/settings')
+  //   .post(updateSettings)
+  //   .get(displaySettings);
 
-  userRoutes.route('/errorlog')
-    .post(clearErrors)
-    .get(showErrorLog);
+  // userRoutes.route('/errorlog')
+  //   .post(clearErrors)
+  //   .get(showErrorLog);
 
-  userRoutes.route('/facebookcallback')
-    .get(facebookCallback);
+  // userRoutes.route('/facebookcallback')
+  //   .get(facebookCallback);
 
   userRoutes.route('/instagram')
     .get(instagram);

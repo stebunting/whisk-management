@@ -14,7 +14,7 @@ function routes() {
       res.render('signin');
     })
     .post(passport.authenticate('local', {
-      successRedirect: '/user/dashboard',
+      successRedirect: '/auth/signin', // '/user/dashboard',
       failureRedirect: '/auth/signin'
     }));
 

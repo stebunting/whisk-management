@@ -8,7 +8,7 @@ const debug = require('debug')(tag);
 const { getUser, updateUser, logError } = require('../../lib/db-control')();
 
 // Facebook Constants
-const serverUri = 'https://whisk-management.herokuapp.com';
+const serverUri = process.env.BACKEND_URI;
 const appId = process.env.FACEBOOK_APP_ID;
 const appSecret = process.env.FACEBOOK_APP_SECRET;
 const redirectUri = `${serverUri}/user/facebookcallback`;

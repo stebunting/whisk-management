@@ -33,34 +33,34 @@ app.set('views', './src/views');
 
 // Connect to MongoDB and SMTP Server
 const dbController = require('./lib/db-control')(tag);
-const email = require('./lib/email')();
+// const email = require('./lib/email')();
 
 dbController.connect();
-email.connect();
+// email.connect();
 
 // Configure Passport
 require('./src/config/passport.js')(app);
 
 // Routing
 const userRouter = require('./src/routes/userRoutes')();
-const authRouter = require('./src/routes/authRoutes')();
-const adminRouter = require('./src/routes/adminRoutes')();
-const treatBoxRouter = require('./src/routes/treatBoxRoutes')();
-const boxRouter = require('./src/routes/boxRoutes')();
-const storeRouter = require('./src/routes/storeRoutes')();
+// const authRouter = require('./src/routes/authRoutes')();
+// const adminRouter = require('./src/routes/adminRoutes')();
+// const treatBoxRouter = require('./src/routes/treatBoxRoutes')();
+// const boxRouter = require('./src/routes/boxRoutes')();
+// const storeRouter = require('./src/routes/storeRoutes')();
 
 app.use('/user', userRouter);
-app.use('/auth', authRouter);
-app.use('/admin', adminRouter);
-app.use('/treatbox', treatBoxRouter);
-app.use('/boxes', boxRouter);
-app.use('/store', storeRouter);
+// app.use('/auth', authRouter);
+// app.use('/admin', adminRouter);
+// app.use('/treatbox', treatBoxRouter);
+// app.use('/boxes', boxRouter);
+// app.use('/store', storeRouter);
 
 // Entry Point
-app.all('/', loginCheck);
-app.get('/', (req, res) => {
-  res.redirect('/user/dashboard');
-});
+// app.all('/', loginCheck);
+// app.get('/', (req, res) => {
+//   res.redirect('/auth/signin');
+// });
 
 app.get('/wakeup', (req, res) => {
   res.send('Awake!');
